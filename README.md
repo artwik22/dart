@@ -42,14 +42,14 @@ A modern, beautiful, and highly customizable shell/launcher system for Quickshel
 - **playerctl** - Media player control
 - **pactl** - PulseAudio volume control
 - **bluetoothctl** - Bluetooth management
-- **systemctl** - System power management
+
 
 ## 🛠️ Installation
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/sharpshell.git ~/.config/sharpshell
+git clone https://github.com/artwik22/sharpshell.git ~/.config/sharpshell
 cd ~/.config/sharpshell
 ```
 
@@ -78,10 +78,25 @@ mkdir -p ~/Pictures/Wallpapers
 
 ## 🎮 Usage
 
-### Keyboard Shortcuts
+### Keyboard Shortcuts Configuration
 
-- **Open Launcher**: Configure your preferred shortcut (e.g., `Super+R`)
-- **Toggle Top Menu**: Configure your preferred shortcut
+**Important**: You need to bind keyboard shortcuts in your Wayland compositor (e.g., Hyprland) to launch the scripts. Add these bindings to your compositor config:
+
+**For Hyprland** (`~/.config/hyprland/hyprland.conf`):
+```ini
+# Open Launcher
+bind = SUPER, R, exec, ~/.config/sharpshell/open-launcher.sh
+
+# Toggle Top Menu
+bind = SUPER, M, exec, ~/.config/sharpshell/toggle-menu.sh
+```
+
+**For other compositors**: Configure similar bindings to execute the scripts from `~/.config/sharpshell/`.
+
+### Keyboard Shortcuts (Inside Launcher/Menu)
+
+- **Open Launcher**: Use your configured shortcut (e.g., `Super+R`)
+- **Toggle Top Menu**: Use your configured shortcut (e.g., `Super+M`)
 - **Navigate**: Arrow keys (`↑`, `↓`, `←`, `→`)
 - **Select**: `Enter` or `Space`
 - **Search**: Start typing to filter
@@ -89,11 +104,6 @@ mkdir -p ~/Pictures/Wallpapers
 
 ### Navigation
 
-- **Arrow Keys**: Navigate through options
-- **Enter**: Select/Launch application
-- **Tab**: Switch between modes (Launch App, Packages, Settings)
-- **Ctrl+1/2/3**: Quick mode switching
-- **Mouse**: Full mouse support with hover effects
 
 ## 📁 Project Structure
 

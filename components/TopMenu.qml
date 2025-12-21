@@ -136,9 +136,20 @@ PanelWindow {
                         border.color: "#252525"
                         border.width: 1
                         radius: 0
+                        scale: (topMenuTabItemMouseArea.containsMouse || currentTab === index) ? 1.02 : 1.0
                         
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation { 
+                                duration: 200
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: 200
+                                easing.type: Easing.OutCubic
+                            }
                         }
 
                         Row {
@@ -151,6 +162,13 @@ PanelWindow {
                                 text: modelData.icon
                                 font.pixelSize: 17
                                 color: currentTab === index ? "#f5f5f5" : "#707070"
+                                
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
                             }
 
                             Text {
@@ -161,6 +179,13 @@ PanelWindow {
                                 font.weight: currentTab === index ? Font.DemiBold : Font.Medium
                                 font.letterSpacing: 0.2
                                 color: currentTab === index ? "#f5f5f5" : "#707070"
+                                
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
                             }
                         }
 
@@ -170,7 +195,14 @@ PanelWindow {
                             width: parent.width
                             height: 2
                             color: "#ffffff"
-                            visible: currentTab === index
+                            opacity: currentTab === index ? 1.0 : 0.0
+                            
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 250
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
                         }
 
                         MouseArea {
@@ -232,6 +264,22 @@ PanelWindow {
                         border.color: "#1a1a1a"
                         border.width: 1
                         anchors.verticalCenter: parent.verticalCenter
+                        opacity: (currentTab === 0) ? 1.0 : 0.0
+                        scale: (currentTab === 0) ? 1.0 : 0.95
+                        
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 300
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: 300
+                                easing.type: Easing.OutCubic
+                            }
+                        }
 
                         Image {
                             id: topMenuAlbumArt
@@ -241,6 +289,14 @@ PanelWindow {
                             source: mpArt ? mpArt : ""
                             asynchronous: true
                             cache: false
+                            opacity: source ? 1.0 : 0.0
+                            
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 400
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
                         }
 
                         Text {
@@ -293,19 +349,40 @@ PanelWindow {
                             id: topMenuProgressCol
                             width: parent.width
                             spacing: 5
+                            opacity: (currentTab === 0) ? 1.0 : 0.0
+                            
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 300
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
 
                             Rectangle {
                                 id: topMenuProgressBarBg
                                 width: parent.width
                                 height: 4
                                 color: "#1e1e1e"
+                                scale: topMenuProgressMouseArea.containsMouse ? 1.05 : 1.0
+                                
+                                Behavior on scale {
+                                    NumberAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
 
                                 Rectangle {
                                     id: topMenuProgressFill
-                                    width: 0
+                                    width: (mpLength > 0) ? (parent.width * (mpPosition / mpLength)) : 0
                                     height: parent.height
                                     color: "#ffffff"
-                                    Behavior on width { NumberAnimation { duration: 300 } }
+                                    Behavior on width { 
+                                        NumberAnimation { 
+                                            duration: 300
+                                            easing.type: Easing.OutCubic
+                                        } 
+                                    }
                                 }
 
                                 MouseArea {
@@ -353,13 +430,35 @@ PanelWindow {
                                 color: topMenuPrevArea.containsMouse ? "#1e1e1e" : "#161616"
                                 border.color: "#252525"
                                 border.width: 1
+                                scale: topMenuPrevArea.containsMouse ? 1.1 : 1.0
+                                
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                                
+                                Behavior on scale {
+                                    NumberAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
 
                                 Text { 
                                     id: topMenuPrevIcon
                                     text: "󰒮"; 
                                     anchors.centerIn: parent; 
                                     font.pixelSize: 23; 
-                                    color: "#a0a0a0" 
+                                    color: topMenuPrevArea.containsMouse ? "#f5f5f5" : "#a0a0a0"
+                                    
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
                                 }
 
                                 MouseArea {
@@ -375,6 +474,21 @@ PanelWindow {
                                 id: topMenuPlayPauseBtn
                                 width: 54; height: 45
                                 color: topMenuPlayArea.containsMouse ? "#e0e0e0" : "#ffffff"
+                                scale: topMenuPlayArea.containsMouse ? 1.1 : 1.0
+                                
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                                
+                                Behavior on scale {
+                                    NumberAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
 
                                 Text {
                                     id: topMenuPlayPauseIcon
@@ -382,6 +496,14 @@ PanelWindow {
                                     anchors.centerIn: parent
                                     font.pixelSize: 25
                                     color: "#0a0a0a"
+                                    rotation: topMenuPlayArea.containsMouse ? 5 : 0
+                                    
+                                    Behavior on rotation {
+                                        NumberAnimation {
+                                            duration: 200
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
                                 }
 
                                 MouseArea {
@@ -447,54 +569,13 @@ PanelWindow {
                     }
                 }
 
-                Row {
-                    id: topMenuSystemRow
+                Column {
+                    id: topMenuSystemStatsCol
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.verticalCenterOffset: 35
-                    spacing: 60
-
-                    Column {
-                        id: topMenuSystemTimeCol
-                        width: 240
-                        spacing: 8
-
-                        Text {
-                            id: topMenuTimeDisplay
-                            text: currentTime
-                            font.pixelSize: 60
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Bold
-                            font.letterSpacing: 1
-                            color: "#f5f5f5"
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Text {
-                            id: topMenuDateDisplay
-                            text: currentDate
-                            font.pixelSize: 15
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Medium
-                            font.letterSpacing: 0.3
-                            color: "#a0a0a0"
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-
-                    Rectangle { 
-                        id: topMenuSystemDivider
-                        width: 1
-                        height: 140
-                        color: "#252525"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Column {
-                        id: topMenuSystemStatsCol
-                        spacing: 18
-                        width: 240
-                        anchors.verticalCenter: parent.verticalCenter
+                    spacing: 20
+                    width: 300
 
                         Repeater {
                             id: topMenuSystemStatsRepeater
@@ -599,7 +680,9 @@ PanelWindow {
                             border.color: topMenuOptionArea.containsMouse ? "#ffffff" : "#252525"
                             border.width: 1
                             radius: 0
-
+                            scale: topMenuOptionArea.containsMouse ? 1.05 : 1.0
+                            opacity: (currentTab === 2) ? 1.0 : 0.0
+                            
                             Behavior on color {
                                 ColorAnimation {
                                     duration: 200
@@ -611,6 +694,23 @@ PanelWindow {
                                 ColorAnimation {
                                     duration: 200
                                     easing.type: Easing.OutCubic
+                                }
+                            }
+                            
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 200
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                            
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: index * 100 }
+                                    NumberAnimation {
+                                        duration: 300
+                                        easing.type: Easing.OutCubic
+                                    }
                                 }
                             }
 
@@ -625,6 +725,21 @@ PanelWindow {
                                     font.pixelSize: 45
                                     color: topMenuOptionArea.containsMouse ? "#f5f5f5" : "#707070"
                                     anchors.horizontalCenter: parent.horizontalCenter
+                                    scale: topMenuOptionArea.containsMouse ? 1.1 : 1.0
+                                    
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
+                                    
+                                    Behavior on scale {
+                                        NumberAnimation {
+                                            duration: 200
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
                                 }
 
                                 Text {
@@ -656,7 +771,6 @@ PanelWindow {
                     }
                 }
             }
-        }
         }
     }
 
