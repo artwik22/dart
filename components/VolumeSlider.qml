@@ -36,7 +36,7 @@ PanelWindow {
     Behavior on slideOffset {
         NumberAnimation { 
             duration: 300
-            easing.type: Easing.OutCubic
+            easing.type: Easing.OutQuart
         }
     }
 
@@ -53,7 +53,7 @@ PanelWindow {
         Behavior on opacity {
             NumberAnimation { 
                 duration: 300
-                easing.type: Easing.OutCubic
+                easing.type: Easing.OutQuart
             }
         }
         
@@ -61,7 +61,7 @@ PanelWindow {
         Behavior on scale {
             NumberAnimation { 
                 duration: 300
-                easing.type: Easing.OutCubic
+                easing.type: Easing.OutQuart
             }
         }
         
@@ -163,7 +163,7 @@ PanelWindow {
                     Behavior on height {
                         NumberAnimation { 
                             duration: 150
-                            easing.type: Easing.OutCubic
+                            easing.type: Easing.OutQuart
                         }
                     }
                 }

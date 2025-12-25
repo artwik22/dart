@@ -89,9 +89,6 @@ PanelWindow {
             radius: 0
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#111111"
             
-            // Border z subtelnym efektem
-            border.color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525"
-            border.width: 1
         }
 
         Column {
@@ -131,26 +128,20 @@ PanelWindow {
                             (topMenuTabItemMouseArea.containsMouse ? 
                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a") : 
                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"))
-                        border.color: currentTab === index ?
-                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
-                            (topMenuTabItemMouseArea.containsMouse ?
-                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
-                                ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#2a2a2a"))
-                        border.width: currentTab === index ? 3 : (topMenuTabItemMouseArea.containsMouse ? 2 : 1)
                         radius: 0
                         scale: (topMenuTabItemMouseArea.containsMouse || currentTab === index) ? 1.02 : 1.0
                         
                         Behavior on color {
                             ColorAnimation { 
-                                duration: 200
-                                easing.type: Easing.OutCubic
+                                duration: 180
+                                easing.type: Easing.OutQuart
                             }
                         }
                         
                         Behavior on scale {
                             NumberAnimation {
-                                duration: 200
-                                easing.type: Easing.OutCubic
+                                duration: 180
+                                easing.type: Easing.OutQuart
                             }
                         }
 
@@ -167,12 +158,12 @@ PanelWindow {
                                     ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
                                     (topMenuTabItemMouseArea.containsMouse ?
                                         ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
-                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"))
+                                        ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#aaaaaa"))
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                             }
@@ -188,12 +179,12 @@ PanelWindow {
                                     ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
                                     (topMenuTabItemMouseArea.containsMouse ?
                                         ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
-                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"))
+                                        ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#aaaaaa"))
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                             }
@@ -209,8 +200,8 @@ PanelWindow {
                             
                             Behavior on opacity {
                                 NumberAnimation {
-                                    duration: 250
-                                    easing.type: Easing.OutCubic
+                                    duration: 220
+                                    easing.type: Easing.OutQuart
                                 }
                             }
                         }
@@ -246,15 +237,15 @@ PanelWindow {
                 
                 Behavior on x {
                     NumberAnimation { 
-                        duration: 300
-                        easing.type: Easing.OutCubic
+                        duration: 280
+                        easing.type: Easing.OutQuart
                     }
                 }
                 
                 Behavior on opacity {
                     NumberAnimation { 
-                        duration: 300
-                        easing.type: Easing.OutCubic
+                        duration: 280
+                        easing.type: Easing.OutQuart
                     }
                 }
 
@@ -271,8 +262,6 @@ PanelWindow {
                         width: 160
                         height: 160
                         color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-                        border.color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                        border.width: 1
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: (currentTab === 0) ? 1.0 : 0.0
                         scale: (currentTab === 0) ? 1.0 : 0.95
@@ -280,14 +269,14 @@ PanelWindow {
                         Behavior on opacity {
                             NumberAnimation {
                                 duration: 300
-                                easing.type: Easing.OutCubic
+                                easing.type: Easing.OutQuart
                             }
                         }
                         
                         Behavior on scale {
                             NumberAnimation {
                                 duration: 300
-                                easing.type: Easing.OutCubic
+                                easing.type: Easing.OutQuart
                             }
                         }
 
@@ -304,7 +293,7 @@ PanelWindow {
                             Behavior on opacity {
                                 NumberAnimation {
                                     duration: 400
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.OutQuart
                                 }
                             }
                         }
@@ -364,7 +353,7 @@ PanelWindow {
                             Behavior on opacity {
                                 NumberAnimation {
                                     duration: 300
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.OutQuart
                                 }
                             }
 
@@ -378,7 +367,7 @@ PanelWindow {
                                 Behavior on scale {
                                     NumberAnimation {
                                         duration: 200
-                                        easing.type: Easing.OutCubic
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
 
@@ -390,7 +379,7 @@ PanelWindow {
                                     Behavior on width { 
                                         NumberAnimation { 
                                             duration: 300
-                                            easing.type: Easing.OutCubic
+                                            easing.type: Easing.OutQuart
                                         } 
                                     }
                                 }
@@ -440,30 +429,19 @@ PanelWindow {
                                 color: topMenuPrevArea.containsMouse ? 
                                     ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#161616")
-                                border.color: topMenuPrevArea.containsMouse ? 
-                                    ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
-                                    ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525")
-                                border.width: 1
                                 scale: topMenuPrevArea.containsMouse ? 1.1 : 1.0
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-                                
-                                Behavior on border.color {
-                                    ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
                                 Behavior on scale {
                                     NumberAnimation {
                                         duration: 200
-                                        easing.type: Easing.OutCubic
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
 
@@ -479,7 +457,7 @@ PanelWindow {
                                     Behavior on color {
                                         ColorAnimation {
                                             duration: 200
-                                            easing.type: Easing.OutCubic
+                                            easing.type: Easing.OutQuart
                                         }
                                     }
                                 }
@@ -503,15 +481,15 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
                                 Behavior on scale {
                                     NumberAnimation {
                                         duration: 200
-                                        easing.type: Easing.OutCubic
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
 
@@ -526,7 +504,7 @@ PanelWindow {
                                     Behavior on rotation {
                                         NumberAnimation {
                                             duration: 200
-                                            easing.type: Easing.OutCubic
+                                            easing.type: Easing.OutQuart
                                         }
                                     }
                                 }
@@ -546,30 +524,19 @@ PanelWindow {
                                 color: topMenuNextArea.containsMouse ? 
                                     ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#161616")
-                                border.color: topMenuNextArea.containsMouse ? 
-                                    ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
-                                    ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525")
-                                border.width: 1
                                 scale: topMenuNextArea.containsMouse ? 1.1 : 1.0
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
-                                    }
-                                }
-                                
-                                Behavior on border.color {
-                                    ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
                                 Behavior on scale {
                                     NumberAnimation {
                                         duration: 200
-                                        easing.type: Easing.OutCubic
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
 
@@ -585,7 +552,7 @@ PanelWindow {
                                     Behavior on color {
                                         ColorAnimation {
                                             duration: 200
-                                            easing.type: Easing.OutCubic
+                                            easing.type: Easing.OutQuart
                                         }
                                     }
                                 }
@@ -617,15 +584,15 @@ PanelWindow {
                 
                 Behavior on x {
                     NumberAnimation { 
-                        duration: 300
-                        easing.type: Easing.OutCubic
+                        duration: 280
+                        easing.type: Easing.OutQuart
                     }
                 }
                 
                 Behavior on opacity {
                     NumberAnimation { 
-                        duration: 300
-                        easing.type: Easing.OutCubic
+                        duration: 280
+                        easing.type: Easing.OutQuart
                     }
                 }
 
@@ -706,15 +673,15 @@ PanelWindow {
                 
                 Behavior on x {
                     NumberAnimation { 
-                        duration: 300
-                        easing.type: Easing.OutCubic
+                        duration: 280
+                        easing.type: Easing.OutQuart
                     }
                 }
                 
                 Behavior on opacity {
                     NumberAnimation { 
-                        duration: 300
-                        easing.type: Easing.OutCubic
+                        duration: 280
+                        easing.type: Easing.OutQuart
                     }
                 }
 
@@ -739,10 +706,6 @@ PanelWindow {
                             color: topMenuOptionArea.containsMouse ? 
                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1e1e1e") : 
                                 ((sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#111111")
-                            border.color: topMenuOptionArea.containsMouse ? 
-                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                                ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525")
-                            border.width: 1
                             radius: 0
                             scale: topMenuOptionArea.containsMouse ? 1.05 : 1.0
                             opacity: (currentTab === 2) ? 1.0 : 0.0
@@ -750,21 +713,14 @@ PanelWindow {
                             Behavior on color {
                                 ColorAnimation {
                                     duration: 200
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                            
-                            Behavior on border.color {
-                                ColorAnimation {
-                                    duration: 200
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.OutQuart
                                 }
                             }
                             
                             Behavior on scale {
                                 NumberAnimation {
                                     duration: 200
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.OutQuart
                                 }
                             }
                             
@@ -773,7 +729,7 @@ PanelWindow {
                                     PauseAnimation { duration: index * 100 }
                                     NumberAnimation {
                                         duration: 300
-                                        easing.type: Easing.OutCubic
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                             }
@@ -796,14 +752,14 @@ PanelWindow {
                                     Behavior on color {
                                         ColorAnimation {
                                             duration: 200
-                                            easing.type: Easing.OutCubic
+                                            easing.type: Easing.OutQuart
                                         }
                                     }
                                     
                                     Behavior on scale {
                                         NumberAnimation {
                                             duration: 200
-                                            easing.type: Easing.OutCubic
+                                            easing.type: Easing.OutQuart
                                         }
                                     }
                                 }

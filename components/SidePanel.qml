@@ -33,7 +33,6 @@ PanelWindow {
         anchors.fill: parent
         color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0d0d0d"
         radius: 0
-        border.width: 0
         
         // Zegar na górze - godzina nad minutą
         Column {
@@ -49,8 +48,15 @@ PanelWindow {
                 font.pixelSize: 20
                 font.family: "JetBrains Mono"
                 font.weight: Font.Bold
-                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 horizontalAlignment: Text.AlignHCenter
+                
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 180
+                        easing.type: Easing.OutQuart
+                    }
+                }
             }
             
             Text {
@@ -59,8 +65,15 @@ PanelWindow {
                 font.pixelSize: 20
                 font.family: "JetBrains Mono"
                 font.weight: Font.Bold
-                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 horizontalAlignment: Text.AlignHCenter
+                
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 180
+                        easing.type: Easing.OutQuart
+                    }
+                }
             }
         }
         
@@ -133,36 +146,36 @@ PanelWindow {
                         
                         Behavior on width {
                             NumberAnimation { 
-                                duration: 300
-                                easing.type: Easing.OutCubic
+                                duration: 280
+                                easing.type: Easing.OutQuart
                             }
                         }
                         
                         Behavior on height {
                             NumberAnimation { 
-                                duration: 300
-                                easing.type: Easing.OutCubic
+                                duration: 280
+                                easing.type: Easing.OutQuart
                             }
                         }
                         
                         Behavior on color {
                             ColorAnimation { 
-                                duration: 250
-                                easing.type: Easing.OutCubic
+                                duration: 180
+                                easing.type: Easing.OutQuart
                             }
                         }
                         
                         Behavior on scale {
                             NumberAnimation { 
-                                duration: 200
-                                easing.type: Easing.OutCubic
+                                duration: 180
+                                easing.type: Easing.OutQuart
                             }
                         }
                         
                         Behavior on opacity {
                             NumberAnimation { 
-                                duration: 200
-                                easing.type: Easing.OutCubic
+                                duration: 180
+                                easing.type: Easing.OutQuart
                             }
                         }
                     }
@@ -176,14 +189,14 @@ PanelWindow {
                             from: 0.5
                             to: 1.1
                             duration: 200
-                            easing.type: Easing.OutCubic
+                            easing.type: Easing.OutQuart
                         }
                         NumberAnimation {
                             target: workspaceLine
                             property: "scale"
                             to: 1.0
                             duration: 150
-                            easing.type: Easing.OutCubic
+                            easing.type: Easing.OutQuart
                         }
                     }
                     
@@ -224,7 +237,7 @@ PanelWindow {
                             property: "scale"
                             to: 1.0
                             duration: 200
-                            easing.type: Easing.OutCubic
+                            easing.type: Easing.OutQuart
                         }
                     }
                 }

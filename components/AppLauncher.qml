@@ -232,164 +232,164 @@ PanelWindow {
     property var colorPresets: {
         "Dark": {
             background: "#0a0a0a",
-            primary: "#3a3a3a",
-            secondary: "#2a2a2a",
+            primary: "#1f1f1f",
+            secondary: "#151515",
             text: "#ffffff",
-            accent: "#4a9eff"
+            accent: "#5dade2"
         },
         "Ocean": {
-            background: "#0d1b26",
-            primary: "#3a4d5a",
-            secondary: "#2a3f4e",
+            background: "#0a1628",
+            primary: "#1a2d3f",
+            secondary: "#152535",
             text: "#ffffff",
-            accent: "#4fc3f7"
+            accent: "#3498db"
         },
         "Forest": {
             background: "#0d1a0d",
-            primary: "#3a4a3a",
-            secondary: "#2a3a2a",
+            primary: "#1a2e1a",
+            secondary: "#152515",
             text: "#ffffff",
-            accent: "#66bb6a"
+            accent: "#52c17a"
         },
         "Violet": {
             background: "#1a0d26",
-            primary: "#4a3a5a",
-            secondary: "#3a2a4a",
+            primary: "#2d1f3f",
+            secondary: "#231a35",
             text: "#ffffff",
-            accent: "#ab47bc"
+            accent: "#9b59b6"
         },
         "Crimson": {
-            background: "#1a0d0d",
-            primary: "#4a3a3a",
-            secondary: "#3a2a2a",
+            background: "#1a0a0a",
+            primary: "#2d1a1a",
+            secondary: "#231515",
             text: "#ffffff",
-            accent: "#ef5350"
+            accent: "#e74c3c"
         },
         "Amber": {
             background: "#1a150d",
-            primary: "#4a453a",
-            secondary: "#3a352a",
+            primary: "#2d251a",
+            secondary: "#231f15",
             text: "#ffffff",
-            accent: "#ffa726"
+            accent: "#f39c12"
         },
         "Teal": {
             background: "#0d1a1a",
-            primary: "#3a4a4a",
-            secondary: "#2a3a3a",
+            primary: "#1a2e2e",
+            secondary: "#152525",
             text: "#ffffff",
-            accent: "#26a69a"
+            accent: "#1abc9c"
         },
         "Rose": {
             background: "#1a0d15",
-            primary: "#4a3a45",
-            secondary: "#3a2a35",
+            primary: "#2d1a23",
+            secondary: "#23151f",
             text: "#ffffff",
-            accent: "#ec407a"
+            accent: "#e91e63"
         },
         "Sunset": {
             background: "#1a150d",
-            primary: "#4a453a",
-            secondary: "#3a352a",
+            primary: "#2d251a",
+            secondary: "#231f15",
             text: "#ffffff",
-            accent: "#ffb74d"
+            accent: "#f39c12"
         },
         "Midnight": {
             background: "#0a0d1a",
-            primary: "#3a3a4a",
-            secondary: "#2a2a3a",
+            primary: "#1a1f2d",
+            secondary: "#151a23",
             text: "#ffffff",
-            accent: "#7986cb"
+            accent: "#6c7a89"
         },
         "Emerald": {
             background: "#0d1a0d",
-            primary: "#3a4a3a",
-            secondary: "#2a3a2a",
+            primary: "#1a2e1a",
+            secondary: "#152515",
             text: "#ffffff",
-            accent: "#4caf50"
+            accent: "#27ae60"
         },
         "Lavender": {
             background: "#1a0d1a",
-            primary: "#4a3a4a",
-            secondary: "#3a2a3a",
+            primary: "#2d1a2d",
+            secondary: "#231523",
             text: "#ffffff",
-            accent: "#ba68c8"
+            accent: "#9b59b6"
         },
         "Sapphire": {
             background: "#0d0d1a",
-            primary: "#3a3a4a",
-            secondary: "#2a2a3a",
+            primary: "#1a1f2d",
+            secondary: "#151a23",
             text: "#ffffff",
-            accent: "#42a5f5"
+            accent: "#3498db"
         },
         "Coral": {
             background: "#1a0d0d",
-            primary: "#4a2a2a",
-            secondary: "#3a1a1a",
+            primary: "#2d1a1a",
+            secondary: "#231515",
             text: "#ffffff",
-            accent: "#ff7043"
+            accent: "#e67e22"
         },
         "Mint": {
             background: "#0d1a0d",
-            primary: "#2a3a2a",
-            secondary: "#1a2a1a",
+            primary: "#1a2e1a",
+            secondary: "#152515",
             text: "#ffffff",
-            accent: "#26d0ce"
+            accent: "#1abc9c"
         },
         "Plum": {
             background: "#1a0d1a",
-            primary: "#3a2a3a",
-            secondary: "#2a1a2a",
+            primary: "#2d1a2d",
+            secondary: "#231523",
             text: "#ffffff",
-            accent: "#9c27b0"
+            accent: "#8e44ad"
         },
         "Gold": {
             background: "#1a150d",
-            primary: "#3a352a",
-            secondary: "#2a251a",
+            primary: "#2d251a",
+            secondary: "#231f15",
             text: "#ffffff",
-            accent: "#ffc107"
+            accent: "#f1c40f"
         },
-        "Slate": {
-            background: "#0d0d0d",
-            primary: "#2a2a2a",
-            secondary: "#1a1a1a",
+        "Monochrome": {
+            background: "#000000",
+            primary: "#1a1a1a",
+            secondary: "#0d0d0d",
             text: "#ffffff",
-            accent: "#607d8b"
+            accent: "#ffffff"
         },
         "Cherry": {
             background: "#1a0a0a",
-            primary: "#3a2a2a",
-            secondary: "#2a1a1a",
+            primary: "#2d1a1a",
+            secondary: "#231515",
             text: "#ffffff",
             accent: "#e91e63"
         },
         "Azure": {
             background: "#0d1a26",
-            primary: "#2a3a4a",
-            secondary: "#1a2a3a",
+            primary: "#1a2d3f",
+            secondary: "#152535",
             text: "#ffffff",
-            accent: "#2196f3"
+            accent: "#3498db"
         },
         "Jade": {
             background: "#0d1a0d",
-            primary: "#2a3a2a",
-            secondary: "#1a2a1a",
+            primary: "#1a2e1a",
+            secondary: "#152515",
             text: "#ffffff",
-            accent: "#00bcd4"
+            accent: "#16a085"
         },
         "Ruby": {
             background: "#1a0a0a",
-            primary: "#3a2a2a",
-            secondary: "#2a1a1a",
+            primary: "#2d1a1a",
+            secondary: "#231515",
             text: "#ffffff",
-            accent: "#f44336"
+            accent: "#c0392b"
         },
         "Indigo": {
             background: "#0d0d1a",
-            primary: "#2a2a3a",
-            secondary: "#1a1a2a",
+            primary: "#1a1f2d",
+            secondary: "#151a23",
             text: "#ffffff",
-            accent: "#3f51b5"
+            accent: "#5b2c6f"
         }
     }
     
@@ -423,22 +423,27 @@ PanelWindow {
     property int wallpaperWidth: Math.floor(baseWidth * 1.3)  // 30% wider
     property int wallpaperHeight: Math.floor(baseHeight * 1.3)  // 30% taller
     
-    implicitWidth: isWallpaperMode ? wallpaperWidth : baseWidth
-    implicitHeight: isWallpaperMode ? wallpaperHeight : baseHeight
+    // Size when in presets mode (40% wider, 30% taller)
+    property bool isPresetsMode: (currentMode === 2 && currentSettingsMode === 4)
+    property int presetsWidth: Math.floor(baseWidth * 1.4)  // 40% wider
+    property int presetsHeight: Math.floor(baseHeight * 1.3)  // 30% taller
+    
+    implicitWidth: isPresetsMode ? presetsWidth : (isWallpaperMode ? wallpaperWidth : baseWidth)
+    implicitHeight: isPresetsMode ? presetsHeight : (isWallpaperMode ? wallpaperHeight : baseHeight)
     width: implicitWidth
     height: implicitHeight
     
     Behavior on implicitWidth {
         NumberAnimation {
-            duration: 300
-            easing.type: Easing.OutCubic
+            duration: 280
+            easing.type: Easing.OutQuart
         }
     }
     
     Behavior on implicitHeight {
         NumberAnimation {
-            duration: 300
-            easing.type: Easing.OutCubic
+            duration: 280
+            easing.type: Easing.OutQuart
         }
     }
     
@@ -464,8 +469,8 @@ PanelWindow {
     
     Behavior on slideOffset {
         NumberAnimation { 
-            duration: 300
-            easing.type: Easing.OutCubic
+            duration: 280
+            easing.type: Easing.OutQuart
         }
     }
     
@@ -477,8 +482,7 @@ PanelWindow {
     property int currentPackageMode: -1  // -1 = Packages option selection, 0 = install source selection (Pacman/AUR), 1 = Pacman search, 2 = AUR search, 3 = remove source selection (Pacman/AUR), 4 = Pacman remove search, 5 = AUR remove search
     property int installSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
     property int removeSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
-    property int currentSettingsMode: -1  // -1 = settings categories, -2 = System settings list, -3 = SharpShell settings list, 0 = Wallpaper, 2 = Bluetooth, 3 = Colors menu, 4 = Presets, 5 = Custom HEX
-    property int currentSettingsCategory: -1  // -1 = categories, 0 = System, 1 = SharpShell
+    property int currentSettingsMode: -1  // -1 = settings list, 0 = Wallpaper, 3 = Colors menu, 4 = Presets, 5 = Custom HEX
     
     // Color theme properties
     property string colorBackground: "#0a0a0a"
@@ -1336,15 +1340,15 @@ PanelWindow {
         
         Behavior on opacity {
             NumberAnimation {
-                duration: 300
-                easing.type: Easing.OutCubic
+                duration: 280
+                easing.type: Easing.OutQuart
             }
         }
         
         Behavior on scale {
             NumberAnimation {
-                duration: 300
-                easing.type: Easing.OutCubic
+                duration: 280
+                easing.type: Easing.OutQuart
             }
         }
         
@@ -1394,22 +1398,11 @@ PanelWindow {
                     if (sharedData) {
                         sharedData.launcherVisible = false
                     }
-                } else if (currentMode === 2 && currentSettingsMode !== -1 && currentSettingsMode !== -2 && currentSettingsMode !== -3) {
-                    // W ustawieniach - wróć do odpowiedniej listy
-                    if (currentSettingsCategory === 0) {
-                        currentSettingsMode = -2
-                    } else if (currentSettingsCategory === 1) {
-                        currentSettingsMode = -3
-                    } else {
-                        currentSettingsMode = -1
-                    }
+                } else if (currentMode === 2 && currentSettingsMode !== -1) {
+                    // W ustawieniach - wróć do listy opcji
+                    currentSettingsMode = -1
                     selectedIndex = 0
                     wallpaperSelectedIndex = 0  // Reset indeksu tapet
-                } else if (currentMode === 2 && (currentSettingsMode === -2 || currentSettingsMode === -3)) {
-                    // W kategorii ustawień - wróć do listy kategorii
-                    currentSettingsMode = -1
-                    currentSettingsCategory = -1
-                    selectedIndex = 0
                 } else if (currentMode === 1 && currentPackageMode === 0) {
                     // Wróć do wyboru opcji Packages
                     currentPackageMode = -1
@@ -1494,24 +1487,10 @@ PanelWindow {
                     }
                     event.accepted = true
                 } else if (currentMode === 2 && currentSettingsMode === -1) {
-                    // W trybie Settings - nawigacja po liście kategorii
+                    // W trybie Settings - nawigacja po liście opcji
                     if (selectedIndex > 0) {
                         selectedIndex--
-                        settingsCategoriesList.positionViewAtIndex(selectedIndex, ListView.Center)
-                    }
-                    event.accepted = true
-                } else if (currentMode === 2 && currentSettingsMode === -2) {
-                    // W System Settings - nawigacja po liście opcji
-                    if (selectedIndex > 0) {
-                        selectedIndex--
-                        systemSettingsList.positionViewAtIndex(selectedIndex, ListView.Center)
-                    }
-                    event.accepted = true
-                } else if (currentMode === 2 && currentSettingsMode === -3) {
-                    // W SharpShell Settings - nawigacja po liście opcji
-                    if (selectedIndex > 0) {
-                        selectedIndex--
-                        sharpshellSettingsList.positionViewAtIndex(selectedIndex, ListView.Center)
+                        settingsList.positionViewAtIndex(selectedIndex, ListView.Center)
                     }
                     event.accepted = true
                 } else if (currentMode === 2 && currentSettingsMode === 0) {
@@ -1580,24 +1559,10 @@ PanelWindow {
                     }
                     event.accepted = true
                 } else if (currentMode === 2 && currentSettingsMode === -1) {
-                    // W trybie Settings - nawigacja po liście kategorii
-                    if (selectedIndex < settingsCategoriesList.count - 1) {
+                    // W trybie Settings - nawigacja po liście opcji
+                    if (selectedIndex < settingsList.count - 1) {
                         selectedIndex++
-                        settingsCategoriesList.positionViewAtIndex(selectedIndex, ListView.Center)
-                    }
-                    event.accepted = true
-                } else if (currentMode === 2 && currentSettingsMode === -2) {
-                    // W System Settings - nawigacja po liście opcji
-                    if (selectedIndex < systemSettingsList.count - 1) {
-                        selectedIndex++
-                        systemSettingsList.positionViewAtIndex(selectedIndex, ListView.Center)
-                    }
-                    event.accepted = true
-                } else if (currentMode === 2 && currentSettingsMode === -3) {
-                    // W SharpShell Settings - nawigacja po liście opcji
-                    if (selectedIndex < sharpshellSettingsList.count - 1) {
-                        selectedIndex++
-                        sharpshellSettingsList.positionViewAtIndex(selectedIndex, ListView.Center)
+                        settingsList.positionViewAtIndex(selectedIndex, ListView.Center)
                     }
                     event.accepted = true
                 } else if (currentMode === 2 && currentSettingsMode === 0) {
@@ -1682,45 +1647,26 @@ PanelWindow {
                     event.accepted = true
                 } else if (currentMode === 1 && currentPackageMode === 0) {
                     // W trybie Pacman search - przekieruj do TextInput
-                    pacmanSearchInput.forceActiveFocus()
+                    if (pacmanSearchInput) pacmanSearchInput.forceActiveFocus()
                     event.accepted = false
                 } else if (currentMode === 1 && currentPackageMode === 1) {
                     // W trybie AUR search - przekieruj do TextInput
-                    aurSearchInput.forceActiveFocus()
+                    if (aurSearchInput) aurSearchInput.forceActiveFocus()
                     event.accepted = false
                 } else if (currentMode === 1 && currentPackageMode === 2) {
                     // W trybie Remove search - przekieruj do TextInput
-                    removeSearchInput.forceActiveFocus()
+                    if (removeSearchInput) removeSearchInput.forceActiveFocus()
                     event.accepted = false
                 } else if (currentMode === 2 && currentSettingsMode === -1) {
-                    // W trybie Settings - wybierz kategorię
-                    if (selectedIndex >= 0 && selectedIndex < settingsCategoriesList.count) {
-                        var category = settingsCategoriesList.model.get(selectedIndex)
-                        currentSettingsCategory = category.categoryId
-                        currentSettingsMode = category.categoryId === 0 ? -2 : -3
-                        selectedIndex = 0
-                    }
-                    event.accepted = true
-                } else if (currentMode === 2 && currentSettingsMode === -2) {
-                    // W System Settings - wybierz opcję
-                    if (selectedIndex >= 0 && selectedIndex < systemSettingsList.count) {
-                        var settingOption = systemSettingsList.model.get(selectedIndex)
+                    // W trybie Settings - wybierz opcję
+                    if (selectedIndex >= 0 && selectedIndex < settingsList.count) {
+                        var settingOption = settingsList.model.get(selectedIndex)
                         currentSettingsMode = settingOption.settingId
                         if (settingOption.settingId === 0) {
                             loadWallpapers()
                             wallpaperSelectedIndex = 0  // Reset indeksu przy otwieraniu
                             wallpapersGrid.currentIndex = 0
-                        } else if (settingOption.settingId === 2) {
-                            checkBluetoothStatus()
-                        }
-                    }
-                    event.accepted = true
-                } else if (currentMode === 2 && currentSettingsMode === -3) {
-                    // W SharpShell Settings - wybierz opcję
-                    if (selectedIndex >= 0 && selectedIndex < sharpshellSettingsList.count) {
-                        var sharpshellOption = sharpshellSettingsList.model.get(selectedIndex)
-                        currentSettingsMode = sharpshellOption.settingId
-                        if (sharpshellOption.settingId === 3) {
+                        } else if (settingOption.settingId === 3) {
                             // Colors - no action needed
                         }
                     }
@@ -1784,11 +1730,11 @@ PanelWindow {
                 }
             } else if (currentMode === 1 && currentPackageMode === 1) {
                 // W trybie Pacman search - przekieruj do TextInput
-                pacmanSearchInput.forceActiveFocus()
+                if (pacmanSearchInput) pacmanSearchInput.forceActiveFocus()
                 event.accepted = false
             } else if (currentMode === 1 && currentPackageMode === 2) {
                 // W trybie AUR search - przekieruj do TextInput
-                aurSearchInput.forceActiveFocus()
+                if (aurSearchInput) aurSearchInput.forceActiveFocus()
                 event.accepted = false
                 } else if (currentMode === 1 && currentPackageMode === 3) {
                     // W wyborze źródła usuwania - nawigacja po liście
@@ -1807,11 +1753,11 @@ PanelWindow {
                     }
                 } else if (currentMode === 1 && currentPackageMode === 4) {
                     // W trybie Pacman remove search - przekieruj do TextInput
-                removeSearchInput.forceActiveFocus()
+                if (removeSearchInput) removeSearchInput.forceActiveFocus()
                 event.accepted = false
                 } else if (currentMode === 1 && currentPackageMode === 5) {
                     // W trybie AUR remove search - przekieruj do TextInput
-                    removeAurSearchInput.forceActiveFocus()
+                    if (removeAurSearchInput) removeAurSearchInput.forceActiveFocus()
                     event.accepted = false
             }
         }
@@ -1834,8 +1780,8 @@ PanelWindow {
             
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 250
-                    easing.type: Easing.OutCubic
+                    duration: 280
+                    easing.type: Easing.OutQuart
                 }
             }
             
@@ -1847,15 +1793,15 @@ PanelWindow {
                             properties: "opacity"
                             from: 0
                             to: 1
-                            duration: 300
-                            easing.type: Easing.OutCubic
+                            duration: 280
+                            easing.type: Easing.OutQuart
                         }
                         NumberAnimation {
                             property: "y"
                             from: 10
                             to: 0
-                            duration: 300
-                            easing.type: Easing.OutCubic
+                            duration: 280
+                            easing.type: Easing.OutQuart
                         }
                     }
                 }
@@ -1867,27 +1813,27 @@ PanelWindow {
                 ListElement { name: "Settings"; description: "Configure launcher"; mode: 2; icon: "󰒓" }
             }
             
-                delegate: Rectangle {
-                    id: modeItem
-                    width: modesList.width
+            delegate: Rectangle {
+                id: modeItem
+                width: modesList.width
                     height: 64
                     color: selectedIndex === index ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent) : (modeItemMouseArea.containsMouse ? ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : colorSecondary) : "transparent")
-                    radius: 0
+                radius: 0
                     scale: (selectedIndex === index || modeItemMouseArea.containsMouse) ? 1.01 : 1.0
-                    
-                    Behavior on color {
+                
+                Behavior on color {
                         ColorAnimation { 
-                            duration: 200
-                            easing.type: Easing.OutCubic
+                            duration: 180
+                            easing.type: Easing.OutQuart
                         }
                     }
                     
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 150
-                            easing.type: Easing.OutCubic
+                            duration: 180
+                            easing.type: Easing.OutQuart
                         }
-                    }
+                }
                 
                 Row {
                     anchors.left: parent.left
@@ -1911,7 +1857,7 @@ PanelWindow {
                             font.pixelSize: 15
                             font.family: "JetBrains Mono"
                             font.weight: Font.Medium
-                            color: selectedIndex === index ? colorText : (modeItemMouseArea.containsMouse ? colorText : "#cccccc")
+                            color: selectedIndex === index ? colorText : (modeItemMouseArea.containsMouse ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc"))
                         }
                         
                         Text {
@@ -1930,7 +1876,7 @@ PanelWindow {
                     
                     onEntered: {
                         if (modesList.currentIndex !== index) {
-                            selectedIndex = index
+                        selectedIndex = index
                             modesList.currentIndex = index
                         }
                     }
@@ -1975,9 +1921,9 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation { 
-                                        duration: 250
-                                        easing.type: Easing.OutCubic
-                                    }
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
+                                }
                                 }
                                 
                                 TextInput {
@@ -2071,8 +2017,8 @@ PanelWindow {
                                             properties: "opacity"
                                             from: 0
                                             to: 1
-                                            duration: 250
-                                            easing.type: Easing.OutCubic
+                                            duration: 220
+                                            easing.type: Easing.OutQuart
                                         }
                                     }
                                 }
@@ -2081,24 +2027,24 @@ PanelWindow {
                                     NumberAnimation {
                                         properties: "opacity"
                                         to: 0
-                                        duration: 200
-                                        easing.type: Easing.InCubic
+                                        duration: 180
+                                        easing.type: Easing.InQuart
                                     }
                                 }
                                 
                                 addDisplaced: Transition {
                                     NumberAnimation {
                                         properties: "y"
-                                        duration: 250
-                                        easing.type: Easing.OutCubic
+                                        duration: 220
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
                                 removeDisplaced: Transition {
                                     NumberAnimation {
                                         properties: "y"
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
@@ -2112,15 +2058,15 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation { 
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
                                 Behavior on scale {
                                     NumberAnimation {
-                                        duration: 150
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
@@ -2142,7 +2088,7 @@ PanelWindow {
                                         font.family: "JetBrains Mono"
                                         font.weight: Font.Medium
                                         font.letterSpacing: 0.1
-                                        color: selectedIndex === index ? colorText : (appItemMouseArea.containsMouse ? colorText : "#d0d0d0")
+                                        color: selectedIndex === index ? colorText : (appItemMouseArea.containsMouse ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#d0d0d0"))
                                     }
 
                                     Text {
@@ -2163,7 +2109,7 @@ PanelWindow {
                                     
                                     onEntered: {
                                         if (appsList.currentIndex !== index) {
-                                            selectedIndex = index
+                                        selectedIndex = index
                                             appsList.currentIndex = index
                                         }
                                     }
@@ -2223,15 +2169,15 @@ PanelWindow {
                     
                     Behavior on color {
                         ColorAnimation { 
-                            duration: 200
-                            easing.type: Easing.OutCubic
+                            duration: 180
+                            easing.type: Easing.OutQuart
                         }
                     }
                     
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 150
-                            easing.type: Easing.OutCubic
+                            duration: 180
+                            easing.type: Easing.OutQuart
                         }
                     }
                     
@@ -2257,7 +2203,7 @@ PanelWindow {
                                 font.pixelSize: 15
                             font.family: "JetBrains Mono"
                             font.weight: Font.Medium
-                            color: selectedIndex === index ? colorText : (packageOptionItemMouseArea.containsMouse ? colorText : "#cccccc")
+                            color: selectedIndex === index ? colorText : (packageOptionItemMouseArea.containsMouse ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc"))
                         }
                         
                         Text {
@@ -2276,7 +2222,7 @@ PanelWindow {
                         
                         onEntered: {
                             if (packagesOptionsList.currentIndex !== index) {
-                                selectedIndex = index
+                            selectedIndex = index
                                 packagesOptionsList.currentIndex = index
                             }
                         }
@@ -2327,15 +2273,15 @@ PanelWindow {
                     
                     Behavior on color {
                         ColorAnimation { 
-                            duration: 200
-                            easing.type: Easing.OutCubic
+                            duration: 180
+                            easing.type: Easing.OutQuart
                         }
                     }
                     
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 150
-                            easing.type: Easing.OutCubic
+                            duration: 180
+                            easing.type: Easing.OutQuart
                         }
                     }
                     
@@ -2361,7 +2307,7 @@ PanelWindow {
                                 font.pixelSize: 14
                                 font.family: "JetBrains Mono"
                                 font.weight: Font.Medium
-                                color: selectedIndex === index ? colorText : "#cccccc"
+                                color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc")
                             }
                             
                             Text {
@@ -2409,7 +2355,7 @@ PanelWindow {
                     radius: 0
                     
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                     }
                 }
             }
@@ -2435,7 +2381,7 @@ PanelWindow {
                         radius: 0
                         
                         Behavior on color {
-                            ColorAnimation { duration: 200 }
+                            ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                         }
                         
                         TextInput {
@@ -2505,7 +2451,7 @@ PanelWindow {
                             text: "Search packages (pacman)..."
                             font.pixelSize: 14
                             font.family: "JetBrains Mono"
-                            color: "#666666"
+                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             verticalAlignment: Text.AlignVCenter
                             visible: pacmanSearchInput.text.length === 0
                             z: 5
@@ -2530,17 +2476,17 @@ PanelWindow {
                             scale: (selectedIndex === index || packageItemMouseArea.containsMouse) ? 1.01 : 1.0
                             
                             Behavior on color {
-                                ColorAnimation { 
-                                    duration: 200
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                            
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 150
-                                    easing.type: Easing.OutCubic
-                                }
+                        ColorAnimation { 
+                            duration: 180
+                            easing.type: Easing.OutQuart
+                        }
+                    }
+                    
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 180
+                            easing.type: Easing.OutQuart
+                        }
                             }
                             
                             property string packageName: model.name || "Unknown"
@@ -2557,7 +2503,7 @@ PanelWindow {
                                     font.pixelSize: 14
                                     font.family: "JetBrains Mono"
                                     font.weight: Font.Medium
-                                    color: selectedIndex === index ? colorText : "#cccccc"
+                                    color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc")
                                 }
                                 
                                 Text {
@@ -2615,7 +2561,7 @@ PanelWindow {
                         radius: 0
                         
                         Behavior on color {
-                            ColorAnimation { duration: 200 }
+                            ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                         }
                         
                         TextInput {
@@ -2685,7 +2631,7 @@ PanelWindow {
                             text: "Search packages (AUR)..."
                             font.pixelSize: 14
                             font.family: "JetBrains Mono"
-                            color: "#666666"
+                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             verticalAlignment: Text.AlignVCenter
                             visible: aurSearchInput.text.length === 0
                             z: 5
@@ -2710,17 +2656,17 @@ PanelWindow {
                             scale: (selectedIndex === index || aurPackageItemMouseArea.containsMouse) ? 1.01 : 1.0
                             
                             Behavior on color {
-                                ColorAnimation { 
-                                    duration: 200
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                            
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 150
-                                    easing.type: Easing.OutCubic
-                                }
+                        ColorAnimation { 
+                            duration: 180
+                            easing.type: Easing.OutQuart
+                        }
+                    }
+                    
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 180
+                            easing.type: Easing.OutQuart
+                        }
                             }
                             
                             property string packageName: model.name || "Unknown"
@@ -2737,7 +2683,7 @@ PanelWindow {
                                     font.pixelSize: 14
                                     font.family: "JetBrains Mono"
                                     font.weight: Font.Medium
-                                    color: selectedIndex === index ? colorText : "#cccccc"
+                                    color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc")
                                 }
                                 
                                 Text {
@@ -2798,15 +2744,15 @@ PanelWindow {
                     
                     Behavior on color {
                         ColorAnimation { 
-                            duration: 200
-                            easing.type: Easing.OutCubic
+                            duration: 180
+                            easing.type: Easing.OutQuart
                         }
                     }
                     
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 150
-                            easing.type: Easing.OutCubic
+                            duration: 180
+                            easing.type: Easing.OutQuart
                         }
                     }
                     
@@ -2832,7 +2778,7 @@ PanelWindow {
                                 font.pixelSize: 14
                                 font.family: "JetBrains Mono"
                                 font.weight: Font.Medium
-                                color: selectedIndex === index ? colorText : "#cccccc"
+                                color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc")
                             }
                             
                             Text {
@@ -2882,7 +2828,7 @@ PanelWindow {
                     radius: 0
                     
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                     }
                 }
             }
@@ -2908,7 +2854,7 @@ PanelWindow {
                         radius: 0
                         
                         Behavior on color {
-                            ColorAnimation { duration: 200 }
+                            ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                         }
                         
                         TextInput {
@@ -2978,7 +2924,7 @@ PanelWindow {
                             text: "Search installed packages..."
                             font.pixelSize: 14
                             font.family: "JetBrains Mono"
-                            color: "#666666"
+                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             verticalAlignment: Text.AlignVCenter
                             visible: removeSearchInput.text.length === 0
                             z: 5
@@ -3003,17 +2949,17 @@ PanelWindow {
                             scale: (selectedIndex === index || installedPackageItemMouseArea.containsMouse) ? 1.01 : 1.0
                             
                             Behavior on color {
-                                ColorAnimation { 
-                                    duration: 200
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                            
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 150
-                                    easing.type: Easing.OutCubic
-                                }
+                        ColorAnimation { 
+                            duration: 180
+                            easing.type: Easing.OutQuart
+                        }
+                    }
+                    
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 180
+                            easing.type: Easing.OutQuart
+                        }
                             }
                             
                             property string packageName: model.name || "Unknown"
@@ -3030,7 +2976,7 @@ PanelWindow {
                                     font.pixelSize: 14
                                     font.family: "JetBrains Mono"
                                     font.weight: Font.Medium
-                                    color: selectedIndex === index ? colorText : "#cccccc"
+                                    color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc")
                                 }
                                 
                                 Text {
@@ -3092,7 +3038,7 @@ PanelWindow {
                         radius: 0
                         
                         Behavior on color {
-                            ColorAnimation { duration: 200 }
+                            ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                         }
                         
                         TextInput {
@@ -3158,7 +3104,7 @@ PanelWindow {
                             text: "Search installed AUR packages..."
                             font.pixelSize: 14
                             font.family: "JetBrains Mono"
-                            color: "#666666"
+                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             verticalAlignment: Text.AlignVCenter
                             visible: removeAurSearchInput.text.length === 0
                             z: 5
@@ -3183,17 +3129,17 @@ PanelWindow {
                             scale: (selectedIndex === index || installedAurPackageItemMouseArea.containsMouse) ? 1.01 : 1.0
                             
                             Behavior on color {
-                                ColorAnimation { 
-                                    duration: 200
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                            
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 150
-                                    easing.type: Easing.OutCubic
-                                }
+                        ColorAnimation { 
+                            duration: 180
+                            easing.type: Easing.OutQuart
+                        }
+                    }
+                    
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 180
+                            easing.type: Easing.OutQuart
+                        }
                             }
                             
                             property string packageName: model.name || "Unknown"
@@ -3210,7 +3156,7 @@ PanelWindow {
                                     font.pixelSize: 14
                                     font.family: "JetBrains Mono"
                                     font.weight: Font.Medium
-                                    color: selectedIndex === index ? colorText : "#cccccc"
+                                    color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc")
                                 }
                                 
                                 Text {
@@ -3255,219 +3201,37 @@ PanelWindow {
                 enabled: true
                 z: 1
                 
-                // Lista kategorii ustawień
+                // Lista ustawień (jedna prosta lista)
                 ListView {
-                    id: settingsCategoriesList
+                    id: settingsList
                     anchors.fill: parent
                     anchors.margins: 18
                     visible: currentSettingsMode === -1
                     clip: true
                     
                     model: ListModel {
-                        id: settingsCategoriesModel
-                        ListElement { name: "System Settings"; description: "System configuration"; icon: "󰒓"; categoryId: 0 }
-                        ListElement { name: "SharpShell Settings"; description: "SharpShell customization"; icon: "󰏘"; categoryId: 1 }
-                    }
-                    
-                    delegate: Rectangle {
-                        width: settingsCategoriesList.width
-                        height: 60
-                        color: (selectedIndex === index) ? ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary) : (settingsCategoryMouseArea.containsMouse ? ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : colorSecondary) : "transparent")
-                        scale: settingsCategoryMouseArea.containsMouse ? 1.02 : 1.0
-                        
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                        
-                        Row {
-                            anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 12
-                            
-                            Text {
-                                text: model.icon
-                                font.pixelSize: 24
-                                color: (selectedIndex === index) ? ((sharedData && sharedData.colorText) ? sharedData.colorText : colorText) : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 30
-                                horizontalAlignment: Text.AlignHCenter
-                            }
-                            
-                            Column {
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 2
-                                
-                                Text {
-                                    text: model.name
-                                    font.pixelSize: 14
-                                    font.family: "JetBrains Mono"
-                                    font.weight: Font.Medium
-                                    color: (selectedIndex === index) ? ((sharedData && sharedData.colorText) ? sharedData.colorText : colorText) : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                }
-                                
-                                Text {
-                                    text: model.description
-                                    font.pixelSize: 11
-                                    font.family: "JetBrains Mono"
-                                    color: ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                }
-                            }
-                        }
-                        
-                        MouseArea {
-                            id: settingsCategoryMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            
-                            onEntered: {
-                                selectedIndex = index
-                            }
-                            
-                            onClicked: {
-                                currentSettingsCategory = model.categoryId
-                                currentSettingsMode = model.categoryId === 0 ? -2 : -3
-                                selectedIndex = 0
-                            }
-                        }
-                    }
-                }
-                
-                // Back buttons for System Settings and SharpShell Settings
-                Rectangle {
-                    id: systemSettingsBackButton
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 50
-                    color: "transparent"
-                    visible: currentSettingsMode === -2
-                    
-                    Row {
-                        anchors.fill: parent
-                        anchors.margins: 12
-                        spacing: 12
-                        
-                        Rectangle {
-                            width: 30
-                            height: 30
-                            color: systemSettingsBackMouseArea.containsMouse ? colorPrimary : "transparent"
-                            radius: 0
-                            anchors.verticalCenter: parent.verticalCenter
-                            
-                            Text {
-                                text: "󰁍"
-                                font.pixelSize: 18
-                                color: colorText
-                                anchors.centerIn: parent
-                            }
-                            
-                            MouseArea {
-                                id: systemSettingsBackMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    currentSettingsMode = -1
-                                    currentSettingsCategory = -1
-                                    selectedIndex = 0
-                                }
-                            }
-                        }
-                        
-                        Text {
-                            text: "System Settings"
-                            font.pixelSize: 16
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Medium
-                            color: colorText
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                }
-                
-                Rectangle {
-                    id: sharpshellSettingsBackButton
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 50
-                    color: "transparent"
-                    visible: currentSettingsMode === -3
-                    
-                    Row {
-                        anchors.fill: parent
-                        anchors.margins: 12
-                        spacing: 12
-                        
-                        Rectangle {
-                            width: 30
-                            height: 30
-                            color: sharpshellSettingsBackMouseArea.containsMouse ? colorPrimary : "transparent"
-                            radius: 0
-                            anchors.verticalCenter: parent.verticalCenter
-                            
-                            Text {
-                                text: "󰁍"
-                                font.pixelSize: 18
-                                color: colorText
-                                anchors.centerIn: parent
-                            }
-                            
-                            MouseArea {
-                                id: sharpshellSettingsBackMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    currentSettingsMode = -1
-                                    currentSettingsCategory = -1
-                                    selectedIndex = 0
-                                }
-                            }
-                        }
-                        
-                        Text {
-                            text: "SharpShell Settings"
-                            font.pixelSize: 16
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Medium
-                            color: colorText
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                }
-                
-                // System Settings list
-                ListView {
-                    id: systemSettingsList
-                    anchors.top: systemSettingsBackButton.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 18
-                    visible: currentSettingsMode === -2
-                    clip: true
-                    
-                    model: ListModel {
-                        id: systemSettingsModel
+                        id: settingsModel
                         ListElement { name: "Wallpaper"; description: "Change wallpaper with swww"; icon: "󰸉"; settingId: 0 }
-                        ListElement { name: "Bluetooth"; description: "Manage Bluetooth devices"; icon: "󰂯"; settingId: 2 }
+                        ListElement { name: "Colors"; description: "Customize color theme"; icon: "󰏘"; settingId: 3 }
                     }
                     
                     delegate: Rectangle {
-                        width: systemSettingsList.width
+                        width: settingsList.width
                         height: 60
-                        color: (selectedIndex === index) ? ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary) : (systemSettingsMouseArea.containsMouse ? ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : colorSecondary) : "transparent")
-                        scale: systemSettingsMouseArea.containsMouse ? 1.02 : 1.0
+                        color: (selectedIndex === index) ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent) : (settingsItemMouseArea.containsMouse ? ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : colorSecondary) : "transparent")
+                        scale: settingsItemMouseArea.containsMouse ? 1.02 : 1.0
+                        
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 180
+                                easing.type: Easing.OutQuart
+                            }
+                        }
                         
                         Behavior on scale {
                             NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutCubic
+                                duration: 180
+                                easing.type: Easing.OutQuart
                             }
                         }
                         
@@ -3507,7 +3271,7 @@ PanelWindow {
                         }
                         
                         MouseArea {
-                            id: systemSettingsMouseArea
+                            id: settingsItemMouseArea
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -3520,93 +3284,10 @@ PanelWindow {
                                 currentSettingsMode = model.settingId
                                 if (model.settingId === 0) {
                                     loadWallpapers()
-                                } else if (model.settingId === 2) {
-                                    checkBluetoothStatus()
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // SharpShell Settings list
-                ListView {
-                    id: sharpshellSettingsList
-                    anchors.top: sharpshellSettingsBackButton.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 18
-                    visible: currentSettingsMode === -3
-                    clip: true
-                    
-                    model: ListModel {
-                        id: sharpshellSettingsModel
-                        ListElement { name: "Colors"; description: "Customize color theme"; icon: "󰏘"; settingId: 3 }
-                    }
-                    
-                    delegate: Rectangle {
-                        width: sharpshellSettingsList.width
-                        height: 60
-                        color: (selectedIndex === index) ? ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary) : (sharpshellSettingsMouseArea.containsMouse ? ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : colorSecondary) : "transparent")
-                        scale: sharpshellSettingsMouseArea.containsMouse ? 1.02 : 1.0
-                        
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                        
-                        Row {
-                            anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 12
-                            
-                            Text {
-                                text: model.icon
-                                font.pixelSize: 24
-                                color: (selectedIndex === index) ? ((sharedData && sharedData.colorText) ? sharedData.colorText : colorText) : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 30
-                                horizontalAlignment: Text.AlignHCenter
-                            }
-                            
-                            Column {
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 2
-                                
-                                Text {
-                                    text: model.name
-                                    font.pixelSize: 14
-                                    font.family: "JetBrains Mono"
-                                    font.weight: Font.Medium
-                                    color: (selectedIndex === index) ? ((sharedData && sharedData.colorText) ? sharedData.colorText : colorText) : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                }
-                                
-                                Text {
-                                    text: model.description
-                                    font.pixelSize: 11
-                                    font.family: "JetBrains Mono"
-                                    color: ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                }
-                            }
-                        }
-                        
-                        MouseArea {
-                            id: sharpshellSettingsMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            
-                            onEntered: {
-                                selectedIndex = index
-                            }
-                            
-                            onClicked: {
-                                currentSettingsMode = model.settingId
-                                if (model.settingId === 3) {
-                                    // Colors - go to Colors menu (Presets/Custom HEX)
-                                    selectedIndex = 0
+                                    wallpaperSelectedIndex = 0
+                                    wallpapersGrid.currentIndex = 0
+                                } else if (model.settingId === 3) {
+                                    // Colors - no action needed
                                 }
                             }
                         }
@@ -3654,8 +3335,7 @@ PanelWindow {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        currentSettingsMode = -2  // Back to System Settings
-                                        currentSettingsCategory = 0
+                                        currentSettingsMode = -1  // Back to Settings list
                                         selectedIndex = 0
                                     }
                                 }
@@ -3716,15 +3396,15 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
                                 Behavior on scale {
                                     NumberAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
@@ -3785,7 +3465,7 @@ PanelWindow {
                             text: "No wallpapers found"
                             font.pixelSize: 14
                             font.family: "JetBrains Mono"
-                            color: "#666666"
+                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                         
@@ -3840,8 +3520,7 @@ PanelWindow {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        currentSettingsMode = -2  // Back to System Settings
-                                        currentSettingsCategory = 0
+                                        currentSettingsMode = -1  // Back to Settings list
                                         selectedIndex = 0
                                     }
                                 }
@@ -3897,7 +3576,7 @@ PanelWindow {
                                     Behavior on x {
                                         NumberAnimation {
                                             duration: 200
-                                            easing.type: Easing.OutCubic
+                                            easing.type: Easing.OutQuart
                                         }
                                     }
                                 }
@@ -3910,8 +3589,8 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                             }
@@ -3920,7 +3599,7 @@ PanelWindow {
                                 text: bluetoothEnabled ? "ON" : "OFF"
                                 font.pixelSize: 12
                                 font.family: "JetBrains Mono"
-                                color: bluetoothEnabled ? "#4a9eff" : "#666666"
+                                color: bluetoothEnabled ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666")
                             }
                         }
                         
@@ -3962,7 +3641,7 @@ PanelWindow {
                             Behavior on color {
                                 ColorAnimation {
                                     duration: 200
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.OutQuart
                                 }
                             }
                         }
@@ -4047,7 +3726,7 @@ PanelWindow {
                                         Behavior on color {
                                             ColorAnimation {
                                                 duration: 200
-                                                easing.type: Easing.OutCubic
+                                                easing.type: Easing.OutQuart
                                             }
                                         }
                                     }
@@ -4135,8 +3814,7 @@ PanelWindow {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        currentSettingsMode = -3  // Back to SharpShell Settings
-                                        currentSettingsCategory = 1
+                                        currentSettingsMode = -1  // Back to Settings list
                                         selectedIndex = 0
                                     }
                                 }
@@ -4179,7 +3857,7 @@ PanelWindow {
                             Behavior on scale {
                                 NumberAnimation {
                                     duration: 150
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.OutQuart
                                 }
                             }
                             
@@ -4191,7 +3869,7 @@ PanelWindow {
                                 Text {
                                     text: model.icon
                                     font.pixelSize: 24
-                                    color: (selectedIndex === index) ? colorText : "#888888"
+                                    color: (selectedIndex === index) ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.4) : "#888888")
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 30
                                     horizontalAlignment: Text.AlignHCenter
@@ -4206,7 +3884,7 @@ PanelWindow {
                                         font.pixelSize: 14
                                         font.family: "JetBrains Mono"
                                         font.weight: Font.Medium
-                                        color: (selectedIndex === index) ? colorText : "#cccccc"
+                                        color: (selectedIndex === index) ? colorText : ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#cccccc")
                                     }
                                     
                                     Text {
@@ -4335,7 +4013,7 @@ PanelWindow {
                                     spacing: 12
                                     
                                     Repeater {
-                                        model: ["Dark", "Ocean", "Forest", "Violet", "Crimson", "Amber", "Teal", "Rose", "Sunset", "Midnight", "Emerald", "Lavender", "Sapphire", "Coral", "Mint", "Plum", "Gold", "Slate", "Cherry", "Azure", "Jade", "Ruby", "Indigo"]
+                                        model: ["Dark", "Ocean", "Forest", "Violet", "Crimson", "Amber", "Teal", "Rose", "Sunset", "Midnight", "Emerald", "Lavender", "Sapphire", "Coral", "Mint", "Plum", "Gold", "Monochrome", "Cherry", "Azure", "Jade", "Ruby", "Indigo"]
                                         
                                         Rectangle {
                                             width: (parent.width - 12) / 2
@@ -4344,29 +4022,10 @@ PanelWindow {
                                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary) : 
                                                 ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : colorSecondary)
                                             radius: 0
-                                            border.width: presetMouseArea.containsMouse ? 3 : 2
-                                            border.color: presetMouseArea.containsMouse ?
-                                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent) :
-                                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary)
-                                            
                                             Behavior on color {
                                                 ColorAnimation {
-                                                    duration: 150
-                                                    easing.type: Easing.OutCubic
-                                                }
-                                            }
-                                            
-                                            Behavior on border.color {
-                                                ColorAnimation {
-                                                    duration: 150
-                                                    easing.type: Easing.OutCubic
-                                                }
-                                            }
-                                            
-                                            Behavior on border.width {
-                                                NumberAnimation {
-                                                    duration: 150
-                                                    easing.type: Easing.OutCubic
+                                                    duration: 180
+                                                    easing.type: Easing.OutQuart
                                                 }
                                             }
                                             
@@ -4374,8 +4033,8 @@ PanelWindow {
                                             
                                             Behavior on scale {
                                                 NumberAnimation {
-                                                    duration: 150
-                                                    easing.type: Easing.OutCubic
+                                                    duration: 180
+                                                    easing.type: Easing.OutQuart
                                                 }
                                             }
                                             
@@ -4398,8 +4057,6 @@ PanelWindow {
                                                             var preset = appLauncherRoot.colorPresets[modelData]
                                                             return preset ? preset.background : "#000000"
                                                         }
-                                                        border.width: 1
-                                                        border.color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
                                                     }
                                                     Rectangle {
                                                         width: 50
@@ -4409,8 +4066,6 @@ PanelWindow {
                                                             var preset = appLauncherRoot.colorPresets[modelData]
                                                             return preset ? preset.primary : "#000000"
                                                         }
-                                                        border.width: 1
-                                                        border.color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
                                                     }
                                                     Rectangle {
                                                         width: 50
@@ -4420,8 +4075,6 @@ PanelWindow {
                                                             var preset = appLauncherRoot.colorPresets[modelData]
                                                             return preset ? preset.secondary : "#000000"
                                                         }
-                                                        border.width: 1
-                                                        border.color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
                                                     }
                                                     Rectangle {
                                                         width: 50
@@ -4431,8 +4084,6 @@ PanelWindow {
                                                             var preset = appLauncherRoot.colorPresets[modelData]
                                                             return preset ? preset.text : "#000000"
                                                         }
-                                                        border.width: 1
-                                                        border.color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
                                                     }
                                                     Rectangle {
                                                         width: 50
@@ -4442,8 +4093,6 @@ PanelWindow {
                                                             var preset = appLauncherRoot.colorPresets[modelData]
                                                             return preset ? preset.accent : "#000000"
                                                         }
-                                                        border.width: 1
-                                                        border.color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
                                                     }
                                                 }
                                                 
@@ -4578,8 +4227,8 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 150
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
@@ -4594,8 +4243,6 @@ PanelWindow {
                                         color: colorBackground
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorSecondary
                                     }
                                     
                                     Column {
@@ -4615,7 +4262,7 @@ PanelWindow {
                                             text: colorBackground
                                             font.pixelSize: 12
                                             font.family: "JetBrains Mono"
-                                            color: "#999999"
+                                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.6) : "#999999"
                                         }
                                     }
                                     
@@ -4631,20 +4278,10 @@ PanelWindow {
                                         color: colorInput1.activeFocus ? colorSecondary : colorPrimary
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorInput1.activeFocus ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent) : colorSecondary
-                                        
                                         Behavior on color {
                                             ColorAnimation {
                                                 duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Behavior on border.color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
+                                                easing.type: Easing.OutQuart
                                             }
                                         }
                                         
@@ -4749,8 +4386,8 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 150
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
@@ -4765,8 +4402,6 @@ PanelWindow {
                                         color: colorPrimary
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorSecondary
                                     }
                                     
                                     Column {
@@ -4786,7 +4421,7 @@ PanelWindow {
                                             text: colorPrimary
                                             font.pixelSize: 12
                                             font.family: "JetBrains Mono"
-                                            color: "#999999"
+                                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.6) : "#999999"
                                         }
                                     }
                                     
@@ -4802,20 +4437,10 @@ PanelWindow {
                                         color: colorInput2.activeFocus ? colorSecondary : colorPrimary
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorInput2.activeFocus ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent) : colorSecondary
-                                        
                                         Behavior on color {
                                             ColorAnimation {
                                                 duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Behavior on border.color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
+                                                easing.type: Easing.OutQuart
                                             }
                                         }
                                         
@@ -4912,8 +4537,8 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 150
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
@@ -4928,8 +4553,6 @@ PanelWindow {
                                         color: colorSecondary
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorSecondary
                                     }
                                     
                                     Column {
@@ -4949,7 +4572,7 @@ PanelWindow {
                                             text: colorSecondary
                                             font.pixelSize: 12
                                             font.family: "JetBrains Mono"
-                                            color: "#999999"
+                                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.6) : "#999999"
                                         }
                                     }
                                     
@@ -4965,20 +4588,10 @@ PanelWindow {
                                         color: colorInput3.activeFocus ? colorSecondary : colorPrimary
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorInput3.activeFocus ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent) : colorSecondary
-                                        
                                         Behavior on color {
                                             ColorAnimation {
                                                 duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Behavior on border.color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
+                                                easing.type: Easing.OutQuart
                                             }
                                         }
                                         
@@ -5075,8 +4688,8 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 150
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
@@ -5091,8 +4704,6 @@ PanelWindow {
                                         color: colorText
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorSecondary
                                     }
                                     
                                     Column {
@@ -5112,7 +4723,7 @@ PanelWindow {
                                             text: colorText
                                             font.pixelSize: 12
                                             font.family: "JetBrains Mono"
-                                            color: "#999999"
+                                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.6) : "#999999"
                                         }
                                     }
                                     
@@ -5128,20 +4739,10 @@ PanelWindow {
                                         color: colorInput4.activeFocus ? colorSecondary : colorPrimary
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorInput4.activeFocus ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent) : colorSecondary
-                                        
                                         Behavior on color {
                                             ColorAnimation {
                                                 duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Behavior on border.color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
+                                                easing.type: Easing.OutQuart
                                             }
                                         }
                                         
@@ -5238,8 +4839,8 @@ PanelWindow {
                                 
                                 Behavior on color {
                                     ColorAnimation {
-                                        duration: 150
-                                        easing.type: Easing.OutCubic
+                                        duration: 180
+                                        easing.type: Easing.OutQuart
                                     }
                                 }
                                 
@@ -5254,8 +4855,6 @@ PanelWindow {
                                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorSecondary
                                     }
                                     
                                     Column {
@@ -5275,7 +4874,7 @@ PanelWindow {
                                             text: colorAccent
                                             font.pixelSize: 12
                                             font.family: "JetBrains Mono"
-                                            color: "#999999"
+                                            color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.6) : "#999999"
                                         }
                                     }
                                     
@@ -5291,20 +4890,10 @@ PanelWindow {
                                         color: colorInput5.activeFocus ? colorSecondary : colorPrimary
                                         radius: 0
                                         anchors.verticalCenter: parent.verticalCenter
-                                        border.width: 2
-                                        border.color: colorInput5.activeFocus ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : colorAccent) : colorSecondary
-                                        
                                         Behavior on color {
                                             ColorAnimation {
                                                 duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Behavior on border.color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
+                                                easing.type: Easing.OutQuart
                                             }
                                         }
                                         
