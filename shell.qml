@@ -237,6 +237,7 @@ ShellRoot {
                     lockScreenFunction: root.lockScreen
                     settingsFunction: root.openSettings
                     launcherFunction: root.openLauncher
+                    clipboardFunction: root.openClipboardManager
                 }
                 
                 // Wykrywacz górnej krawędzi - wykrywa najechanie myszką

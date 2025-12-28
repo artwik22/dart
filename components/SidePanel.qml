@@ -19,8 +19,8 @@ PanelWindow {
     anchors.bottom: (sharedData && sharedData.sidebarPosition === "left") ? true : false
     
     // Dynamic dimensions based on position
-    implicitWidth: (sharedData && sharedData.sidebarPosition === "top") ? undefined : 36
-    implicitHeight: (sharedData && sharedData.sidebarPosition === "top") ? 36 : undefined
+    implicitWidth: sharedData && sharedData.sidebarPosition === "left" ? 36 : 0
+    implicitHeight: sharedData && sharedData.sidebarPosition === "top" ? 36 : 0
     color: "transparent"
     visible: sharedData && sharedData.sidebarVisible !== undefined ? sharedData.sidebarVisible : true
     
@@ -35,8 +35,8 @@ PanelWindow {
     margins {
         left: 0
         top: 0
-        bottom: (sharedData && sharedData.sidebarPosition === "left") ? 0 : undefined
-        right: (sharedData && sharedData.sidebarPosition === "top") ? 0 : undefined
+        bottom: (sharedData && sharedData.sidebarPosition === "left") ? 0 : 0
+        right: (sharedData && sharedData.sidebarPosition === "top") ? 0 : 0
     }
     
     // No global MouseArea needed - individual MouseAreas handle clicks
@@ -706,15 +706,9 @@ PanelWindow {
             z: 10001
             onClicked: {
                 console.log("=== CLIPBOARD BUTTON CLICKED ===")
-                // Execute the script to open clipboard manager
-                var scriptPath = "/home/artwik/.config/sharpshell/open-clipboard.sh"
-                if (projectPath && projectPath.length > 0 && projectPath !== "/tmp/sharpshell") {
-                    scriptPath = projectPath + "/open-clipboard.sh"
+                if (clipboardFunction) {
+                    clipboardFunction()
                 }
-                console.log("Executing script:", scriptPath)
-                // Execute script using the same pattern as cava script
-                var absScriptPath = scriptPath
-                Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["bash", "' + absScriptPath + '"]; running: true }', sidePanel)
             }
             onPressed: {
                 console.log("Clipboard button pressed - MouseArea received press event")
@@ -732,6 +726,7 @@ PanelWindow {
     property var lockScreenFunction
     property var settingsFunction
     property var launcherFunction
+    property var clipboardFunction
     
     // --- Music Visualizer ---
     property var cavaValues: []
