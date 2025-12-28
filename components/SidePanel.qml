@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
+import QtQuick.Shapes
 
 PanelWindow {
     id: sidePanel
@@ -19,14 +20,21 @@ PanelWindow {
     
     implicitWidth: 36
     color: "transparent"
+    visible: sharedData && sharedData.sidebarVisible !== undefined ? sharedData.sidebarVisible : true
+    
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "qssidepanel"
+    exclusiveZone: (sharedData && sharedData.sidebarVisible !== undefined && sharedData.sidebarVisible) ? implicitWidth : 0  // Reserve 36px space so windows don't overlap
+    
+    property var sharedData: null
     
     margins {
         left: 0
         top: 0
         bottom: 0
     }
-
-    property var sharedData: null
+    
+    // No global MouseArea needed - individual MouseAreas handle clicks
     
     Rectangle {
         id: sidePanelRect
@@ -205,6 +213,7 @@ PanelWindow {
                         anchors.fill: parent
                         anchors.margins: -5
                         hoverEnabled: true
+                        propagateComposedEvents: false
                         
                         onEntered: {
                             workspaceLine.scale = 1.25
@@ -252,7 +261,8 @@ PanelWindow {
             visible: true
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 15
+            anchors.bottomMargin: 48  // Space for button below
+            z: 1
             
             Repeater {
                 id: visualizerBarsRepeater
@@ -285,6 +295,96 @@ PanelWindow {
             }
         }
         
+    }
+    
+    // Clipboard Manager Button - OUTSIDE sidePanelRect to ensure it's clickable
+    Item {
+        id: clipboardButtonContainer
+        width: 40
+        height: 40
+        anchors.horizontalCenter: sidePanelRect.horizontalCenter
+        anchors.bottom: sidePanelRect.bottom
+        anchors.bottomMargin: 8
+        z: 10000  // Very high z to ensure it's on top of everything
+        visible: true
+        enabled: true
+        
+        Rectangle {
+            id: clipboardButton
+            width: 28
+            height: 28
+            anchors.centerIn: parent
+            radius: 0
+            color: clipboardButtonMouseArea.containsMouse ? 
+                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
+                ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
+            
+            property real buttonScale: clipboardButtonMouseArea.pressed ? 0.9 : (clipboardButtonMouseArea.containsMouse ? 1.1 : 1.0)
+            
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                    easing.type: Easing.OutQuart
+                }
+            }
+            
+            Behavior on buttonScale {
+                NumberAnimation {
+                    duration: 150
+                    easing.type: Easing.OutQuart
+                }
+            }
+            
+            scale: buttonScale
+            
+            Text {
+                text: "󰨸"
+                font.pixelSize: 16
+                anchors.centerIn: parent
+                color: clipboardButtonMouseArea.containsMouse ? 
+                    ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
+                    ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
+                
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 200
+                        easing.type: Easing.OutQuart
+                    }
+                }
+            }
+        }
+        
+        MouseArea {
+            id: clipboardButtonMouseArea
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            enabled: true
+            propagateComposedEvents: false
+            acceptedButtons: Qt.LeftButton
+            z: 10001
+            onClicked: {
+                console.log("=== CLIPBOARD BUTTON CLICKED ===")
+                // Execute the script to open clipboard manager
+                var scriptPath = "/home/artwik/.config/sharpshell/open-clipboard.sh"
+                if (projectPath && projectPath.length > 0 && projectPath !== "/tmp/sharpshell") {
+                    scriptPath = projectPath + "/open-clipboard.sh"
+                }
+                console.log("Executing script:", scriptPath)
+                // Execute script using the same pattern as cava script
+                var absScriptPath = scriptPath
+                Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["bash", "' + absScriptPath + '"]; running: true }', sidePanel)
+            }
+            onPressed: {
+                console.log("Clipboard button pressed - MouseArea received press event")
+            }
+            onEntered: {
+                console.log("Clipboard button hover entered - MouseArea received enter event")
+            }
+            onExited: {
+                console.log("Clipboard button hover exited")
+            }
+        }
     }
     
     // Opcjonalne funkcje callback

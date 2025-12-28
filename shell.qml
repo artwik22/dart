@@ -14,6 +14,8 @@ ShellRoot {
         property bool launcherVisible: false
         property bool volumeVisible: false
         property bool volumeEdgeHovered: false  // Czy myszka jest nad detektorem krawędzi
+        property bool clipboardVisible: false
+        property bool sidebarVisible: true  // Sidebar visibility toggle
         
         // Color theme properties
         property string colorBackground: "#0a0a0a"
@@ -128,6 +130,18 @@ ShellRoot {
         sharedData.launcherVisible = !sharedData.launcherVisible
     }
     
+    // Funkcja otwierania clipboard managera
+    function openClipboardManager() {
+        console.log("openClipboardManager called, sharedData:", sharedData)
+        if (sharedData) {
+            var oldState = sharedData.clipboardVisible
+            sharedData.clipboardVisible = !oldState
+            console.log("Toggling clipboard manager from", oldState, "to", sharedData.clipboardVisible)
+        } else {
+            console.log("sharedData is null!")
+        }
+    }
+    
     // Timer do monitorowania pliku poleceń dla skrótów klawiszowych z Hyprland
     Timer {
         id: commandCheckTimer
@@ -148,6 +162,10 @@ ShellRoot {
                             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'rm -f /tmp/quickshell_command']; running: true }", root)
                         } else if (cmd === "toggleMenu") {
                             root.toggleMenu()
+                            // Usuń plik po przetworzeniu
+                            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'rm -f /tmp/quickshell_command']; running: true }", root)
+                        } else if (cmd === "openClipboardManager") {
+                            root.openClipboardManager()
                             // Usuń plik po przetworzeniu
                             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'rm -f /tmp/quickshell_command']; running: true }", root)
                         }
@@ -251,5 +269,19 @@ ShellRoot {
         id: volumeSliderInstance
         sharedData: root.sharedData
     }
+    
+    // ClipboardManager - menedżer schowka (jeden na pierwszym ekranie)
+    ClipboardManager {
+        id: clipboardManagerInstance
+        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+        sharedData: root.sharedData
+    }
+    
+    // NotificationDisplay - wyświetlanie powiadomień w prawym górnym rogu
+    NotificationDisplay {
+        id: notificationDisplayInstance
+        sharedData: root.sharedData
+    }
+    
 }
 

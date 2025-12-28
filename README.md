@@ -21,6 +21,8 @@
   - [🎯 Application Launcher](#-application-launcher)
   - [📊 Dashboard](#-dashboard)
   - [🎨 Side Panel](#-side-panel)
+  - [📋 Clipboard Manager](#-clipboard-manager)
+  - [🔔 Notification System](#-notification-system)
   - [🖼️ Wallpaper Management](#️-wallpaper-management)
 - [📋 Requirements](#-requirements)
 - [🛠️ Installation](#️-installation)
@@ -41,10 +43,12 @@
 | Feature | Description |
 |---------|-------------|
 | 🔍 **Fast Search** | Real-time filtering of applications |
+| 🌐 **Web Search** | Multiple search engines via prefixes: `!` (DuckDuckGo), `!w` (Wikipedia), `!r` (Reddit), `!y` (YouTube) |
+| 🧮 **Calculator** | Type `=` followed by a math expression for instant calculations |
 | ⌨️ **Keyboard Navigation** | Full arrow key support with smooth navigation |
 | 🎬 **Smooth Animations** | Beautiful transitions and hover effects |
 | 📦 **Package Management** | Install/remove packages via Pacman and AUR |
-| ⚙️ **Settings Panel** | Customize wallpaper, colors, and system updates |
+| ⚙️ **Settings Panel** | Customize wallpaper, colors, toggle sidebar, and system updates |
 | 🎨 **24 Color Presets** | Beautiful pre-made themes to choose from |
 | 🖌️ **Custom Colors** | Edit HEX values for complete customization |
 
@@ -68,17 +72,36 @@ A comprehensive system dashboard with multiple tabs and real-time monitoring.
 - 💾 **Disk Usage** - Real-time disk space monitoring for multiple partitions
 - 🔥 **Top Processes** - Live view of top resource-consuming processes with CPU and memory usage
 
-**Additional Features:**
-- ✨ Smooth animated tab switching with slide and zoom effects
-- 🎨 Seamless color scheme integration with shared theme system
-- 🔄 Real-time updates for all system metrics
+
 
 ### 🎨 Side Panel
 
 - 🎵 **Audio Visualizer** - Real-time audio visualization with cava
-- 🔊 **Volume Control** - Adjust system volume with visual slider
+- 🔊 **Volume Control** - Adjust system volume with interactive slider (hover right edge to show)
 - 📶 **Bluetooth Control** - Toggle Bluetooth on/off
+- 📋 **Clipboard Manager** - Access clipboard history with a button below the visualizer
+- 🕐 **Clock Display** - Current time and date
 - 🎨 **Modern Design** - Clean, minimal interface
+- 👁️ **Toggle Visibility** - Show/hide sidebar from Launcher Settings
+
+### 📋 Clipboard Manager
+
+- 📜 **History Tracking** - Automatically tracks clipboard changes (up to 50 items)
+- 🔄 **Smart Deduplication** - Moves duplicate items to the top instead of creating duplicates
+- 🖱️ **Click to Copy** - Click any item to copy it back to clipboard
+- 🗑️ **Clear History** - Button to clear all clipboard history
+- ⌨️ **Keyboard Support** - Press `Escape` to close
+- 🎨 **Theme Integration** - Matches your color scheme
+
+### 🔔 Notification System
+
+- 📢 **Desktop Notifications** - Full support for D-Bus notifications
+- 🎨 **Modern Design** - Beautiful notifications with smooth slide-in/out animations
+- ⏱️ **Auto-Dismiss** - Notifications automatically disappear after 5 seconds
+- 🖱️ **Interactive** - Click to dismiss or use the close button
+- 📊 **Progress Indicator** - Visual progress bar showing time until auto-dismiss
+- 🎯 **Top-Right Positioning** - Notifications appear in the top-right corner, stacking vertically
+- 🎭 **Urgency Support** - Different colors for normal, low, and critical notifications
 
 ### 🖼️ Wallpaper Management
 
@@ -165,6 +188,9 @@ bind = SUPER, R, exec, ~/.config/sharpshell/open-launcher.sh
 
 # Toggle Dashboard
 bind = SUPER, M, exec, ~/.config/sharpshell/toggle-menu.sh
+
+# Open Clipboard Manager
+bind = SUPER, V, exec, ~/.config/sharpshell/open-clipboard.sh
 ```
 
 #### For other compositors
@@ -177,9 +203,12 @@ Configure similar bindings to execute the scripts from `~/.config/sharpshell/`.
 |--------|----------|
 | **Open Launcher** | `Super+R` (or your configured shortcut) |
 | **Toggle Dashboard** | `Super+M` (or your configured shortcut) |
+| **Open Clipboard Manager** | `Super+V` (or your configured shortcut) / Click button in Side Panel |
 | **Navigate** | Arrow keys (`↑`, `↓`, `←`, `→`) |
 | **Select** | `Enter` or `Space` |
 | **Search** | Start typing to filter (in launcher) |
+| **Web Search** | Type `!` (DuckDuckGo), `!w` (Wikipedia), `!r` (Reddit), or `!y` (YouTube) followed by your query |
+| **Calculator** | Type `=` followed by a math expression (e.g., `= 2+2*3`) |
 | **Tab Navigation** | Click tabs or use mouse to switch between Dashboard, Media, and Performance tabs |
 | **Close** | `Escape` |
 
@@ -195,6 +224,9 @@ sharpshell/
 │   ├── Dashboard.qml         # Dashboard with tabs and cards
 │   ├── SidePanel.qml         # Side panel with visualizer
 │   ├── VolumeSlider.qml      # Volume control component
+│   ├── NotificationDisplay.qml # Notification server and display
+│   ├── NotificationItem.qml   # Individual notification component
+│   ├── ClipboardManager.qml   # Clipboard manager component
 │   ├── WallpaperBackground.qml # Native wallpaper background (Quickshell)
 │   ├── Utils.qml             # Utility functions
 │   ├── TopEdgeDetector.qml   # Top edge detection
@@ -208,7 +240,9 @@ sharpshell/
 │   └── update-system.sh      # System update script
 ├── open-launcher.sh          # Launcher opener script
 ├── toggle-menu.sh            # Menu toggle script
-└── run.sh                   # Main runner script
+├── open-clipboard.sh         # Clipboard manager opener script
+├── run.sh                   # Main runner script
+└── colors.json              # Color theme configuration (auto-generated)
 ```
 
 ---
@@ -242,6 +276,8 @@ Edit the QML files in `components/` to customize:
 | **Tab Content** | Customize card layouts and sizes in respective tab sections |
 | **Resource Bars** | Adjust bar heights and animation speeds |
 | **Media Player** | Modify album art size and control button dimensions |
+| **Notification Size** | Adjust `width` and positioning in `NotificationDisplay.qml` |
+| **Notification Timeout** | Change auto-dismiss timer in `NotificationItem.qml` (default: 5 seconds) |
 
 ### Behavior
 

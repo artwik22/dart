@@ -40,22 +40,112 @@ PanelWindow {
         }
     }
 
+    // MouseArea dla slidera - umieszczony PRZED kontenerem, zawsze aktywny
+    MouseArea {
+        id: sliderMouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        z: 99999  // Very high z-index to ensure it's on top of everything
+        enabled: true  // Always enabled
+        propagateComposedEvents: false
+        
+        // Only process events when slider is visible
+        property bool isSliderVisible: (sharedData && sharedData.volumeVisible)
+        
+        // Calculate slider bounds (centered, 180px high)
+        property real sliderY: (parent.height - 180) / 2
+        property real sliderHeight: 180
+        property real sliderWidth: parent.width - 18
+        
+        function isMouseOverSlider(mouse) {
+            var centerX = parent.width / 2
+            var sliderLeft = centerX - sliderWidth / 2
+            var sliderRight = centerX + sliderWidth / 2
+            return mouse.x >= sliderLeft && mouse.x <= sliderRight && 
+                   mouse.y >= sliderY && mouse.y <= sliderY + sliderHeight
+        }
+        
+        // Also handle hover for the entire slider area
+        onEntered: {
+            console.log("VolumeSlider: Mouse entered PanelWindow area")
+            if (sharedData) {
+                sharedData.volumeVisible = true
+                hideDelayTimer.stop()
+            }
+        }
+        
+        onExited: {
+            console.log("VolumeSlider: Mouse exited PanelWindow area")
+            if (sharedData) {
+                // Don't start timer if mouse is still over edge detector
+                if (!sharedData.volumeEdgeHovered) {
+                    console.log("Starting hideDelayTimer")
+                    hideDelayTimer.stop()
+                    hideDelayTimer.restart()
+                } else {
+                    console.log("Not starting timer - mouse still over edge detector")
+                }
+            }
+        }
+        
+        function setVolumeFromMouse(mouse) {
+            // Calculate volume based on mouse position relative to slider area
+            var relativeY = mouse.y - sliderY
+            var newVolume = 100 - Math.round((relativeY / sliderHeight) * 100)
+            if (newVolume < 0) newVolume = 0
+            if (newVolume > 100) newVolume = 100
+            console.log("Setting volume:", newVolume, "from mouse.y:", mouse.y, "relativeY:", relativeY)
+            setSystemVolume(newVolume)
+        }
+        
+        function adjustVolume(delta) {
+            var newVolume = volumeValue + delta
+            if (newVolume < 0) newVolume = 0
+            if (newVolume > 100) newVolume = 100
+            setSystemVolume(newVolume)
+        }
+        
+        onPressed: function(mouse) {
+            console.log("VolumeSlider: Mouse pressed at", mouse.x, mouse.y, "isSliderVisible:", isSliderVisible, "isOverSlider:", isMouseOverSlider(mouse))
+            if (isSliderVisible && isMouseOverSlider(mouse)) {
+                mouse.accepted = true
+                setVolumeFromMouse(mouse)
+            } else {
+                mouse.accepted = false
+            }
+        }
+        
+        onPositionChanged: function(mouse) {
+            if (pressed && isSliderVisible && isMouseOverSlider(mouse)) {
+                console.log("VolumeSlider: Mouse dragged to", mouse.x, mouse.y)
+                mouse.accepted = true
+                setVolumeFromMouse(mouse)
+            }
+        }
+        
+        onWheel: function(wheel) {
+            var mousePos = mapToItem(parent, wheel.x, wheel.y)
+            console.log("VolumeSlider: Wheel event", wheel.angleDelta.y, "isSliderVisible:", isSliderVisible, "isOverSlider:", isMouseOverSlider({x: mousePos.x, y: mousePos.y}))
+            if (isSliderVisible && isMouseOverSlider({x: mousePos.x, y: mousePos.y})) {
+                var delta = wheel.angleDelta.y > 0 ? 5 : -5
+                adjustVolume(delta)
+                wheel.accepted = true
+            } else {
+                wheel.accepted = false
+            }
+        }
+    }
+
     // Kontener z animacją fade in/out
     Item {
         id: volumeSliderContainer
         anchors.fill: parent
+        visible: (sharedData && sharedData.volumeVisible)  // Use visible instead of opacity for mouse events
         
-        // Właściwości animacji fade i scale
-        opacity: (sharedData && sharedData.volumeVisible) ? 1.0 : 0.0
+        // Właściwości animacji scale
         scale: (sharedData && sharedData.volumeVisible) ? 1.0 : 0.95
-        
-        // Animacja fade in/out - zsynchronizowana z slide
-        Behavior on opacity {
-            NumberAnimation { 
-                duration: 300
-                easing.type: Easing.OutQuart
-            }
-        }
         
         // Lekka animacja scale dla lepszego efektu
         Behavior on scale {
@@ -64,60 +154,55 @@ PanelWindow {
                 easing.type: Easing.OutQuart
             }
         }
-        
-        // Wyłączamy interakcję gdy slider jest ukryty
-        enabled: opacity > 0.1
-        
-        // MouseArea do wykrywania czy myszka jest nad sliderem
-        MouseArea {
-            id: volumeSliderMouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            acceptedButtons: Qt.NoButton
-            propagateComposedEvents: true
-            z: 1
-            
-            onEntered: {
-                if (sharedData) {
-                    sharedData.volumeVisible = true
-                    hideDelayTimer.stop()
-                }
-            }
-            
-            onExited: {
-                // Ukryj slider tylko gdy myszka opuści obszar slidera
-                if (sharedData) {
-                    // Zatrzymaj timer i uruchom ponownie, aby zawsze się uruchomił
-                    hideDelayTimer.stop()
-                    hideDelayTimer.restart()
-                }
-            }
-        }
 
-        // Tło jednolite
+        // Tło jednolite z animacją fade
         Rectangle {
             id: volumeSliderBackground
             anchors.fill: parent
             anchors.rightMargin: 0
             radius: 0
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#111111"
+            opacity: (sharedData && sharedData.volumeVisible) ? 1.0 : 0.0
+            
+            Behavior on opacity {
+                NumberAnimation { 
+                    duration: 300
+                    easing.type: Easing.OutQuart
+                }
+            }
         }
         
-        // Border tylko z lewej strony
+        // Border tylko z lewej strony z animacją fade
         Rectangle {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: 1
             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525"
+            opacity: (sharedData && sharedData.volumeVisible) ? 1.0 : 0.0
+            
+            Behavior on opacity {
+                NumberAnimation { 
+                    duration: 300
+                    easing.type: Easing.OutQuart
+                }
+            }
         }
 
-        // Slider głośności - pionowy
+        // Slider głośności - pionowy z animacją fade
         Column {
             id: volumeSliderColumn
             anchors.centerIn: parent
             spacing: 18
             width: parent.width - 18
+            opacity: (sharedData && sharedData.volumeVisible) ? 1.0 : 0.0
+            
+            Behavior on opacity {
+                NumberAnimation { 
+                    duration: 300
+                    easing.type: Easing.OutQuart
+                }
+            }
 
             // Ikona głośności
             Text {
@@ -139,6 +224,7 @@ PanelWindow {
                 width: parent.width
                 height: 180
                 anchors.horizontalCenter: parent.horizontalCenter
+                z: 1000  // High z-index for the entire slider container
 
                 // Tło slidera
                 Rectangle {
@@ -148,6 +234,7 @@ PanelWindow {
                     height: parent.height
                     color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"
                     radius: 0
+                    z: 1
                 }
 
                 // Wypełnienie slidera
@@ -159,52 +246,13 @@ PanelWindow {
                     height: sliderTrack.height * (volumeValue / 100)
                     color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                     radius: 0
+                    z: 2
                     
                     Behavior on height {
                         NumberAnimation { 
                             duration: 150
                             easing.type: Easing.OutQuart
                         }
-                    }
-                }
-
-                // Obsługa kliknięć, przeciągania i scrollu
-                MouseArea {
-                    id: sliderMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    acceptedButtons: Qt.LeftButton
-                    z: 10
-                    
-                    function setVolumeFromMouse(mouse) {
-                        var newVolume = 100 - Math.round((mouse.y / parent.height) * 100)
-                        if (newVolume < 0) newVolume = 0
-                        if (newVolume > 100) newVolume = 100
-                        setSystemVolume(newVolume)
-                    }
-                    
-                    function adjustVolume(delta) {
-                        var newVolume = volumeValue + delta
-                        if (newVolume < 0) newVolume = 0
-                        if (newVolume > 100) newVolume = 100
-                        setSystemVolume(newVolume)
-                    }
-                    
-                    onPressed: function(mouse) {
-                        setVolumeFromMouse(mouse)
-                    }
-                    
-                    onPositionChanged: function(mouse) {
-                        if (pressed) {
-                            setVolumeFromMouse(mouse)
-                        }
-                    }
-                    
-                    onWheel: function(wheel) {
-                        var delta = wheel.angleDelta.y > 0 ? 5 : -5
-                        adjustVolume(delta)
-                        wheel.accepted = true
                     }
                 }
             }
@@ -226,11 +274,15 @@ PanelWindow {
     // Timer do opóźnienia ukrywania
     Timer {
         id: hideDelayTimer
-        interval: 800  // Zwiększony interwał dla lepszej responsywności
+        interval: 1000  // Zwiększony interwał
         onTriggered: {
             // Sprawdź czy myszka nie jest ani nad sliderem ani nad detektorem
-            if (sharedData && !volumeSliderMouseArea.containsMouse && !sharedData.volumeEdgeHovered) {
+            console.log("hideDelayTimer triggered, sliderMouseArea.containsMouse:", sliderMouseArea.containsMouse, "volumeEdgeHovered:", sharedData ? sharedData.volumeEdgeHovered : "null")
+            if (sharedData && !sliderMouseArea.containsMouse && !sharedData.volumeEdgeHovered) {
+                console.log("Hiding volume slider")
                 sharedData.volumeVisible = false
+            } else {
+                console.log("Not hiding - mouse still over slider or edge")
             }
         }
     }
@@ -239,10 +291,19 @@ PanelWindow {
     Connections {
         target: sharedData
         function onVolumeEdgeHoveredChanged() {
-            if (sharedData && !sharedData.volumeEdgeHovered && !volumeSliderMouseArea.containsMouse) {
-                // Myszka opuściła detektor i nie jest nad sliderem - uruchom timer
-                hideDelayTimer.stop()
-                hideDelayTimer.restart()
+            console.log("volumeEdgeHovered changed to:", sharedData ? sharedData.volumeEdgeHovered : "null", "sliderMouseArea.containsMouse:", sliderMouseArea.containsMouse)
+            if (sharedData && !sharedData.volumeEdgeHovered) {
+                // Myszka opuściła detektor - uruchom timer tylko jeśli myszka nie jest nad sliderem
+                // Dodaj małe opóźnienie, aby dać czas MouseArea na zareagowanie
+                Qt.callLater(function() {
+                    if (!sliderMouseArea.containsMouse && sharedData && !sharedData.volumeEdgeHovered) {
+                        console.log("Starting hideDelayTimer after edge detector exit")
+                        hideDelayTimer.stop()
+                        hideDelayTimer.restart()
+                    } else {
+                        console.log("Not starting timer - mouse over slider or edge")
+                    }
+                })
             }
         }
     }

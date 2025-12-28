@@ -503,7 +503,11 @@ PanelWindow {
     property var apps: []
     property int selectedIndex: 0
     property string searchText: ""
-    property int currentMode: -1  // -1 = mode selection, 0 = Launch App, 1 = Packages, 2 = Settings
+    
+    // Calculator properties
+    property string calculatorResult: ""
+    property bool isCalculatorMode: false
+    property int currentMode: -1  // -1 = mode selection, 0 = Launcher, 1 = Packages, 2 = Settings
     property int currentPackageMode: -1  // -1 = Packages option selection, 0 = install source selection (Pacman/AUR), 1 = Pacman search, 2 = AUR search, 3 = remove source selection (Pacman/AUR), 4 = Pacman remove search, 5 = AUR remove search
     property int installSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
     property int removeSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
@@ -803,7 +807,58 @@ PanelWindow {
     // Function to filter applications
     function filterApps() {
         filteredApps.clear()
-        var search = (searchText || "").toLowerCase().trim()
+        var search = (searchText || "").trim()
+        var searchLower = search.toLowerCase()
+        
+        // Check if it's calculator mode (starts with "=" or looks like math expression)
+        if (search.startsWith("=") || (search.length > 0 && /^[\d+\-*/().\sπe]+$/.test(search.replace(/sqrt|sin|cos|tan|log|ln|pow/gi, "").replace(/\s+/g, "")))) {
+            var result = calculateExpression(search)
+            if (result && result !== "Error") {
+                isCalculatorMode = true
+                calculatorResult = result
+                // Add calculator result as a "fake" app
+                filteredApps.append({
+                    name: "= " + result,
+                    comment: "Calculator result - Press Enter to copy",
+                    exec: "",
+                    icon: "󰃀",
+                    isCalculator: true
+                })
+                selectedIndex = 0
+                return
+            }
+        }
+        
+        isCalculatorMode = false
+        calculatorResult = ""
+        
+        // Check if search starts with ! prefix for web search
+        if (search.startsWith("!")) {
+            var serviceName = "DuckDuckGo"
+            if (search.startsWith("!w ")) {
+                serviceName = "Wikipedia"
+            } else if (search.startsWith("!w")) {
+                serviceName = "Wikipedia"
+            } else if (search.startsWith("!r ")) {
+                serviceName = "Reddit"
+            } else if (search.startsWith("!r")) {
+                serviceName = "Reddit"
+            } else if (search.startsWith("!y ")) {
+                serviceName = "YouTube"
+            } else if (search.startsWith("!y")) {
+                serviceName = "YouTube"
+            }
+            
+            filteredApps.append({
+                name: "Search in " + serviceName,
+                comment: "Press Enter to search",
+                exec: "",
+                icon: "󰖟",
+                isCalculator: false
+            })
+            selectedIndex = 0
+            return
+        }
         
         // If there are no applications, do nothing
         if (apps.length === 0) {
@@ -819,12 +874,13 @@ PanelWindow {
             
             // If search is empty, show all applications
             // Otherwise, filter by name or comment
-            if (search === "" || name.indexOf(search) >= 0 || comment.indexOf(search) >= 0) {
+            if (searchLower === "" || name.indexOf(searchLower) >= 0 || comment.indexOf(searchLower) >= 0) {
                 filteredApps.append({
                     name: app.name,
                     comment: app.comment || "",
                     exec: app.exec || "",
-                    icon: app.icon || ""
+                    icon: app.icon || "",
+                    isCalculator: false
                 })
             }
         }
@@ -835,6 +891,123 @@ PanelWindow {
         }
         if (selectedIndex < 0 && filteredApps.count > 0) {
             selectedIndex = 0
+        }
+    }
+    
+    // Function to calculate mathematical expression
+    function calculateExpression(expression) {
+        try {
+            // Remove the "=" prefix if present
+            var expr = expression.startsWith("=") ? expression.substring(1).trim() : expression.trim()
+            if (expr.length === 0) return null
+            
+            // Replace common math functions and constants
+            expr = expr.replace(/π/g, "Math.PI")
+            expr = expr.replace(/pi/gi, "Math.PI")
+            expr = expr.replace(/e\b/g, "Math.E")
+            expr = expr.replace(/sqrt\(/g, "Math.sqrt(")
+            expr = expr.replace(/sin\(/g, "Math.sin(")
+            expr = expr.replace(/cos\(/g, "Math.cos(")
+            expr = expr.replace(/tan\(/g, "Math.tan(")
+            expr = expr.replace(/log\(/g, "Math.log(")
+            expr = expr.replace(/ln\(/g, "Math.log(")
+            expr = expr.replace(/pow\(/g, "Math.pow(")
+            expr = expr.replace(/\^/g, "**")  // Power operator
+            
+            // Evaluate the expression safely
+            var result = eval(expr)
+            
+            // Format result
+            if (typeof result === "number") {
+                // Round to reasonable precision
+                if (result % 1 === 0) {
+                    return result.toString()
+                } else {
+                    // Round to 10 decimal places max
+                    return parseFloat(result.toFixed(10)).toString()
+                }
+            }
+            return result.toString()
+        } catch(e) {
+            return "Error"
+        }
+    }
+    
+    // Function to search in Firefox with different services
+    function searchInFirefox(query) {
+        if (query && query.length > 0) {
+            var trimmedQuery = query.trim()
+            var searchQuery = ""
+            var searchUrl = ""
+            
+            // Check for service prefixes
+            if (trimmedQuery.startsWith("!w ")) {
+                // Wikipedia search
+                searchQuery = trimmedQuery.substring(3).trim()
+                if (searchQuery.length > 0) {
+                    var encodedQuery = encodeURIComponent(searchQuery)
+                    searchUrl = "https://en.wikipedia.org/wiki/Special:Search?search=" + encodedQuery
+                }
+            } else if (trimmedQuery.startsWith("!w")) {
+                // Wikipedia search (no space after !w)
+                searchQuery = trimmedQuery.substring(2).trim()
+                if (searchQuery.length > 0) {
+                    var encodedQuery = encodeURIComponent(searchQuery)
+                    searchUrl = "https://en.wikipedia.org/wiki/Special:Search?search=" + encodedQuery
+                }
+            } else if (trimmedQuery.startsWith("!r ")) {
+                // Reddit search
+                searchQuery = trimmedQuery.substring(3).trim()
+                if (searchQuery.length > 0) {
+                    var encodedQuery = encodeURIComponent(searchQuery)
+                    searchUrl = "https://www.reddit.com/search/?q=" + encodedQuery
+                }
+            } else if (trimmedQuery.startsWith("!r")) {
+                // Reddit search (no space after !r)
+                searchQuery = trimmedQuery.substring(2).trim()
+                if (searchQuery.length > 0) {
+                    var encodedQuery = encodeURIComponent(searchQuery)
+                    searchUrl = "https://www.reddit.com/search/?q=" + encodedQuery
+                }
+            } else if (trimmedQuery.startsWith("!y ")) {
+                // YouTube search
+                searchQuery = trimmedQuery.substring(3).trim()
+                if (searchQuery.length > 0) {
+                    var encodedQuery = encodeURIComponent(searchQuery)
+                    searchUrl = "https://www.youtube.com/results?search_query=" + encodedQuery
+                }
+            } else if (trimmedQuery.startsWith("!y")) {
+                // YouTube search (no space after !y)
+                searchQuery = trimmedQuery.substring(2).trim()
+                if (searchQuery.length > 0) {
+                    var encodedQuery = encodeURIComponent(searchQuery)
+                    searchUrl = "https://www.youtube.com/results?search_query=" + encodedQuery
+                }
+            } else if (trimmedQuery.startsWith("!")) {
+                // DuckDuckGo search (default)
+                searchQuery = trimmedQuery.substring(1).trim()
+                if (searchQuery.length > 0) {
+                    var encodedQuery = encodeURIComponent(searchQuery)
+                    searchUrl = "https://duckduckgo.com/?q=" + encodedQuery
+                }
+            } else {
+                // No prefix, use DuckDuckGo
+                searchQuery = trimmedQuery
+                if (searchQuery.length > 0) {
+                    var encodedQuery = encodeURIComponent(searchQuery)
+                    searchUrl = "https://duckduckgo.com/?q=" + encodedQuery
+                }
+            }
+            
+            if (searchUrl && searchUrl.length > 0) {
+                // Launch Firefox with the search URL
+                var command = "firefox \"" + searchUrl + "\" &"
+                Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
+                
+                if (sharedData) {
+                    sharedData.launcherVisible = false
+                }
+            }
         }
     }
     
@@ -1746,16 +1919,29 @@ PanelWindow {
                     // W trybie Settings - wybierz opcję
                     if (selectedIndex >= 0 && selectedIndex < settingsList.count) {
                         var settingOption = settingsList.model.get(selectedIndex)
-                        currentSettingsMode = settingOption.settingId
-                        if (settingOption.settingId === 0) {
-                            loadWallpapers()
-                            wallpaperSelectedIndex = 0  // Reset indeksu przy otwieraniu
-                            wallpapersGrid.currentIndex = 0
-                        } else if (settingOption.settingId === 3) {
-                            // Colors - no action needed
+                        if (settingOption.settingId === 1) {
+                            // Toggle Sidebar - immediate action
+                            if (sharedData && sharedData.sidebarVisible !== undefined) {
+                                sharedData.sidebarVisible = !sharedData.sidebarVisible
+                                console.log("Sidebar toggled to:", sharedData.sidebarVisible)
+                            }
+                            // Close launcher after toggle
+                            if (sharedData) {
+                                sharedData.launcherVisible = false
+                            }
+                            event.accepted = true
+                        } else {
+                            currentSettingsMode = settingOption.settingId
+                            if (settingOption.settingId === 0) {
+                                loadWallpapers()
+                                wallpaperSelectedIndex = 0  // Reset indeksu przy otwieraniu
+                                wallpapersGrid.currentIndex = 0
+                            } else if (settingOption.settingId === 3) {
+                                // Colors - no action needed
+                            }
+                            event.accepted = true
                         }
                     }
-                    event.accepted = true
                 } else if (currentMode === 2 && currentSettingsMode === 0) {
                     // W trybie Wallpaper - wybierz tapetę
                     if (wallpaperSelectedIndex >= 0 && wallpaperSelectedIndex < wallpapersModel.count) {
@@ -1893,7 +2079,7 @@ PanelWindow {
             }
             
             model: ListModel {
-                ListElement { name: "Launch App"; description: "Launch applications"; mode: 0; icon: "󰈙" }
+                ListElement { name: "Launcher"; description: "Launch applications"; mode: 0; icon: "󰈙" }
                 ListElement { name: "Packages"; description: "Manage packages"; mode: 1; icon: "󰏖" }
                 ListElement { name: "Settings"; description: "Configure launcher"; mode: 2; icon: "󰒓" }
             }
@@ -1986,7 +2172,7 @@ PanelWindow {
             anchors.margins: 20
             visible: currentMode !== -1
         
-            // Tryb 0: Launch App
+            // Tryb 0: Launcher
             Item {
                 id: launchAppMode
                 anchors.fill: parent
@@ -2048,10 +2234,34 @@ PanelWindow {
                                             }
                                             event.accepted = true
                                         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                            // Check if search text starts with "!" for Firefox search
+                                            if (searchText && searchText.trim().startsWith("!")) {
+                                                searchInFirefox(searchText.trim())
+                                                event.accepted = true
+                                                return
+                                            }
+                                            
+                                            // Check if it's calculator mode
+                                            if (isCalculatorMode && calculatorResult && calculatorResult !== "Error") {
+                                                // Copy result to clipboard
+                                                Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo -n \"" + calculatorResult.replace(/"/g, '\\"') + "\" | xclip -selection clipboard']; running: true }", appLauncherRoot)
+                                                if (sharedData) {
+                                                    sharedData.launcherVisible = false
+                                                }
+                                                event.accepted = true
+                                                return
+                                            }
+                                            
                                             if (filteredApps.count > 0 && selectedIndex >= 0 && selectedIndex < filteredApps.count) {
                                                 var app = filteredApps.get(selectedIndex)
                                                 if (app && app.exec) {
                                                     launchApp(app)
+                                                } else if (app && app.isCalculator && calculatorResult) {
+                                                    // Copy calculator result
+                                                    Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo -n \"" + calculatorResult.replace(/"/g, '\\"') + "\" | xclip -selection clipboard']; running: true }", appLauncherRoot)
+                                                    if (sharedData) {
+                                                        sharedData.launcherVisible = false
+                                                    }
                                                 }
                                             }
                                             event.accepted = true
@@ -2161,6 +2371,7 @@ PanelWindow {
                                 property string appComment: model.comment || ""
                                 property string appExec: model.exec || ""
                                 property string appIcon: model.icon || ""
+                                property bool appIsCalculator: model.isCalculator || false
                                 
                                 Column {
                                     anchors.left: parent.left
@@ -2202,6 +2413,21 @@ PanelWindow {
                                     }
                                     
                                     onClicked: {
+                                        // Check if search text starts with "!" for Firefox search
+                                        if (searchText && searchText.trim().startsWith("!")) {
+                                            searchInFirefox(searchText.trim())
+                                            return
+                                        }
+                                        
+                                        // Check if it's calculator result
+                                        if (appItem.appIsCalculator && isCalculatorMode && calculatorResult && calculatorResult !== "Error") {
+                                            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo -n \"" + calculatorResult.replace(/"/g, '\\"') + "\" | xclip -selection clipboard']; running: true }", appLauncherRoot)
+                                            if (sharedData) {
+                                                sharedData.launcherVisible = false
+                                            }
+                                            return
+                                        }
+                                        
                                         if (appItem.appExec) {
                                             launchApp({
                                                 name: appItem.appName,
@@ -3305,6 +3531,7 @@ PanelWindow {
                     model: ListModel {
                         id: settingsModel
                         ListElement { name: "Wallpaper"; description: "Change wallpaper with swww"; icon: "󰸉"; settingId: 0 }
+                        ListElement { name: "Toggle Sidebar"; description: "Show or hide sidebar"; icon: "󰍁"; settingId: 1 }
                         ListElement { name: "Colors"; description: "Customize color theme"; icon: "󰏘"; settingId: 3 }
                     }
                     
@@ -3374,13 +3601,25 @@ PanelWindow {
                             }
                             
                             onClicked: {
-                                currentSettingsMode = model.settingId
-                                if (model.settingId === 0) {
-                                    loadWallpapers()
-                                    wallpaperSelectedIndex = 0
-                                    wallpapersGrid.currentIndex = 0
-                                } else if (model.settingId === 3) {
-                                    // Colors - no action needed
+                                if (model.settingId === 1) {
+                                    // Toggle Sidebar - immediate action, no submenu
+                                    if (sharedData && sharedData.sidebarVisible !== undefined) {
+                                        sharedData.sidebarVisible = !sharedData.sidebarVisible
+                                        console.log("Sidebar toggled to:", sharedData.sidebarVisible)
+                                    }
+                                    // Close launcher after toggle
+                                    if (sharedData) {
+                                        sharedData.launcherVisible = false
+                                    }
+                                } else {
+                                    currentSettingsMode = model.settingId
+                                    if (model.settingId === 0) {
+                                        loadWallpapers()
+                                        wallpaperSelectedIndex = 0
+                                        wallpapersGrid.currentIndex = 0
+                                    } else if (model.settingId === 3) {
+                                        // Colors - no action needed
+                                    }
                                 }
                             }
                         }

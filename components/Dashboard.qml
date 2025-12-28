@@ -1714,9 +1714,7 @@ PanelWindow {
         dayNumber.text = now.getDate().toString()
         monthNumber.text = (now.getMonth() + 1 < 10 ? "0" : "") + (now.getMonth() + 1).toString()
         
-        var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        var dayNameStr = days[now.getDay()]
-        dayName.text = dayNameStr + ", " + now.getDate()
+        // dayName was removed, so we don't update it
     }
     
     function updateUptime() {
@@ -1960,40 +1958,39 @@ PanelWindow {
         interval: 2000
         repeat: true
         running: true
-        function readGpu() {
-            // Read GPU usage using nvidia-smi (primary) or radeontop (fallback)
-            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d \" \" > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \"{print int(\\$2)}\" > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage']; running: true }", dashboardRoot)
-            Qt.createQmlObject("import QtQuick; Timer { interval: 800; running: true; repeat: false; onTriggered: dashboardRoot.readGpuData() }", dashboardRoot)
-        }
-        
-        function readGpuData() {
-            var xhr = new XMLHttpRequest()
-            xhr.open("GET", "file:///tmp/quickshell_gpu_usage")
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    var text = xhr.responseText.trim()
-                    // Remove any non-numeric characters except digits
-                    text = text.replace(/[^0-9]/g, '')
-                    var usage = parseInt(text)
-                    if (!isNaN(usage)) {
-                        if (usage >= 0 && usage <= 100) {
-                            gpuUsageValue = usage
-                        } else if (usage > 100) {
-                            // Sometimes nvidia-smi returns values > 100, cap it
-                            gpuUsageValue = 100
-                        } else {
-                            gpuUsageValue = 0
-                        }
+        onTriggered: readGpu()
+    }
+    
+    function readGpu() {
+        // Read GPU usage using nvidia-smi (primary) or radeontop (fallback)
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d \" \" > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \"{print int(\\$2)}\" > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage']; running: true }", dashboardRoot)
+        Qt.createQmlObject("import QtQuick; Timer { interval: 800; running: true; repeat: false; onTriggered: dashboardRoot.readGpuData() }", dashboardRoot)
+    }
+    
+    function readGpuData() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///tmp/quickshell_gpu_usage")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                var text = xhr.responseText.trim()
+                // Remove any non-numeric characters except digits
+                text = text.replace(/[^0-9]/g, '')
+                var usage = parseInt(text)
+                if (!isNaN(usage)) {
+                    if (usage >= 0 && usage <= 100) {
+                        gpuUsageValue = usage
+                    } else if (usage > 100) {
+                        // Sometimes nvidia-smi returns values > 100, cap it
+                        gpuUsageValue = 100
                     } else {
                         gpuUsageValue = 0
                     }
+                } else {
+                    gpuUsageValue = 0
                 }
             }
-            xhr.send()
         }
-        
-        onTriggered: readGpu()
-        Component.onCompleted: readGpu()
+        xhr.send()
     }
 
     Timer {
@@ -2001,8 +1998,8 @@ PanelWindow {
         interval: 300000 // Update every 5 minutes
         repeat: true
         running: true
-        onTriggered: updateWeather()
         Component.onCompleted: updateWeather()
+        onTriggered: updateWeather()
     }
     
     // ============ PERFORMANCE TAB FUNCTIONS ============
