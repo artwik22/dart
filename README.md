@@ -46,6 +46,7 @@
 - **📝 Notes System**: Added complete notes management with menu interface
   - Create new notes with automatic filename generation
   - View and edit existing notes
+  - Notes stored in `~/Documents/Notes/`
   - Intuitive menu navigation with keyboard support
 - **🔧 Enhanced Installer**: Auto-detection of package manager with manual selection fallback
 - **🎨 UI Improvements**: Refined launcher animations and menu interactions

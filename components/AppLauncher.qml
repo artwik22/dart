@@ -146,7 +146,6 @@ PanelWindow {
         notesModel.append({ name: "Ładowanie notatek...", file: "" })
 
         // Use Process to list all .txt files in the directory
-        var notesDir = colorConfigPath.replace("colors.json", "")
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['ls', '-1', '" + notesDir + "', '2>/dev/null', '|', 'grep', '\\.txt$']; running: true }", appLauncherRoot)
 
         // Use timer to process results
@@ -193,7 +192,7 @@ PanelWindow {
             fileName = notesFileName
         }
 
-        var notesPath = colorConfigPath.replace("colors.json", fileName)
+        var notesPath = notesDir + "/" + fileName
         var content = notesEditText.text
         var escapedContent = content.replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`')
 
@@ -208,7 +207,7 @@ PanelWindow {
 
     function loadNoteContent(fileName) {
         console.log("Loading note content for file:", fileName)
-        var notesPath = colorConfigPath.replace("colors.json", fileName)
+        var notesPath = notesDir + "/" + fileName
         console.log("Full path:", notesPath)
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file://" + notesPath)
@@ -251,11 +250,13 @@ PanelWindow {
                 if (home && home.length > 0) {
                     colorConfigPath = home + "/.config/sharpshell/colors.json"
                     wallpapersPath = home + "/Pictures/Wallpapers"
-                    console.log("Paths initialized - home:", home, "colorConfig:", colorConfigPath, "wallpapers:", wallpapersPath)
+                    notesDir = home + "/Documents/Notes"
+                    console.log("Paths initialized - home:", home, "colorConfig:", colorConfigPath, "wallpapers:", wallpapersPath, "notes:", notesDir)
                 } else {
                     // Fallback to defaults
                     colorConfigPath = "/tmp/sharpshell/colors.json"
                     wallpapersPath = "/tmp/Pictures/Wallpapers"
+                    notesDir = "/tmp/Documents/Notes"
                     console.log("Using fallback paths")
                 }
                 // Load wallpapers immediately after path is initialized
@@ -632,6 +633,7 @@ PanelWindow {
     property int currentNotesMode: -1  // -1 = menu, 0 = new note, 1 = edit note
     property string notesFileName: ""  // Current note file name
     property string pendingNoteContent: ""  // Content to load into editor
+    property string notesDir: ""  // Notes directory path
     property int notesMenuIndex: 0  // Selected index in notes menu (0 = new note button, 1+ = notes list)
     property int currentPackageMode: -1  // -1 = Packages option selection, 0 = install source selection (Pacman/AUR), 1 = Pacman search, 2 = AUR search, 3 = remove source selection (Pacman/AUR), 4 = Pacman remove search, 5 = AUR remove search
     property int installSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR

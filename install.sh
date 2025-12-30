@@ -70,8 +70,8 @@ detect_package_manager() {
     if command_exists "pacman"; then
         print_success "Detected Arch Linux (pacman)"
         PACKAGE_MANAGER="pacman"
-        INSTALL_CMD="sudo pacman -S --noconfirm"
-        UPDATE_CMD="sudo pacman -Syu --noconfirm"
+        INSTALL_CMD="sudo pacman -S"
+        UPDATE_CMD="sudo pacman -Syu"
     elif command_exists "apt"; then
         print_success "Detected Debian/Ubuntu (apt)"
         PACKAGE_MANAGER="apt"
