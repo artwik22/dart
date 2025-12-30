@@ -186,9 +186,9 @@ SharpShell includes an interactive installer that handles everything automatical
 ```bash
 git clone https://github.com/artwik22/sharpshell.git
 cd sharpshell
-./install.sh
-# Or for fully automatic installation:
-./install.sh --auto
+./install.sh                    # Interactive installation
+./install.sh --auto            # Auto-install optional deps
+./install.sh --force           # Force install everything
 ```
 
 The installer will:
@@ -202,7 +202,8 @@ The installer will:
 
 #### Installer Options
 - **`./install.sh`** - Interactive installation with prompts
-- **`./install.sh --auto`** - Fully automatic installation (installs all optional dependencies)
+- **`./install.sh --auto`** - Install optional dependencies automatically
+- **`./install.sh --force`** - Force install all dependencies without any prompts
 - **`./install.sh --help`** - Show help and usage information
 
 #### Supported Package Managers

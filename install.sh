@@ -33,10 +33,14 @@ UPDATE_CMD=""
 
 # Parse command line arguments
 AUTO_INSTALL=false
+FORCE_INSTALL=false
 for arg in "$@"; do
     case $arg in
         --auto)
             AUTO_INSTALL=true
+            ;;
+        --force)
+            FORCE_INSTALL=true
             ;;
         --help)
             echo "SharpShell Installer"
@@ -44,12 +48,14 @@ for arg in "$@"; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --auto    Automatically install all dependencies without asking"
-            echo "  --help    Show this help message"
+            echo "  --auto     Automatically install optional dependencies without asking"
+            echo "  --force    Force install all dependencies without any prompts"
+            echo "  --help     Show this help message"
             echo ""
             echo "Examples:"
-            echo "  $0                    # Interactive installation"
-            echo "  $0 --auto            # Fully automatic installation"
+            echo "  $0                     # Interactive installation"
+            echo "  $0 --auto             # Install optional deps automatically"
+            echo "  $0 --force            # Install everything automatically"
             echo ""
             exit 0
             ;;
@@ -228,12 +234,17 @@ check_dependency() {
         print_success "$name is installed"
         return 0
     else
-        if [ "$optional" = true ]; then
+        if [ "$optional" = true ] && [ "$FORCE_INSTALL" = false ]; then
             print_warning "$name is not installed (optional)"
             OPTIONAL_DEPS+=("$package")
         else
-            print_error "$name is not installed (required)"
-            MISSING_DEPS+=("$package")
+            if [ "$optional" = true ] && [ "$FORCE_INSTALL" = true ]; then
+                print_info "$name is not installed (will be auto-installed)"
+                MISSING_DEPS+=("$package")
+            else
+                print_error "$name is not installed (required)"
+                MISSING_DEPS+=("$package")
+            fi
         fi
         return 1
     fi
@@ -374,14 +385,17 @@ check_dependencies() {
         done
         echo ""
 
-        if [ "$AUTO_INSTALL" = true ]; then
+        if [ "$FORCE_INSTALL" = true ]; then
+            print_info "Force-installing all optional dependencies (--force flag used)"
+            install_optional=true
+        elif [ "$AUTO_INSTALL" = true ]; then
             print_info "Auto-installing optional dependencies (--auto flag used)"
             install_optional=true
         else
             read -p "$(echo -e ${YELLOW}Would you like to install optional dependencies? [y/N]: ${NC})" install_optional
         fi
 
-        if [[ "$install_optional" =~ ^[Yy]$ ]] || [ "$AUTO_INSTALL" = true ]; then
+        if [[ "$install_optional" =~ ^[Yy]$ ]] || [ "$AUTO_INSTALL" = true ] || [ "$FORCE_INSTALL" = true ]; then
             print_header "Installing Optional Dependencies"
             check_sudo
 
