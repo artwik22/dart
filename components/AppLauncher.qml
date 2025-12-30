@@ -121,7 +121,25 @@ PanelWindow {
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$HOME\" > /tmp/quickshell_home 2>/dev/null || echo \"\" > /tmp/quickshell_home']; running: true }", appLauncherRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: appLauncherRoot.readHomePath() }", appLauncherRoot)
     }
-    
+
+    function loadNotes() {
+        var notesPath = colorConfigPath.replace("colors.json", "notes.txt")
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file://" + notesPath)
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200 || xhr.status === 0) {
+                    notesText.text = xhr.responseText
+                    console.log("Notes loaded from:", notesPath)
+                } else {
+                    console.log("Notes file doesn't exist, showing default message")
+                    notesText.text = "No notes yet.\n\nClick 'Edit Notes' to add your first note!"
+                }
+            }
+        }
+        xhr.send()
+    }
+
     function readHomePath() {
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file:///tmp/quickshell_home")
@@ -508,7 +526,7 @@ PanelWindow {
     // Calculator properties
     property string calculatorResult: ""
     property bool isCalculatorMode: false
-    property int currentMode: -1  // -1 = mode selection, 0 = Launcher, 1 = Packages, 2 = Settings
+    property int currentMode: -1  // -1 = mode selection, 0 = Launcher, 1 = Packages, 2 = Settings, 3 = Notes
     property int currentPackageMode: -1  // -1 = Packages option selection, 0 = install source selection (Pacman/AUR), 1 = Pacman search, 2 = AUR search, 3 = remove source selection (Pacman/AUR), 4 = Pacman remove search, 5 = AUR remove search
     property int installSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
     property int removeSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
@@ -1657,6 +1675,10 @@ PanelWindow {
                     if (sharedData) {
                         sharedData.launcherVisible = false
                     }
+                } else if (currentMode === 3) {
+                    // W trybie Notes - wróć do wyboru trybu
+                    currentMode = -1
+                    selectedIndex = 2  // Wróć do pozycji Notes w menu
                 } else if (currentMode === 2 && currentSettingsMode !== -1) {
                     // W ustawieniach - wróć do listy opcji
                     currentSettingsMode = -1
@@ -2093,6 +2115,7 @@ PanelWindow {
             model: ListModel {
                 ListElement { name: "Launcher"; description: "Launch applications"; mode: 0; icon: "󰈙" }
                 ListElement { name: "Packages"; description: "Manage packages"; mode: 1; icon: "󰏖" }
+                ListElement { name: "Notes"; description: "Quick notes and reminders"; mode: 3; icon: "󰎞" }
                 ListElement { name: "Settings"; description: "Configure launcher"; mode: 2; icon: "󰒓" }
             }
             
@@ -5219,6 +5242,91 @@ PanelWindow {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     acceptedButtons: Qt.NoButton
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Tryb 3: Notes
+            Item {
+                id: notesMode
+                anchors.fill: parent
+                visible: currentMode === 3
+                enabled: true
+                z: 10
+
+                // Content
+                Flickable {
+                    anchors.fill: parent
+                    anchors.margins: 20
+                    contentHeight: notesColumn.height
+                    clip: true
+
+                    Column {
+                        id: notesColumn
+                        width: parent.width
+                        spacing: 16
+
+                        // Title
+                        Text {
+                            text: "Quick Notes"
+                            font.pixelSize: 18
+                            font.family: "JetBrains Mono"
+                            font.weight: Font.Bold
+                            color: colorText
+                        }
+
+                        // Notes display area
+                        Rectangle {
+                            width: parent.width
+                            height: 400
+                            color: colorPrimary
+                            border.width: 2
+                            border.color: colorSecondary
+                            radius: 8
+
+                            Text {
+                                id: notesText
+                                anchors.fill: parent
+                                anchors.margins: 12
+                                font.pixelSize: 14
+                                font.family: "JetBrains Mono"
+                                color: colorText
+                                text: "Loading notes..."
+                                wrapMode: Text.Wrap
+                                verticalAlignment: Text.AlignTop
+
+                                Component.onCompleted: {
+                                    loadNotes()
+                                }
+                            }
+                        }
+
+                        // Edit button
+                        Rectangle {
+                            width: parent.width
+                            height: 45
+                            color: editNotesButtonMouseArea.containsMouse ? colorAccent : colorSecondary
+                            radius: 0
+
+                            Text {
+                                text: "Edit Notes"
+                                font.pixelSize: 14
+                                font.family: "JetBrains Mono"
+                                font.weight: Font.Bold
+                                color: colorText
+                                anchors.centerIn: parent
+                            }
+
+                            MouseArea {
+                                id: editNotesButtonMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    console.log("Edit Notes clicked - feature coming soon!")
                                 }
                             }
                         }

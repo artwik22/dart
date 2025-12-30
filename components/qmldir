@@ -1,0 +1,12 @@
+module qs.components
+AppLauncher 1.0 AppLauncher.qml
+ClipboardManager 1.0 ClipboardManager.qml
+Dashboard 1.0 Dashboard.qml
+NotificationDisplay 1.0 NotificationDisplay.qml
+NotificationItem 1.0 NotificationItem.qml
+RightEdgeDetector 1.0 RightEdgeDetector.qml
+SidePanel 1.0 SidePanel.qml
+TopEdgeDetector 1.0 TopEdgeDetector.qml
+Utils 1.0 Utils.qml
+VolumeSlider 1.0 VolumeSlider.qml
+WallpaperBackground 1.0 WallpaperBackground.qml

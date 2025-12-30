@@ -640,7 +640,6 @@ PanelWindow {
         id: screenshotButtonContainer
         width: 40
         height: 40
-        anchors.left: panelPosition === "left" ? parent.left : undefined
         anchors.horizontalCenter: panelPosition === "left" ? parent.horizontalCenter : undefined
         anchors.verticalCenter: panelPosition === "top" ? parent.verticalCenter : undefined
         anchors.right: panelPosition === "top" ? parent.right : undefined
@@ -737,7 +736,6 @@ PanelWindow {
         id: clipboardButtonContainer
         width: 40
         height: 40
-        anchors.left: panelPosition === "left" ? parent.left : undefined
         anchors.horizontalCenter: panelPosition === "left" ? parent.horizontalCenter : undefined
         anchors.verticalCenter: panelPosition === "top" ? parent.verticalCenter : undefined
         anchors.right: panelPosition === "top" ? parent.right : undefined
