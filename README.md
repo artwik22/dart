@@ -202,9 +202,11 @@ The installer will:
 
 #### Installer Options
 - **`./install.sh`** - Interactive installation with prompts
-- **`./install.sh --auto`** - Install optional dependencies automatically
-- **`./install.sh --force`** - Force install all dependencies without any prompts
+- **`./install.sh --auto`** - Install optional dependencies automatically (one command)
+- **`./install.sh --force`** - Force install all dependencies without any prompts (one command)
 - **`./install.sh --help`** - Show help and usage information
+
+**Note:** `--auto` and `--force` use batch installation (`sudo pacman install pkg1 pkg2...`) for faster installation.
 
 #### Supported Package Managers
 - **Arch Linux**: pacman + AUR (yay/paru)

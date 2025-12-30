@@ -366,18 +366,73 @@ check_dependencies() {
     
     echo ""
     
-    # Install missing required dependencies
-    if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
-        print_header "Installing Required Dependencies"
-        check_sudo
-        
-        for dep in "${MISSING_DEPS[@]}"; do
-            install_dependency "$dep" false || print_error "Failed to install $dep"
-        done
-    fi
-    
-    # Install optional dependencies
-    if [ ${#OPTIONAL_DEPS[@]} -gt 0 ]; then
+    # Install all dependencies
+    if [ ${#MISSING_DEPS[@]} -gt 0 ] || ([ ${#OPTIONAL_DEPS[@]} -gt 0 ] && ([ "$AUTO_INSTALL" = true ] || [ "$FORCE_INSTALL" = true ])); then
+        print_header "Installing Dependencies"
+
+        # Collect all packages to install
+        ALL_PACKAGES=("${MISSING_DEPS[@]}")
+
+        if [ "$AUTO_INSTALL" = true ] || [ "$FORCE_INSTALL" = true ]; then
+            ALL_PACKAGES+=("${OPTIONAL_DEPS[@]}")
+        fi
+
+        if [ ${#ALL_PACKAGES[@]} -gt 0 ]; then
+            check_sudo
+
+            # Separate regular packages and AUR packages
+            REGULAR_PACKAGES=()
+            AUR_PACKAGES=()
+
+            for dep in "${ALL_PACKAGES[@]}"; do
+                if [ "$dep" = "quickshell" ] && [ "$PACKAGE_MANAGER" = "pacman" ]; then
+                    AUR_PACKAGES+=("$dep")
+                else
+                    REGULAR_PACKAGES+=("$dep")
+                fi
+            done
+
+            # Install regular packages with one command
+            if [ ${#REGULAR_PACKAGES[@]} -gt 0 ]; then
+                print_info "Installing packages: ${REGULAR_PACKAGES[*]}"
+                echo "Running: sudo $INSTALL_CMD ${REGULAR_PACKAGES[*]}"
+                if sudo $INSTALL_CMD "${REGULAR_PACKAGES[@]}"; then
+                    for dep in "${REGULAR_PACKAGES[@]}"; do
+                        INSTALLED_DEPS+=("$dep")
+                    done
+                    print_success "Installed ${#REGULAR_PACKAGES[@]} regular packages"
+                else
+                    print_error "Failed to install regular packages"
+                fi
+            fi
+
+            # Install AUR packages
+            if [ ${#AUR_PACKAGES[@]} -gt 0 ]; then
+                for dep in "${AUR_PACKAGES[@]}"; do
+                    print_info "Installing AUR package: $dep"
+                    if command_exists yay; then
+                        if yay -S --noconfirm "$dep"; then
+                            INSTALLED_DEPS+=("$dep")
+                            print_success "Installed AUR package: $dep"
+                        else
+                            print_error "Failed to install AUR package: $dep"
+                        fi
+                    elif command_exists paru; then
+                        if paru -S --noconfirm "$dep"; then
+                            INSTALLED_DEPS+=("$dep")
+                            print_success "Installed AUR package: $dep"
+                        else
+                            print_error "Failed to install AUR package: $dep"
+                        fi
+                    else
+                        print_error "No AUR helper available for: $dep"
+                    fi
+                done
+            fi
+        fi
+
+    elif [ ${#OPTIONAL_DEPS[@]} -gt 0 ]; then
+        # Interactive mode - ask about optional dependencies
         echo ""
         print_info "Found optional dependencies that may enhance functionality:"
         for dep in "${OPTIONAL_DEPS[@]}"; do
@@ -385,17 +440,9 @@ check_dependencies() {
         done
         echo ""
 
-        if [ "$FORCE_INSTALL" = true ]; then
-            print_info "Force-installing all optional dependencies (--force flag used)"
-            install_optional=true
-        elif [ "$AUTO_INSTALL" = true ]; then
-            print_info "Auto-installing optional dependencies (--auto flag used)"
-            install_optional=true
-        else
-            read -p "$(echo -e ${YELLOW}Would you like to install optional dependencies? [y/N]: ${NC})" install_optional
-        fi
+        read -p "$(echo -e ${YELLOW}Would you like to install optional dependencies? [y/N]: ${NC})" install_optional
 
-        if [[ "$install_optional" =~ ^[Yy]$ ]] || [ "$AUTO_INSTALL" = true ] || [ "$FORCE_INSTALL" = true ]; then
+        if [[ "$install_optional" =~ ^[Yy]$ ]]; then
             print_header "Installing Optional Dependencies"
             check_sudo
 
