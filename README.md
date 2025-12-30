@@ -40,6 +40,16 @@
 
 ## Latest Updates
 
+### Version 2.2.0 - Multi-Platform Support & Notes System
+
+- **📦 Multi-Platform Package Manager Support**: Installer now supports pacman (Arch), apt (Debian/Ubuntu), and dnf (Fedora/RHEL)
+- **📝 Notes System**: Added complete notes management with menu interface
+  - Create new notes with automatic filename generation
+  - View and edit existing notes
+  - Intuitive menu navigation with keyboard support
+- **🔧 Enhanced Installer**: Auto-detection of package manager with manual selection fallback
+- **🎨 UI Improvements**: Refined launcher animations and menu interactions
+
 ### Version 2.1.0 - UI/UX Improvements
 
 - **Fixed Selection Visibility**: Resolved issue where selected items in launcher were too bright with invisible text
@@ -62,6 +72,7 @@
 | Calculator | Type `=` followed by math expressions |
 | Keyboard Navigation | Full arrow key support with smooth animations |
 | Package Management | Install/remove via Pacman and AUR |
+| **Notes System** | **Create, view, and edit notes with automatic file management** |
 | Settings Panel | Wallpaper, colors, sidebar toggle, system updates, bar position (4 options) |
 | Color Presets | 24 pre-made themes with live preview |
 | Custom Colors | Edit HEX values directly with instant feedback |
@@ -179,12 +190,18 @@ cd sharpshell
 ```
 
 The installer will:
-- Check and install dependencies
+- **Auto-detect your package manager** (pacman, apt, dnf)
+- Check and install dependencies for your system
 - Copy all files to `~/.config/sharpshell`
 - Set proper permissions
 - Create wallpapers directory
 - Create color configuration
 - Display setup instructions
+
+#### Supported Package Managers
+- **Arch Linux**: pacman + AUR (yay/paru)
+- **Debian/Ubuntu**: apt
+- **Fedora/RHEL**: dnf
 
 ### Manual Installation
 

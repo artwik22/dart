@@ -140,6 +140,83 @@ PanelWindow {
         xhr.send()
     }
 
+    function loadNotesList() {
+        // For now, just show placeholder - we'll implement proper directory listing later
+        notesModel.clear()
+        notesModel.append({ name: "Brak zapisanych notatek", file: "" })
+
+        // Try to find existing note files
+        var notesDir = colorConfigPath.replace("colors.json", "")
+        var testFiles = ["test.txt", "notatka.txt", "przypomnienie.txt"]
+
+        for (var i = 0; i < testFiles.length; i++) {
+            var xhr = new XMLHttpRequest()
+            xhr.open("GET", "file://" + notesDir + "/" + testFiles[i])
+            xhr.onreadystatechange = (function(file) {
+                return function() {
+                    if (this.readyState === XMLHttpRequest.DONE && (this.status === 200 || this.status === 0)) {
+                        // File exists, add to model
+                        if (notesModel.count === 1 && notesModel.get(0).name === "Brak zapisanych notatek") {
+                            notesModel.clear()
+                        }
+                        var fileName = file.replace('.txt', '')
+                        notesModel.append({ name: fileName, file: file })
+                    }
+                }
+            })(testFiles[i])
+            xhr.send()
+        }
+    }
+
+    function saveNote() {
+        if (notesEditText.text.trim() === "") {
+            return
+        }
+
+        // Generate filename from first line or current filename
+        var fileName
+        if (currentNotesMode === 0) {
+            // New note - use first line as filename
+            var firstLine = notesEditText.text.split('\n')[0].trim()
+            if (firstLine === "") {
+                firstLine = "Bez tytułu"
+            }
+            fileName = firstLine.replace(/[^a-zA-Z0-9\-_\s]/g, "").replace(/\s+/g, "_") + ".txt"
+        } else {
+            // Edit existing note
+            fileName = notesFileName
+        }
+
+        var notesPath = colorConfigPath.replace("colors.json", fileName)
+        var content = notesEditText.text
+        var escapedContent = content.replace(/"/g, '\\"').replace(/\$/g, '\\$').replace(/`/g, '\\`')
+
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"" + escapedContent + "\" > \"" + notesPath + "\"']; running: true }", appLauncherRoot)
+        console.log("Note saved to:", notesPath)
+
+        // Reload notes list and go back to menu
+        loadNotesList()
+        currentNotesMode = -1
+        selectedIndex = 0
+    }
+
+    function loadNoteContent(fileName) {
+        var notesPath = colorConfigPath.replace("colors.json", fileName)
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file://" + notesPath)
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200 || xhr.status === 0) {
+                    notesEditText.text = xhr.responseText
+                    console.log("Note loaded from:", notesPath)
+                } else {
+                    notesEditText.text = ""
+                }
+            }
+        }
+        xhr.send()
+    }
+
     function readHomePath() {
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file:///tmp/quickshell_home")
@@ -527,6 +604,8 @@ PanelWindow {
     property string calculatorResult: ""
     property bool isCalculatorMode: false
     property int currentMode: -1  // -1 = mode selection, 0 = Launcher, 1 = Packages, 2 = Settings, 3 = Notes
+    property int currentNotesMode: -1  // -1 = menu, 0 = new note, 1 = edit note
+    property string notesFileName: ""  // Current note file name
     property int currentPackageMode: -1  // -1 = Packages option selection, 0 = install source selection (Pacman/AUR), 1 = Pacman search, 2 = AUR search, 3 = remove source selection (Pacman/AUR), 4 = Pacman remove search, 5 = AUR remove search
     property int installSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
     property int removeSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
@@ -1675,8 +1754,12 @@ PanelWindow {
                     if (sharedData) {
                         sharedData.launcherVisible = false
                     }
-                } else if (currentMode === 3) {
-                    // W trybie Notes - wróć do wyboru trybu
+                } else if (currentMode === 3 && currentNotesMode !== -1) {
+                    // W edytorze notes - wróć do menu notes
+                    currentNotesMode = -1
+                    selectedIndex = 0
+                } else if (currentMode === 3 && currentNotesMode === -1) {
+                    // W menu notes - wróć do wyboru trybu
                     currentMode = -1
                     selectedIndex = 2  // Wróć do pozycji Notes w menu
                 } else if (currentMode === 2 && currentSettingsMode !== -1) {
@@ -2064,6 +2147,43 @@ PanelWindow {
                     // W trybie AUR remove search - przekieruj do TextInput
                     if (removeAurSearchInput) removeAurSearchInput.forceActiveFocus()
                     event.accepted = false
+                } else if (currentMode === 3 && currentNotesMode === -1) {
+                    // W menu notes - nawigacja po liście notatek
+                    if (event.key === Qt.Key_Up) {
+                        if (selectedIndex > 0) {
+                            selectedIndex--
+                            notesList.positionViewAtIndex(selectedIndex, ListView.Center)
+                        }
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Down) {
+                        if (selectedIndex < notesList.count - 1) {
+                            selectedIndex++
+                            notesList.positionViewAtIndex(selectedIndex, ListView.Center)
+                        }
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        // Enter - wybierz pierwszą notatkę lub nową notatkę
+                        if (selectedIndex === 0) {
+                            // Nowa notatka
+                            currentNotesMode = 0
+                            selectedIndex = 0
+                            notesEditText.text = ""
+                            notesFileName = ""
+                        } else {
+                            // Wybierz istniejącą notatkę
+                            var noteItem = notesModel.get(selectedIndex)
+                            if (noteItem && noteItem.file !== "") {
+                                currentNotesMode = 1
+                                notesFileName = noteItem.file
+                                loadNoteContent(noteItem.file)
+                            }
+                        }
+                        event.accepted = true
+                    }
+                } else if (currentMode === 3 && (currentNotesMode === 0 || currentNotesMode === 1)) {
+                    // W edytorze notes - przekieruj do TextEdit
+                    notesEditText.forceActiveFocus()
+                    event.accepted = false
             }
         }
         
@@ -2087,28 +2207,6 @@ PanelWindow {
                 NumberAnimation {
                     duration: 280
                     easing.type: Easing.OutQuart
-                }
-            }
-            
-            add: Transition {
-                SequentialAnimation {
-                    PauseAnimation { duration: index * 50 }
-                    ParallelAnimation {
-                        NumberAnimation {
-                            properties: "opacity"
-                            from: 0
-                            to: 1
-                            duration: 280
-                            easing.type: Easing.OutQuart
-                        }
-                        NumberAnimation {
-                            property: "y"
-                            from: 10
-                            to: 0
-                            duration: 280
-                            easing.type: Easing.OutQuart
-                        }
-                    }
                 }
             }
             
@@ -2355,28 +2453,6 @@ PanelWindow {
                                 onCurrentIndexChanged: {
                                     if (currentIndex !== selectedIndex) {
                                         selectedIndex = currentIndex
-                                    }
-                                }
-                                
-                                add: Transition {
-                                    SequentialAnimation {
-                                        PauseAnimation { duration: index * 30 }
-                                        NumberAnimation {
-                                            properties: "opacity"
-                                            from: 0
-                                            to: 1
-                                            duration: 220
-                                            easing.type: Easing.OutQuart
-                                        }
-                                    }
-                                }
-                                
-                                remove: Transition {
-                                    NumberAnimation {
-                                        properties: "opacity"
-                                        to: 0
-                                        duration: 180
-                                        easing.type: Easing.InQuart
                                     }
                                 }
                                 
@@ -5257,76 +5333,280 @@ PanelWindow {
                 enabled: true
                 z: 10
 
-                // Content
-                Flickable {
+                // Notes menu (-1) or editor (0=new, 1=edit)
+                Item {
+                    id: notesMenu
                     anchors.fill: parent
-                    anchors.margins: 20
-                    contentHeight: notesColumn.height
-                    clip: true
+                    visible: currentNotesMode === -1
 
-                    Column {
-                        id: notesColumn
-                        width: parent.width
-                        spacing: 16
+                    Flickable {
+                        anchors.fill: parent
+                        anchors.margins: 20
+                        contentHeight: notesMenuColumn.height
+                        clip: true
 
-                        // Title
-                        Text {
-                            text: "Quick Notes"
-                            font.pixelSize: 18
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Bold
-                            color: colorText
-                        }
-
-                        // Notes display area
-                        Rectangle {
+                        Column {
+                            id: notesMenuColumn
                             width: parent.width
-                            height: 400
-                            color: colorPrimary
-                            border.width: 2
-                            border.color: colorSecondary
-                            radius: 8
+                            spacing: 16
 
+                            // Title
                             Text {
-                                id: notesText
-                                anchors.fill: parent
-                                anchors.margins: 12
-                                font.pixelSize: 14
+                                text: "Notes Manager"
+                                font.pixelSize: 18
                                 font.family: "JetBrains Mono"
+                                font.weight: Font.Bold
                                 color: colorText
-                                text: "Loading notes..."
-                                wrapMode: Text.Wrap
-                                verticalAlignment: Text.AlignTop
+                            }
 
-                                Component.onCompleted: {
-                                    loadNotes()
+                            // New note button
+                            Rectangle {
+                                width: parent.width
+                                height: 60
+                                color: newNoteButtonMouseArea.containsMouse ? colorAccent : colorSecondary
+                                radius: 0
+
+                                Text {
+                                    text: "➕ Nowa notatka"
+                                    font.pixelSize: 16
+                                    font.family: "JetBrains Mono"
+                                    font.weight: Font.Bold
+                                    color: colorText
+                                    anchors.centerIn: parent
+                                }
+
+                                MouseArea {
+                                    id: newNoteButtonMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        currentNotesMode = 0
+                                        selectedIndex = 0
+                                        notesEditText.text = ""
+                                        notesFileName = ""
+                                    }
+                                }
+
+                                // Bottom accent line for selected items
+                                Rectangle {
+                                    anchors.bottom: parent.bottom
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width * 0.8
+                                    height: 3
+                                    color: colorAccent
+                                    radius: 1.5
                                 }
                             }
-                        }
 
-                        // Edit button
-                        Rectangle {
-                            width: parent.width
-                            height: 45
-                            color: editNotesButtonMouseArea.containsMouse ? colorAccent : colorSecondary
-                            radius: 0
-
+                            // Saved notes title
                             Text {
-                                text: "Edit Notes"
+                                text: "Zapisane notatki:"
                                 font.pixelSize: 14
                                 font.family: "JetBrains Mono"
                                 font.weight: Font.Bold
                                 color: colorText
-                                anchors.centerIn: parent
+                                visible: notesList.count > 0
                             }
 
-                            MouseArea {
-                                id: editNotesButtonMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    console.log("Edit Notes clicked - feature coming soon!")
+                            // List of saved notes
+                            ListView {
+                                id: notesList
+                                width: parent.width
+                                height: 300
+                                model: ListModel { id: notesModel }
+                                spacing: 8
+                                clip: true
+
+                                delegate: Rectangle {
+                                    width: parent.width
+                                    height: 50
+                                    color: selectedIndex === index ? colorAccent : (notesItemMouseArea.containsMouse ? colorPrimary : "transparent")
+                                    radius: 0
+
+                                    Text {
+                                        text: model.name
+                                        font.pixelSize: 14
+                                        font.family: "JetBrains Mono"
+                                        color: colorText
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 20
+                                        elide: Text.ElideRight
+                                    }
+
+                                    MouseArea {
+                                        id: notesItemMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            if (model.file !== "") {
+                                                selectedIndex = index
+                                                currentNotesMode = 1
+                                                notesFileName = model.file
+                                                loadNoteContent(model.file)
+                                            }
+                                        }
+                                    }
+
+                                    // Bottom accent line for selected items
+                                    Rectangle {
+                                        anchors.bottom: parent.bottom
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        width: selectedIndex === index ? parent.width * 0.8 : 0
+                                        height: 3
+                                        color: colorAccent
+                                        radius: 1.5
+                                        Behavior on width {
+                                            NumberAnimation {
+                                                duration: 300
+                                                easing.type: Easing.OutCubic
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Component.onCompleted: {
+                                    loadNotesList()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Note editor (new or edit)
+                Item {
+                    id: notesEditor
+                    anchors.fill: parent
+                    visible: currentNotesMode === 0 || currentNotesMode === 1
+
+                    Flickable {
+                        anchors.fill: parent
+                        anchors.margins: 20
+                        contentHeight: notesEditorColumn.height
+                        clip: true
+
+                        Column {
+                            id: notesEditorColumn
+                            width: parent.width
+                            spacing: 16
+
+                            // Title
+                            Text {
+                                text: currentNotesMode === 0 ? "Nowa notatka" : "Edytuj notatkę"
+                                font.pixelSize: 18
+                                font.family: "JetBrains Mono"
+                                font.weight: Font.Bold
+                                color: colorText
+                            }
+
+                            // Instructions for new notes
+                            Text {
+                                width: parent.width
+                                text: currentNotesMode === 0 ?
+                                    "Wpisz tytuł notatki w pierwszej linii, potem treść.\nNazwa pliku zostanie utworzona automatycznie." :
+                                    "Edytuj notatkę. Pierwsza linia to tytuł."
+                                font.pixelSize: 12
+                                font.family: "JetBrains Mono"
+                                color: "#888888"
+                                wrapMode: Text.Wrap
+                                visible: currentNotesMode === 0 || currentNotesMode === 1
+                            }
+
+                            // Notes edit area
+                            Rectangle {
+                                width: parent.width
+                                height: 350
+                                color: colorPrimary
+                                border.width: 2
+                                border.color: colorSecondary
+                                radius: 8
+
+                                TextEdit {
+                                    id: notesEditText
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    font.pixelSize: 14
+                                    font.family: "JetBrains Mono"
+                                    color: colorText
+                                    wrapMode: TextEdit.Wrap
+                                    selectByMouse: true
+                                    activeFocusOnPress: true
+                                    focus: true
+
+                                    Text {
+                                        text: "Wpisz swoją notatkę tutaj..."
+                                        font.pixelSize: 14
+                                        font.family: "JetBrains Mono"
+                                        color: Qt.lighter(colorText, 1.5)
+                                        visible: parent.text.length === 0
+                                        anchors.fill: parent
+                                        anchors.margins: 12
+                                        verticalAlignment: Text.AlignTop
+                                    }
+                                }
+                            }
+
+                            // Buttons row
+                            Row {
+                                spacing: 12
+                                width: parent.width
+
+                                // Save button
+                                Rectangle {
+                                    width: (parent.width - parent.spacing) / 2
+                                    height: 45
+                                    color: saveNoteButtonMouseArea.containsMouse ? colorAccent : colorSecondary
+                                    radius: 0
+
+                                    Text {
+                                        text: "💾 Zapisz"
+                                        font.pixelSize: 14
+                                        font.family: "JetBrains Mono"
+                                        font.weight: Font.Bold
+                                        color: colorText
+                                        anchors.centerIn: parent
+                                    }
+
+                                    MouseArea {
+                                        id: saveNoteButtonMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            saveNote()
+                                        }
+                                    }
+                                }
+
+                                // Cancel button
+                                Rectangle {
+                                    width: (parent.width - parent.spacing) / 2
+                                    height: 45
+                                    color: cancelNoteButtonMouseArea.containsMouse ? colorPrimary : "transparent"
+                                    border.width: 1
+                                    border.color: colorSecondary
+                                    radius: 0
+
+                                    Text {
+                                        text: "❌ Anuluj"
+                                        font.pixelSize: 14
+                                        font.family: "JetBrains Mono"
+                                        font.weight: Font.Bold
+                                        color: colorText
+                                        anchors.centerIn: parent
+                                    }
+
+                                    MouseArea {
+                                        id: cancelNoteButtonMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            currentNotesMode = -1
+                                            selectedIndex = 0
+                                        }
+                                    }
                                 }
                             }
                         }

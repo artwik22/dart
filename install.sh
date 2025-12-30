@@ -26,6 +26,70 @@ INSTALLED_DEPS=()
 MISSING_DEPS=()
 OPTIONAL_DEPS=()
 
+# Package manager variables
+PACKAGE_MANAGER=""
+INSTALL_CMD=""
+UPDATE_CMD=""
+
+# Detect package manager
+detect_package_manager() {
+    print_header "Package Manager Selection"
+
+    # Auto-detect based on available package managers
+    if command_exists "pacman"; then
+        print_success "Detected Arch Linux (pacman)"
+        PACKAGE_MANAGER="pacman"
+        INSTALL_CMD="sudo pacman -S --noconfirm"
+        UPDATE_CMD="sudo pacman -Syu --noconfirm"
+    elif command_exists "apt"; then
+        print_success "Detected Debian/Ubuntu (apt)"
+        PACKAGE_MANAGER="apt"
+        INSTALL_CMD="sudo apt install -y"
+        UPDATE_CMD="sudo apt update && sudo apt upgrade -y"
+    elif command_exists "dnf"; then
+        print_success "Detected Fedora/RHEL (dnf)"
+        PACKAGE_MANAGER="dnf"
+        INSTALL_CMD="sudo dnf install -y"
+        UPDATE_CMD="sudo dnf upgrade -y"
+    else
+        print_warning "Could not auto-detect package manager"
+        echo ""
+        print_step "Please select your package manager:"
+        echo ""
+        echo -e "${CYAN}1.${NC} pacman (Arch Linux)"
+        echo -e "${CYAN}2.${NC} apt (Debian/Ubuntu)"
+        echo -e "${CYAN}3.${NC} dnf (Fedora/RHEL)"
+        echo ""
+        read -p "$(echo -e ${YELLOW}Enter your choice [1-3]: ${NC})" pm_choice
+
+        case $pm_choice in
+            1)
+                PACKAGE_MANAGER="pacman"
+                INSTALL_CMD="sudo pacman -S --noconfirm"
+                UPDATE_CMD="sudo pacman -Syu --noconfirm"
+                ;;
+            2)
+                PACKAGE_MANAGER="apt"
+                INSTALL_CMD="sudo apt install -y"
+                UPDATE_CMD="sudo apt update && sudo apt upgrade -y"
+                ;;
+            3)
+                PACKAGE_MANAGER="dnf"
+                INSTALL_CMD="sudo dnf install -y"
+                UPDATE_CMD="sudo dnf upgrade -y"
+                ;;
+            *)
+                print_error "Invalid choice. Defaulting to pacman."
+                PACKAGE_MANAGER="pacman"
+                INSTALL_CMD="sudo pacman -S --noconfirm"
+                UPDATE_CMD="sudo pacman -Syu --noconfirm"
+                ;;
+        esac
+    fi
+
+    print_info "Using package manager: $PACKAGE_MANAGER"
+}
+
 # Helper functions
 print_header() {
     echo ""
@@ -68,12 +132,73 @@ check_sudo() {
     fi
 }
 
+# Get package name for current system
+get_package_name() {
+    local base_name=$1
+
+    case $base_name in
+        "quickshell")
+            case $PACKAGE_MANAGER in
+                "pacman") echo "quickshell" ;;
+                "apt") echo "quickshell" ;;  # Assuming quickshell is available via apt
+                "dnf") echo "quickshell" ;;  # Assuming quickshell is available via dnf
+                *) echo "quickshell" ;;
+            esac
+            ;;
+        "cava")
+            case $PACKAGE_MANAGER in
+                "pacman") echo "cava" ;;
+                "apt") echo "cava" ;;
+                "dnf") echo "cava" ;;
+                *) echo "cava" ;;
+            esac
+            ;;
+        "playerctl")
+            case $PACKAGE_MANAGER in
+                "pacman") echo "playerctl" ;;
+                "apt") echo "playerctl" ;;
+                "dnf") echo "playerctl" ;;
+                *) echo "playerctl" ;;
+            esac
+            ;;
+        "pulseaudio")
+            case $PACKAGE_MANAGER in
+                "pacman") echo "pulseaudio" ;;
+                "apt") echo "pulseaudio" ;;
+                "dnf") echo "pulseaudio" ;;
+                *) echo "pulseaudio" ;;
+            esac
+            ;;
+        "bluez-utils")
+            case $PACKAGE_MANAGER in
+                "pacman") echo "bluez-utils" ;;
+                "apt") echo "bluez" ;;
+                "dnf") echo "bluez" ;;
+                *) echo "bluez-utils" ;;
+            esac
+            ;;
+        "lm_sensors")
+            case $PACKAGE_MANAGER in
+                "pacman") echo "lm_sensors" ;;
+                "apt") echo "lm-sensors" ;;
+                "dnf") echo "lm_sensors" ;;
+                *) echo "lm_sensors" ;;
+            esac
+            ;;
+        *)
+            echo "$base_name"
+            ;;
+    esac
+}
+
 # Check dependency
 check_dependency() {
     local name=$1
-    local package=$2
+    local base_package=$2
     local optional=${3:-false}
-    
+
+    local package=$(get_package_name "$base_package")
+
     if command_exists "$name"; then
         print_success "$name is installed"
         return 0
@@ -89,42 +214,66 @@ check_dependency() {
     fi
 }
 
-# Install dependency via pacman or AUR
+# Install dependency via detected package manager
 install_dependency() {
     local package=$1
-    local is_aur=${2:-false}
-    
-    if [ "$is_aur" = true ]; then
-        # Check for AUR helper
-        if command_exists yay; then
-            print_info "Installing $package via yay..."
-            yay -S --noconfirm "$package" && INSTALLED_DEPS+=("$package")
-        elif command_exists paru; then
-            print_info "Installing $package via paru..."
-            paru -S --noconfirm "$package" && INSTALLED_DEPS+=("$package")
-        else
-            print_warning "No AUR helper (yay/paru) found. Cannot install $package automatically."
-            return 1
-        fi
-    else
-        # Try pacman first, then AUR if pacman fails
-        print_info "Attempting to install $package via pacman..."
-        if sudo pacman -S --noconfirm "$package" 2>/dev/null; then
-            INSTALLED_DEPS+=("$package")
-            return 0
-        else
-            # Try AUR if pacman failed
-            print_info "Pacman did not find $package, trying AUR..."
-            if command_exists yay; then
-                yay -S --noconfirm "$package" && INSTALLED_DEPS+=("$package")
-            elif command_exists paru; then
-                paru -S --noconfirm "$package" && INSTALLED_DEPS+=("$package")
+    local is_special=${2:-false}
+
+    case $PACKAGE_MANAGER in
+        "pacman")
+            if [ "$is_special" = true ]; then
+                # Check for AUR helper
+                if command_exists yay; then
+                    print_info "Installing $package via yay..."
+                    yay -S --noconfirm "$package" && INSTALLED_DEPS+=("$package")
+                elif command_exists paru; then
+                    print_info "Installing $package via paru..."
+                    paru -S --noconfirm "$package" && INSTALLED_DEPS+=("$package")
+                else
+                    print_warning "No AUR helper (yay/paru) found. Cannot install $package automatically."
+                    return 1
+                fi
             else
-                print_warning "Cannot install $package (AUR helper required)"
+                print_info "Installing $package via pacman..."
+                if $INSTALL_CMD "$package"; then
+                    INSTALLED_DEPS+=("$package")
+                else
+                    # Try AUR as fallback for Arch
+                    print_info "Pacman did not find $package, trying AUR..."
+                    if command_exists yay; then
+                        yay -S --noconfirm "$package" && INSTALLED_DEPS+=("$package")
+                    elif command_exists paru; then
+                        paru -S --noconfirm "$package" && INSTALLED_DEPS+=("$package")
+                    else
+                        print_warning "Cannot install $package"
+                        return 1
+                    fi
+                fi
+            fi
+            ;;
+        "apt")
+            print_info "Installing $package via apt..."
+            if $INSTALL_CMD "$package"; then
+                INSTALLED_DEPS+=("$package")
+            else
+                print_warning "Failed to install $package via apt"
                 return 1
             fi
-        fi
-    fi
+            ;;
+        "dnf")
+            print_info "Installing $package via dnf..."
+            if $INSTALL_CMD "$package"; then
+                INSTALLED_DEPS+=("$package")
+            else
+                print_warning "Failed to install $package via dnf"
+                return 1
+            fi
+            ;;
+        *)
+            print_error "Unknown package manager: $PACKAGE_MANAGER"
+            return 1
+            ;;
+    esac
 }
 
 # Check and install dependencies
@@ -164,12 +313,20 @@ check_dependencies() {
     # Sensors
     check_dependency "sensors" "lm_sensors" true
     
-    # AUR helpers (for optional AUR packages)
-    if command_exists "yay" || command_exists "paru"; then
-        print_success "AUR helper is available"
-    else
-        print_warning "AUR helper (yay/paru) is not installed (optional)"
-    fi
+    # Package manager specific tools
+    case $PACKAGE_MANAGER in
+        "pacman")
+            # AUR helpers (for optional AUR packages)
+            if command_exists "yay" || command_exists "paru"; then
+                print_success "AUR helper is available"
+            else
+                print_warning "AUR helper (yay/paru) is not installed (optional)"
+            fi
+            ;;
+        *)
+            print_info "Using $PACKAGE_MANAGER package manager"
+            ;;
+    esac
     
     echo ""
     
@@ -385,6 +542,8 @@ show_instructions() {
             echo -e "  ${GREEN}•${NC} $dep"
         done
         echo ""
+
+    echo -e "${CYAN}${BOLD}Package Manager Used:${NC} $PACKAGE_MANAGER"
     fi
     
     echo -e "${GREEN}${BOLD}Enjoy using SharpShell!${NC}"
@@ -412,6 +571,9 @@ main() {
         exit 1
     fi
     
+    # Detect package manager first
+    detect_package_manager
+
     # Run installation steps
     check_dependencies
 
@@ -419,7 +581,21 @@ main() {
     if ! command_exists quickshell; then
         print_error "Quickshell is not installed!"
         print_info "Quickshell is required for SharpShell to work"
-        print_info "Install it from AUR: ${CYAN}yay -S quickshell${NC} or ${CYAN}paru -S quickshell${NC}"
+
+        case $PACKAGE_MANAGER in
+            "pacman")
+                print_info "Install it from AUR: ${CYAN}yay -S quickshell${NC} or ${CYAN}paru -S quickshell${NC}"
+                ;;
+            "apt")
+                print_info "Install it from repository: ${CYAN}sudo apt install quickshell${NC}"
+                ;;
+            "dnf")
+                print_info "Install it from repository: ${CYAN}sudo dnf install quickshell${NC}"
+                ;;
+            *)
+                print_info "Install quickshell for your package manager"
+                ;;
+        esac
         exit 1
     fi
 

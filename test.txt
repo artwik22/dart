@@ -1,0 +1,4 @@
+Testowa notatka
+To jest test zapisywania notatek.
+
+Data: Wed Dec 31 00:02:10 CET 2025
