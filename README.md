@@ -8,7 +8,7 @@
 [![Wayland](https://img.shields.io/badge/Wayland-Supported-FF6B6B?style=for-the-badge&logo=wayland)](https://wayland.freedesktop.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-*A customizable system with beautiful smooth animations, automated installation, and comprehensive features*
+*A customizable system with beautiful smooth animations, automated installation, and comprehensive features. See the showcase for visual previews.*
 
 </div>
 
@@ -16,6 +16,7 @@
 
 ## Table of Contents
 
+- [Showcase](#showcase)
 - [Features](#features)
   - [Application Launcher](#application-launcher)
   - [Dashboard](#dashboard)
@@ -59,6 +60,40 @@
 - **Improved Color Contrast**: Changed selected item backgrounds to use darker colors for better text visibility
 - **UI Polish**: Standardized animation durations and easing functions across all components
 - **Removed Change Password**: Eliminated the Change Password feature for a cleaner settings interface
+
+---
+
+## Showcase
+
+### Application Launcher
+<div align="center">
+  <img src="showcase/launcher.png" alt="SharpShell Launcher" width="800">
+  <p><em>Modern launcher with search, calculator, package management, and settings</em></p>
+</div>
+
+### Dashboard
+<div align="center">
+  <img src="showcase/dashboard.png" alt="SharpShell Dashboard" width="800">
+  <p><em>System monitoring dashboard with weather, performance metrics, and calendar</em></p>
+</div>
+
+### Media Player
+<div align="center">
+  <img src="showcase/media.png" alt="SharpShell Media Player" width="800">
+  <p><em>Full-featured media player with visualizer and album art</em></p>
+</div>
+
+### Clipboard Manager
+<div align="center">
+  <img src="showcase/clipboard.png" alt="SharpShell Clipboard Manager" width="800">
+  <p><em>Advanced clipboard manager with history and smart deduplication</em></p>
+</div>
+
+### Notifications
+<div align="center">
+  <img src="showcase/notification.png" alt="SharpShell Notifications" width="800">
+  <p><em>Beautiful notification system with animations and urgency colors</em></p>
+</div>
 
 ---
 
@@ -213,6 +248,7 @@ The installer will:
 - **Arch Linux**: pacman + AUR (yay/paru)
 - **Debian/Ubuntu**: apt
 - **Fedora/RHEL**: dnf
+  - ⚠️ **Quickshell not available in repositories** - requires manual build from source
 
 ### Manual Installation
 
@@ -295,6 +331,12 @@ sharpshell/
 │   ├── remove-package.sh     # Package removal
 │   ├── remove-aur-package.sh # AUR removal
 │   └── update-system.sh      # System updates
+├── showcase/                 # Screenshots and previews
+│   ├── launcher.png          # Application launcher
+│   ├── dashboard.png         # Dashboard interface
+│   ├── media.png             # Media player
+│   ├── clipboard.png         # Clipboard manager
+│   └── notification.png      # Notification system
 ├── open-launcher.sh          # Launcher script
 ├── toggle-menu.sh            # Menu toggle script
 ├── open-clipboard.sh         # Clipboard script
@@ -397,6 +439,22 @@ Supports Pacman and AUR (via yay/paru).
 - Try clicking on the launcher window
 - Check compositor focus settings
 - **Fixed in v2.1.0**: All launcher submenus now have consistent keyboard navigation
+
+### Quickshell Not Available on Fedora/RHEL
+- Quickshell is not packaged in Fedora repositories
+- **Manual installation required:**
+  ```bash
+  # Install dependencies
+  sudo dnf install qt6-qtbase-devel qt6-qtdeclarative-devel cmake gcc-c++
+
+  # Clone and build Quickshell
+  git clone https://github.com/Quickshell/Quickshell.git
+  cd Quickshell
+  mkdir build && cd build
+  cmake ..
+  make
+  sudo make install
+  ```
 
 ### Screenshot Not Working
 - Install `grim` and `slurp`: `sudo pacman -S grim slurp`

@@ -638,9 +638,10 @@ PanelWindow {
     // Screenshot Button - OUTSIDE sidePanelRect to ensure it's clickable
     Item {
         id: screenshotButtonContainer
-        width: 36
-        height: 36
+        width: 32
+        height: 32
 
+        anchors.horizontalCenter: panelPosition === "left" ? parent.horizontalCenter : undefined
         anchors.right: panelPosition === "top" ? parent.right : undefined
         anchors.rightMargin: panelPosition === "top" ? 48 : 0
         anchors.bottom: panelPosition === "left" ? parent.bottom : undefined
@@ -711,7 +712,7 @@ PanelWindow {
         MouseArea {
             id: screenshotButtonMouseArea
             anchors.fill: parent
-            anchors.margins: -5  // Slightly larger hit area
+            anchors.margins: -10  // Much larger hit area
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             enabled: true
@@ -721,9 +722,9 @@ PanelWindow {
             
             onClicked: {
                 console.log("=== SCREENSHOT BUTTON CLICKED ===")
-                console.log("Mouse position:", mouse.x, mouse.y)
-                console.log("Button container position:", screenshotButtonContainer.x, screenshotButtonContainer.y)
                 console.log("Panel position:", panelPosition)
+                console.log("Container size:", screenshotButtonContainer.width, "x", screenshotButtonContainer.height)
+                console.log("Container position:", screenshotButtonContainer.x, ",", screenshotButtonContainer.y)
                 if (screenshotFunction) {
                     screenshotFunction()
                 } else {
@@ -744,12 +745,13 @@ PanelWindow {
     // Clipboard Manager Button - OUTSIDE sidePanelRect to ensure it's clickable
     Item {
         id: clipboardButtonContainer
-        width: 36
-        height: 36
+        width: 32
+        height: 32
+        anchors.horizontalCenter: panelPosition === "left" ? parent.horizontalCenter : undefined
         anchors.right: panelPosition === "top" ? parent.right : undefined
         anchors.rightMargin: panelPosition === "top" ? 8 : 0
         anchors.bottom: panelPosition === "left" ? parent.bottom : undefined
-        anchors.bottomMargin: panelPosition === "left" ? 35 : 0
+        anchors.bottomMargin: panelPosition === "left" ? 45 : 0
         z: 10000  // Very high z to ensure it's on top of everything
         visible: true
         enabled: true
@@ -816,7 +818,7 @@ PanelWindow {
         MouseArea {
             id: clipboardButtonMouseArea
             anchors.fill: parent
-            anchors.margins: -5  // Slightly larger hit area
+            anchors.margins: -10  // Much larger hit area
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             enabled: true
@@ -830,8 +832,13 @@ PanelWindow {
             
             onClicked: {
                 console.log("=== CLIPBOARD BUTTON CLICKED ===")
+                console.log("Panel position:", panelPosition)
+                console.log("Container size:", clipboardButtonContainer.width, "x", clipboardButtonContainer.height)
+                console.log("Container position:", clipboardButtonContainer.x, ",", clipboardButtonContainer.y)
                 if (clipboardFunction) {
                     clipboardFunction()
+                } else {
+                    console.log("clipboardFunction is null!")
                 }
             }
             

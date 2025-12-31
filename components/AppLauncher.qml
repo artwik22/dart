@@ -574,9 +574,14 @@ PanelWindow {
     property bool isPresetsMode: (currentMode === 2 && currentSettingsMode === 4)
     property int presetsWidth: Math.floor(baseWidth * 1.4)  // 40% wider
     property int presetsHeight: Math.floor(baseHeight * 1.3)  // 30% taller
+
+    // Size when in notes mode (50% larger)
+    property bool isNotesMode: (currentMode === 3)
+    property int notesWidth: Math.floor(baseWidth * 1.5)  // 50% wider
+    property int notesHeight: Math.floor(baseHeight * 1.5)  // 50% taller
     
-    implicitWidth: isPresetsMode ? presetsWidth : (isWallpaperMode ? wallpaperWidth : baseWidth)
-    implicitHeight: isPresetsMode ? presetsHeight : (isWallpaperMode ? wallpaperHeight : baseHeight)
+    implicitWidth: isNotesMode ? notesWidth : (isPresetsMode ? presetsWidth : (isWallpaperMode ? wallpaperWidth : baseWidth))
+    implicitHeight: isNotesMode ? notesHeight : (isPresetsMode ? presetsHeight : (isWallpaperMode ? wallpaperHeight : baseHeight))
     width: implicitWidth
     height: implicitHeight
     
