@@ -12,8 +12,8 @@ PanelWindow {
         right: true
     }
     
-    implicitWidth: 380
-    implicitHeight: 600  // Max height for notification stack
+    implicitWidth: notifications.length > 0 ? 380 : 0
+    implicitHeight: notifications.length > 0 ? 600 : 0
     
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qsnotifications"
@@ -21,7 +21,7 @@ PanelWindow {
     
     property var sharedData: null
     
-    visible: true
+    visible: notifications.length > 0
     color: "transparent"
     
     margins {
@@ -66,13 +66,15 @@ PanelWindow {
         
         // Remove oldest if we exceed max
         if (notifications.length >= maxNotifications) {
-            var oldest = notifications.shift()
+            var currentNotifs = [...notifications]
+            var oldest = currentNotifs.shift()
             if (oldest && oldest.notification) {
                 oldest.notification.dismiss()
             }
             if (oldest) {
                 oldest.destroy()
             }
+            notifications = currentNotifs
         }
         
         // Create notification item directly using inline component
@@ -83,22 +85,25 @@ PanelWindow {
         
         if (notificationItem) {
             console.log("NotificationItem created directly, notification:", notificationItem.notification ? notificationItem.notification.summary : "null")
-            notifications.push(notificationItem)
+            
+            // Update array in a way that triggers QML property change (using spread or concat)
+            notifications = [...notifications, notificationItem]
             
             // Connect to closed signal
             notificationItem.notificationClosed.connect(function() {
                 removeNotification(notificationItem)
             })
-            
-            // Auto-dismiss timer is now handled inside NotificationItem
         }
     }
     
     function removeNotification(item) {
         console.log("removeNotification called")
-        var index = notifications.indexOf(item)
+        var currentNotifs = notifications
+        var index = currentNotifs.indexOf(item)
         if (index !== -1) {
-            notifications.splice(index, 1)
+            var newNotifs = [...currentNotifs]
+            newNotifs.splice(index, 1)
+            notifications = newNotifs
         }
         if (item) {
             // Wait a bit for animation to complete, then destroy

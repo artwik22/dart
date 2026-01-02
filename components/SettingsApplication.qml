@@ -551,9 +551,36 @@ PanelWindow {
 
     // Functions
     function initializePaths() {
-        // Set default paths - will be corrected if needed
-        var defaultUsername = "artwik"  // Default fallback
-        setUserPaths(defaultUsername)
+        // Get home directory and project path
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$HOME\" > /tmp/quickshell_home_dir; echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_project_path 2>/dev/null || echo \"\" > /tmp/quickshell_project_path']; running: true }", settingsApplicationRoot)
+
+        // Wait a moment and read the results
+        Qt.createQmlObject("import QtQuick; Timer { interval: 150; running: true; repeat: false; onTriggered: settingsApplicationRoot.readAllPaths() }", settingsApplicationRoot)
+    }
+
+    function readAllPaths() {
+        // 1. Read Home Dir
+        var homeXhr = new XMLHttpRequest()
+        homeXhr.open("GET", "file:///tmp/quickshell_home_dir")
+        homeXhr.onreadystatechange = function() {
+            if (homeXhr.readyState === XMLHttpRequest.DONE) {
+                var home = homeXhr.responseText.trim()
+                if (home && home.length > 0) {
+                    var username = home.split("/").pop()
+                    setUserPaths(username)
+                } else {
+                    setUserPaths("artwik") // Fallback
+                }
+                
+                // Now that paths are initialized, load wallpapers and settings
+                loadWallpapers()
+                loadSavedSettings()
+            }
+        }
+        homeXhr.send()
+
+        // 2. Read Project Path (already handled by existing logic, but combined here)
+        readProjectPath()
     }
 
     function setUserPaths(username) {
@@ -568,6 +595,20 @@ PanelWindow {
     }
 
 
+    // List of wallpapers
+    ListModel {
+        id: wallpapersModel
+    }
+
+    // Process to find wallpapers
+    Process {
+        id: wallpaperFinderProcess
+        onExited: function(exitCode, exitStatus) {
+            console.log("Wallpaper finder process exited with code:", exitCode, "status:", exitStatus)
+            readWallpapersList()
+        }
+    }
+
     function loadWallpapers() {
         console.log("Loading wallpapers from path:", wallpapersPath)
         if (!wallpapersPath || wallpapersPath.length === 0) {
@@ -576,14 +617,16 @@ PanelWindow {
             Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: settingsApplicationRoot.loadWallpapers() }", settingsApplicationRoot)
             return
         }
-        wallpapersModel.clear()
 
-        // Use a simpler find command
-        var findCmd = "find '" + wallpapersPath + "' -maxdepth 1 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \\) 2>/dev/null | sort"
+        // Use a simpler find command and write to a specific file
+        // Search in subdirectories as well (maxdepth 2)
+        var findCmd = "find -L '" + wallpapersPath + "' -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \\) 2>/dev/null | sort"
         console.log("Find command:", findCmd)
 
-        Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["sh", "-c", "' + findCmd + ' > /tmp/quickshell_wallpapers"]; running: true }', settingsApplicationRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: settingsApplicationRoot.readWallpapersList() }", settingsApplicationRoot)
+        // Ensure process is stopped before starting again
+        wallpaperFinderProcess.running = false
+        wallpaperFinderProcess.command = ["sh", "-c", findCmd + " > /tmp/quickshell_wallpapers"]
+        wallpaperFinderProcess.running = true
     }
 
     function readWallpapersList() {
@@ -591,20 +634,30 @@ PanelWindow {
         xhr.open("GET", "file:///tmp/quickshell_wallpapers")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                wallpapersModel.clear()
-                var content = xhr.responseText || ""
-                console.log("Wallpaper list content:", content.substring(0, 200))
-                var lines = content.trim().split("\n")
-                console.log("Found", lines.length, "lines in wallpaper list")
-                for (var i = 0; i < lines.length; i++) {
-                    var path = lines[i].trim()
-                    if (path.length > 0 && !path.includes("wallpapers")) {
-                        var filename = path.split("/").pop()
-                        wallpapersModel.append({ path: path, filename: filename })
-                        console.log("Added wallpaper:", filename)
+                if (xhr.status === 200 || xhr.status === 0) {
+                    var content = xhr.responseText || ""
+                    console.log("Wallpaper list received, length:", content.length)
+                    var lines = content.trim().split("\n")
+                    
+                    wallpapersModel.clear()
+                    
+                    var addedCount = 0
+                    for (var i = 0; i < lines.length; i++) {
+                        var path = lines[i].trim()
+                        if (path.length > 0) {
+                            var filename = path.split("/").pop()
+                            wallpapersModel.append({ path: path, filename: filename })
+                            addedCount++
+                        }
+                    }
+                    console.log("Successfully loaded", addedCount, "wallpapers")
+                } else {
+                    console.log("Failed to read wallpaper list file, status:", xhr.status)
+                    // If file not found, might still be writing or find found nothing
+                    if (wallpapersModel.count === 0) {
+                        console.log("No wallpapers found or file not ready")
                     }
                 }
-                console.log("Loaded", wallpapersModel.count, "wallpapers")
             }
         }
         xhr.send()
@@ -660,7 +713,8 @@ PanelWindow {
     Component.onCompleted: {
         loadProjectPath()
         // Wait for project path to be loaded, then initialize other paths
-        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: function() { initializePaths(); loadWallpapers(); loadSavedSettings(); } }", settingsApplicationRoot)
+        // readAllPaths will trigger loadWallpapers and loadSavedSettings after paths are ready
+        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: function() { initializePaths(); } }", settingsApplicationRoot)
         if (sharedData) {
             // Load colors from sharedData if available
             colorBackground = sharedData.colorBackground || colorBackground
@@ -705,11 +759,6 @@ PanelWindow {
                 colorAccent = sharedData.colorAccent
             }
         }
-    }
-
-    // Wallpaper model
-    ListModel {
-        id: wallpapersModel
     }
 
     // Bluetooth devices model
@@ -2192,23 +2241,63 @@ PanelWindow {
                             width: parent.width - 32
                             spacing: 24
 
-                            Text {
-                                text: "Select Wallpaper"
-                                font.pixelSize: 24
-                                font.family: "sans-serif"
-                                font.weight: Font.Bold
-                                color: colorText
-                                opacity: 1.0
+                            Row {
+                                width: parent.width
+                                spacing: 16
+                                
+                                Text {
+                                    text: "Select Wallpaper (" + wallpapersModel.count + ")"
+                                    font.pixelSize: 24
+                                    font.family: "sans-serif"
+                                    font.weight: Font.Bold
+                                    color: colorText
+                                    opacity: 1.0
+                                }
+                                
+                                // Refresh button
+                                Rectangle {
+                                    width: 80
+                                    height: 32
+                                    color: refreshButtonMouseArea.containsMouse ? (refreshButtonMouseArea.pressed ? darkenColor(colorSecondary, 0.9) : lightenColor(colorSecondary, 1.05)) : colorSecondary
+                                    radius: 4
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    
+                                    Text {
+                                        text: "Refresh"
+                                        font.pixelSize: 12
+                                        font.family: "sans-serif"
+                                        color: colorText
+                                        anchors.centerIn: parent
+                                    }
+                                    
+                                    MouseArea {
+                                        id: refreshButtonMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            console.log("Refreshing wallpaper list...")
+                                            loadWallpapers()
+                                        }
+                                    }
+                                }
                             }
 
                             // Wallpapers Grid
                             GridView {
                                 id: wallpapersGrid
                                 width: parent.width
-                                height: 600
-                                cellWidth: Math.floor((width - 32) / 3)  // 3 wallpapers per row (16:9 aspect ratio) with spacing
-                                cellHeight: Math.floor(cellWidth * 9 / 16)  // 16:9 aspect ratio
-                                clip: true
+                                // Explicitly calculate height to ensure all items are visible
+                                height: {
+                                    var rows = Math.ceil(wallpapersModel.count / 3);
+                                    var cw = Math.floor((width - 32) / 3);
+                                    var ch = Math.floor(cw * 9 / 16) + 24;
+                                    return Math.max(400, rows * ch);
+                                }
+                                cellWidth: Math.floor((width - 32) / 3)
+                                cellHeight: Math.floor(cellWidth * 9 / 16) + 24
+                                clip: false
+                                interactive: false
 
                                 model: wallpapersModel
                                 currentIndex: wallpaperSelectedIndex
@@ -2254,7 +2343,7 @@ PanelWindow {
                                             source: "file://" + model.path
                                             fillMode: Image.PreserveAspectCrop
                                             asynchronous: true
-                                            cache: true
+                                            cache: false // Disable cache to see new wallpapers immediately
                                             sourceSize.width: 400
                                             sourceSize.height: 225  // 16:9 ratio
 

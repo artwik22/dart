@@ -56,39 +56,32 @@ PanelWindow {
         }
     }
     
-    Item {
+    // Background Rectangle - separate from buttons to avoid blocking clicks
+    Rectangle {
         id: sidePanelRect
         anchors.fill: parent
-        enabled: false  // Disable to allow clicks to pass through
+        color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0d0d0d"
+        radius: 0
+        enabled: false  // Don't capture mouse events - allows clicks to pass through
         z: -1  // Put background behind everything to ensure buttons are clickable
         
-        // MouseArea to pass through all clicks - must be first child
-        MouseArea {
-            anchors.fill: parent
-            enabled: true
-            acceptedButtons: Qt.NoButton  // Don't capture any clicks
-            propagateComposedEvents: true
-            z: -1000  // Very low z to ensure it doesn't interfere
-        }
-        
-        // Background Rectangle - separate to avoid blocking clicks
-        Rectangle {
-            id: sidePanelBackground
-            anchors.fill: parent
-            color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0d0d0d"
-            radius: 0
-            enabled: false  // Don't capture mouse events
-            z: -1
-            
-            // Smooth fade animation when panel appears/disappears
-            opacity: sidePanel.visible ? 1.0 : 0.0
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 300
-                    easing.type: Easing.OutCubic
-                }
+        // Smooth fade animation when panel appears/disappears
+        opacity: sidePanel.visible ? 1.0 : 0.0
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.OutCubic
             }
         }
+    }
+    
+    // Container for all sidebar content (clock, workspace switcher, visualizer)
+    Item {
+        id: sidePanelContent
+        anchors.fill: parent
+        enabled: false  // Don't capture mouse events - allows clicks to pass through
+        z: 0  // Above background but below buttons
+        clip: false  // Don't clip children (buttons are outside)
         
         // Zegar - layout zależy od pozycji sidebara
         // Pionowy zegar dla pozycji left
@@ -685,9 +678,9 @@ PanelWindow {
             }
         }
         
-    }
+    }  // End of sidePanelContent
     
-    // Screenshot Button - OUTSIDE sidePanelRect to ensure it's clickable
+    // Screenshot Button - OUTSIDE sidePanelRect and sidePanelContent to ensure it's clickable
     Item {
         id: screenshotButtonContainer
         width: 32
