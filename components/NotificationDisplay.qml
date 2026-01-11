@@ -42,6 +42,19 @@ PanelWindow {
             console.log("AppName:", notification.appName)
             console.log("AppIcon:", notification.appIcon)
             
+            // Add to notification history
+            if (sharedData) {
+                var now = new Date()
+                var timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0')
+                var historyItem = {
+                    appName: notification.appName || "Unknown",
+                    title: notification.summary || "",
+                    body: notification.body || "",
+                    time: timeStr
+                }
+                sharedData.notificationHistory = [historyItem].concat(sharedData.notificationHistory)
+            }
+            
             // Check if notifications are enabled
             if (sharedData && !sharedData.notificationsEnabled) {
                 console.log("Notifications disabled, ignoring")
@@ -134,32 +147,22 @@ PanelWindow {
         width: parent.width
         spacing: 8
 
-        // Smooth animation for notification repositioning
+        // Premium smooth animation for notification repositioning
         move: Transition {
             NumberAnimation {
                 properties: "y"
-                duration: 300
-                easing.type: Easing.OutCubic
+                duration: 550
+                easing.type: Easing.OutExpo
             }
         }
 
-        // Animation for adding new notifications
+        // Space reservation animation
         add: Transition {
-            ParallelAnimation {
-                NumberAnimation {
-                    property: "opacity"
-                    from: 0.0
-                    to: 1.0
-                    duration: 400
-                    easing.type: Easing.OutCubic
-                }
-                NumberAnimation {
-                    property: "scale"
-                    from: 0.8
-                    to: 1.0
-                    duration: 400
-                    easing.type: Easing.OutCubic
-                }
+            NumberAnimation {
+                property: "opacity"
+                from: 0.0
+                to: 1.0
+                duration: 200
             }
         }
     }

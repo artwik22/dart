@@ -79,8 +79,8 @@ PanelWindow {
     Item {
         id: sidePanelContent
         anchors.fill: parent
-        enabled: false  // Don't capture mouse events - allows clicks to pass through
-        z: 0  // Above background but below buttons
+        enabled: true  // Must be enabled for MouseArea inside to work
+        z: 0  // Above background but below buttons (z: 10000)
         clip: false  // Don't clip children (buttons are outside)
         
         // Zegar - layout zależy od pozycji sidebara
@@ -245,13 +245,6 @@ PanelWindow {
                 x: (parent.width - width) / 2
                 y: (parent.height - height) / 2
                 
-                // MouseArea to pass through clicks - don't block buttons
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: false  // Don't capture events, just pass them through
-                    z: -1
-                }
-                
                 Repeater {
                     model: 4  // Workspaces 1-4
                 
@@ -278,71 +271,83 @@ PanelWindow {
                     
                     Component.onCompleted: wasActive = isActive
                     
-                    // Pionowa linia
+                    // Pionowa linia z lepszymi wskaźnikami
                     Rectangle {
                         id: workspaceLine
                         anchors.centerIn: parent
-                        width: workspaceItem.isActive ? 4 : 3
-                        height: workspaceItem.isActive ? 40 : workspaceItem.hasWindows ? 34 : 30
+                        width: workspaceItem.isActive ? 5 : (workspaceItem.hasWindows ? 3.5 : 3)
+                        height: workspaceItem.isActive ? 45 : (workspaceItem.hasWindows ? 36 : 30)
                         color: workspaceItem.isActive ? 
                             ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
                             workspaceItem.hasWindows ? 
                             ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a") : 
                             ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#2a2a2a")
+                        radius: 0
+                        opacity: workspaceItem.isActive ? 1.0 : (workspaceItem.hasWindows ? 0.8 : 0.5)
                         
                         Behavior on width {
                             NumberAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
+                                duration: 400
+                                easing.type: Easing.OutCubic
                             }
                         }
                         
                         Behavior on height {
                             NumberAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
+                                duration: 400
+                                easing.type: Easing.OutCubic
                             }
                         }
                         
                         Behavior on color {
                             ColorAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-                        
-                        Behavior on scale {
-                            NumberAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
+                                duration: 400
+                                easing.type: Easing.OutCubic
                             }
                         }
                         
                         Behavior on opacity {
                             NumberAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
+                                duration: 400
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        
+                        Behavior on scale {
+                            NumberAnimation { 
+                                duration: 300
+                                easing.type: Easing.OutCubic
                             }
                         }
                     }
                     
-                    // Animacja aktywacji
+                    // Animacja aktywacji - płynniejsza
                     SequentialAnimation {
                         id: workspaceActivateAnim
-                        NumberAnimation {
-                            target: workspaceLine
-                            property: "scale"
-                            from: 0.5
-                            to: 1.1
-                            duration: 200
-                            easing.type: Easing.OutQuart
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: workspaceLine
+                                property: "scale"
+                                from: 0.6
+                                to: 1.15
+                                duration: 300
+                                easing.type: Easing.OutCubic
+                            }
+                            NumberAnimation {
+                                target: workspaceLine
+                                property: "opacity"
+                                from: 0.5
+                                to: 1.0
+                                duration: 300
+                                easing.type: Easing.OutCubic
+                            }
                         }
                         NumberAnimation {
                             target: workspaceLine
                             property: "scale"
                             to: 1.0
-                            duration: 150
-                            easing.type: Easing.OutQuart
+                            duration: 250
+                            easing.type: Easing.OutCubic
                         }
                     }
                     
@@ -352,17 +357,21 @@ PanelWindow {
                         anchors.margins: -2  // Mały margines tylko dla łatwiejszego klikania
                         hoverEnabled: true
                         propagateComposedEvents: true  // Pozwól na propagację zdarzeń poza workspace
-                        z: 50  // Niższy niż przyciski (które mają z: 10000)
+                        z: 1  // Very low z to ensure buttons (z: 10000) are on top
                         acceptedButtons: Qt.LeftButton
                         
                         onEntered: {
-                            workspaceLine.scale = 1.25
-                            workspaceLine.opacity = 1.2
+                            if (!workspaceItem.isActive) {
+                                workspaceLine.scale = 1.2
+                                workspaceLine.opacity = Math.min(workspaceLine.opacity + 0.2, 1.0)
+                            }
                         }
                         
                         onExited: {
-                            workspaceLine.scale = 1.0
-                            workspaceLine.opacity = 1.0
+                            if (!workspaceItem.isActive) {
+                                workspaceLine.scale = 1.0
+                                workspaceLine.opacity = workspaceItem.hasWindows ? 0.8 : 0.5
+                            }
                         }
                         
                         onClicked: {
@@ -371,22 +380,22 @@ PanelWindow {
                         }
                     }
                     
-                    // Animacja kliknięcia
+                    // Animacja kliknięcia - płynniejsza
                     SequentialAnimation {
                         id: workspaceClickAnim
                         NumberAnimation {
                             target: workspaceLine
                             property: "scale"
-                            to: 0.7
-                            duration: 80
-                            easing.type: Easing.InQuad
+                            to: 0.75
+                            duration: 100
+                            easing.type: Easing.InCubic
                         }
                         NumberAnimation {
                             target: workspaceLine
                             property: "scale"
                             to: 1.0
-                            duration: 200
-                            easing.type: Easing.OutQuart
+                            duration: 300
+                            easing.type: Easing.OutCubic
                         }
                     }
                 }
@@ -410,13 +419,6 @@ PanelWindow {
                 height: parent.height
                 x: (parent.width - width) / 2
                 y: (parent.height - height) / 2
-                
-                // MouseArea to pass through clicks - don't block buttons
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: false  // Don't capture events, just pass them through
-                    z: -1
-                }
                 
                 Repeater {
                     model: 4  // Workspaces 1-4
@@ -444,72 +446,83 @@ PanelWindow {
                     
                     Component.onCompleted: wasActive = isActive
                     
-                    // Pozioma linia
+                    // Pozioma linia z lepszymi wskaźnikami
                     Rectangle {
                         id: workspaceLineTop
                         anchors.centerIn: parent
-                        height: workspaceItemTop.isActive ? 4 : 3
-                        width: workspaceItemTop.isActive ? 40 : workspaceItemTop.hasWindows ? 34 : 30
+                        height: workspaceItemTop.isActive ? 5 : (workspaceItemTop.hasWindows ? 3.5 : 3)
+                        width: workspaceItemTop.isActive ? 45 : (workspaceItemTop.hasWindows ? 36 : 30)
                         color: workspaceItemTop.isActive ? 
                             ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
                             workspaceItemTop.hasWindows ? 
                             ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a") : 
                             ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#2a2a2a")
                         radius: 0
+                        opacity: workspaceItemTop.isActive ? 1.0 : (workspaceItemTop.hasWindows ? 0.8 : 0.5)
                         
                         Behavior on width {
                             NumberAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
+                                duration: 400
+                                easing.type: Easing.OutCubic
                             }
                         }
                         
                         Behavior on height {
                             NumberAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
+                                duration: 400
+                                easing.type: Easing.OutCubic
                             }
                         }
                         
                         Behavior on color {
                             ColorAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-                        
-                        Behavior on scale {
-                            NumberAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
+                                duration: 400
+                                easing.type: Easing.OutCubic
                             }
                         }
                         
                         Behavior on opacity {
                             NumberAnimation { 
-                                duration: 280
-                                easing.type: Easing.OutQuart
+                                duration: 400
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        
+                        Behavior on scale {
+                            NumberAnimation { 
+                                duration: 300
+                                easing.type: Easing.OutCubic
                             }
                         }
                     }
                     
-                    // Animacja aktywacji
+                    // Animacja aktywacji - płynniejsza
                     SequentialAnimation {
                         id: workspaceActivateAnimTop
-                        NumberAnimation {
-                            target: workspaceLineTop
-                            property: "scale"
-                            from: 0.5
-                            to: 1.1
-                            duration: 200
-                            easing.type: Easing.OutQuart
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: workspaceLineTop
+                                property: "scale"
+                                from: 0.6
+                                to: 1.15
+                                duration: 300
+                                easing.type: Easing.OutCubic
+                            }
+                            NumberAnimation {
+                                target: workspaceLineTop
+                                property: "opacity"
+                                from: 0.5
+                                to: 1.0
+                                duration: 300
+                                easing.type: Easing.OutCubic
+                            }
                         }
                         NumberAnimation {
                             target: workspaceLineTop
                             property: "scale"
                             to: 1.0
-                            duration: 150
-                            easing.type: Easing.OutQuart
+                            duration: 250
+                            easing.type: Easing.OutCubic
                         }
                     }
                     
@@ -519,17 +532,21 @@ PanelWindow {
                         anchors.margins: -2  // Mały margines tylko dla łatwiejszego klikania
                         hoverEnabled: true
                         propagateComposedEvents: true  // Pozwól na propagację zdarzeń poza workspace
-                        z: 50  // Niższy niż przyciski (które mają z: 10000)
+                        z: 1  // Very low z to ensure buttons (z: 10000) are on top
                         acceptedButtons: Qt.LeftButton
                         
                         onEntered: {
-                            workspaceLineTop.scale = 1.25
-                            workspaceLineTop.opacity = 1.2
+                            if (!workspaceItemTop.isActive) {
+                                workspaceLineTop.scale = 1.2
+                                workspaceLineTop.opacity = Math.min(workspaceLineTop.opacity + 0.2, 1.0)
+                            }
                         }
                         
                         onExited: {
-                            workspaceLineTop.scale = 1.0
-                            workspaceLineTop.opacity = 1.0
+                            if (!workspaceItemTop.isActive) {
+                                workspaceLineTop.scale = 1.0
+                                workspaceLineTop.opacity = workspaceItemTop.hasWindows ? 0.8 : 0.5
+                            }
                         }
                         
                         onClicked: {
@@ -538,22 +555,22 @@ PanelWindow {
                         }
                     }
                     
-                    // Animacja kliknięcia
+                    // Animacja kliknięcia - płynniejsza
                     SequentialAnimation {
                         id: workspaceClickAnimTop
                         NumberAnimation {
                             target: workspaceLineTop
                             property: "scale"
-                            to: 0.7
-                            duration: 80
-                            easing.type: Easing.InQuad
+                            to: 0.75
+                            duration: 100
+                            easing.type: Easing.InCubic
                         }
                         NumberAnimation {
                             target: workspaceLineTop
                             property: "scale"
                             to: 1.0
-                            duration: 200
-                            easing.type: Easing.OutQuart
+                            duration: 300
+                            easing.type: Easing.OutCubic
                         }
                     }
                 }
@@ -691,9 +708,14 @@ PanelWindow {
         anchors.rightMargin: panelPosition === "top" ? 48 : 0
         anchors.bottom: panelPosition === "left" ? parent.bottom : undefined
         anchors.bottomMargin: panelPosition === "left" ? 10 : 0
-        z: 10000  // Very high z to ensure it's on top of everything
+        z: 100000  // Very high z to ensure it's on top of everything (increased from 10000)
         visible: true
         enabled: true
+        
+        // Debug: Make sure button is visible and clickable
+        Component.onCompleted: {
+            console.log("Screenshot button container created at z:", z, "visible:", visible, "enabled:", enabled)
+        }
 
         // Smooth repositioning when panel position changes
         Behavior on anchors.rightMargin {
@@ -797,9 +819,14 @@ PanelWindow {
         anchors.rightMargin: panelPosition === "top" ? 8 : 0
         anchors.bottom: panelPosition === "left" ? parent.bottom : undefined
         anchors.bottomMargin: panelPosition === "left" ? 45 : 0
-        z: 10000  // Very high z to ensure it's on top of everything
+        z: 100000  // Very high z to ensure it's on top of everything (increased from 10000)
         visible: true
         enabled: true
+        
+        // Debug: Make sure button is visible and clickable
+        Component.onCompleted: {
+            console.log("Clipboard button container created at z:", z, "visible:", visible, "enabled:", enabled)
+        }
 
         // Smooth repositioning when panel position changes
         Behavior on anchors.rightMargin {

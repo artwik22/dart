@@ -20,21 +20,24 @@ PanelWindow {
     property var sharedData: null
     property var screen: null
     
-    // Kontrola widoczności - całkowicie ukryj gdy nie jest widoczny, aby nie blokować kliknięć
-    visible: (sharedData && sharedData.volumeVisible) ? true : false
+    // Visibility control - always visible, controlled by slideOffset
+    visible: true
     color: "transparent"
+    
+    // Slide in animation from right - negative value moves right (off screen)
+    property int slideOffset: (sharedData && sharedData.volumeVisible) ? 0 : -implicitWidth
     
     margins {
         top: (screen && screen.height) ? (screen.height - 270) / 2 : 0
         bottom: 0
-        right: 0
+        right: slideOffset
         left: 0
     }
     
-    Behavior on visible {
+    Behavior on slideOffset {
         NumberAnimation {
-            duration: 300
-            easing.type: Easing.OutQuart
+            duration: 500
+            easing.type: Easing.OutExpo
         }
     }
 

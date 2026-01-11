@@ -417,11 +417,13 @@ Rectangle {
     }
     
     // Animation states
-    property real slideOffset: 400  // Start off-screen to the right
+    property real slideOffset: 450  // Start further off-screen
     property real fadeOpacity: 0.0  // Start invisible
+    property real itemScale: 0.95   // Slight scale start
     
-    // Use opacity binding to ensure text is visible when fadeOpacity changes
+    // Premium Look Bindings
     opacity: fadeOpacity
+    scale: itemScale
     
     transform: Translate {
         x: slideOffset
@@ -433,165 +435,90 @@ Rectangle {
     // Component.onCompleted - update texts if notification is already set
     Component.onCompleted: {
         console.log("=== NotificationItem Component.onCompleted ===")
-        console.log("notification property:", notification)
         
         if (notification) {
-            // Store notification reference
             storedNotification = notification
             
-            console.log("Component.onCompleted: Summary:", notification.summary)
-            console.log("Component.onCompleted: Body:", notification.body)
-            console.log("Component.onCompleted: AppName:", notification.appName)
-            
-            // Store notification reference for use
-            var notif = notification
-            
-            // Update texts immediately if notification is already set
-            if (appNameText) {
-                appNameText.text = notif.appName || notif.desktopEntry || "Notification"
-                console.log("Component.onCompleted: SET appNameText.text =", appNameText.text)
-            }
-            if (summaryText) {
-                summaryText.text = notif.summary || ""
-                console.log("Component.onCompleted: SET summaryText.text =", summaryText.text)
-            }
+            // Update texts immediately
+            if (appNameText) appNameText.text = notification.appName || notification.desktopEntry || "Notification"
+            if (summaryText) summaryText.text = notification.summary || ""
             if (bodyText) {
-                var body = notif.body || ""
-                if (body.length === 0) body = notif.summary || ""
+                var body = notification.body || ""
+                if (body.length === 0) body = notification.summary || ""
                 bodyText.text = body
-                console.log("Component.onCompleted: SET bodyText.text =", bodyText.text)
             }
             
-            // Start auto-dismiss timer immediately - capture notification reference
+            // Start auto-dismiss timer
             if (!timerStarted) {
-                console.log("Component.onCompleted: Starting auto-dismiss timer immediately")
-                // Capture notification reference in local variable
                 var notifRef = notification
-                console.log("Component.onCompleted: Captured notification reference:", !!notifRef)
-                
-                // Use a small delay to ensure everything is ready
                 var startTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 200; running: true; repeat: false }', notificationItem)
                 startTimer.triggered.connect(function() {
-                    // Use captured reference
                     if (!timerStarted && notifRef) {
-                        console.log("Component.onCompleted: Starting timer now with captured notification")
-                        // Temporarily set storedNotification if needed
-                        if (!storedNotification) {
-                            storedNotification = notifRef
-                        }
+                        if (!storedNotification) storedNotification = notifRef
                         startAutoDismissTimer()
-                    } else {
-                        console.log("Component.onCompleted: Timer not started - timerStarted:", timerStarted, "notifRef:", !!notifRef, "storedNotification:", !!storedNotification)
                     }
                 })
             }
-        } else {
-            console.log("Component.onCompleted: notification is null, will wait for onNotificationChanged")
         }
         
-        // Start slide-in animation
-        Qt.callLater(function() {
-            console.log("Starting enter animation")
-            enterAnimation.start()
-        })
+        // Premium Entrance Animation
+        enterAnimation.start()
     }
     
-    // Update when notification property changes - THIS IS THE ONLY PLACE TEXT IS SET
+    // Update when notification property changes
     onNotificationChanged: {
-        console.log("=== onNotificationChanged ===")
-        console.log("  notification:", notification ? "exists" : "null")
-        console.log("  storedNotification:", storedNotification ? "exists" : "null")
-        
         if (notification) {
-            // Store notification reference to prevent garbage collection
             storedNotification = notification
+            if (appNameText) appNameText.text = notification.appName || notification.desktopEntry || "Notification"
+            if (summaryText) summaryText.text = notification.summary || ""
+            if (bodyText) bodyText.text = notification.body || notification.summary || ""
             
-            console.log("  Summary:", notification.summary)
-            console.log("  Body:", notification.body)
-            console.log("  AppName:", notification.appName)
-            console.log("  expireTimeout:", notification.expireTimeout, "type:", typeof notification.expireTimeout)
-            
-            // Store notification reference for use in callback
-            var notif = notification
-            
-            // Set texts immediately (don't delay this)
-            if (appNameText) {
-                appNameText.text = notif.appName || notif.desktopEntry || "Notification"
-                console.log("  SET appNameText.text =", appNameText.text)
-            }
-            if (summaryText) {
-                summaryText.text = notif.summary || ""
-                console.log("  SET summaryText.text =", summaryText.text)
-            }
-            if (bodyText) {
-                var body = notif.body || ""
-                if (body.length === 0) {
-                    body = notif.summary || ""
-                }
-                bodyText.text = body
-                console.log("  SET bodyText.text =", bodyText.text)
-            }
-            
-            // Start auto-dismiss timer immediately after a very short delay
             if (!timerStarted) {
-                console.log("onNotificationChanged: Will start auto-dismiss timer")
-                // Capture notification reference in local variable
                 var notifRef = notification
-                console.log("onNotificationChanged: Captured notification reference:", !!notifRef)
-                
-                // Use a Timer with very short delay to ensure notification is ready
                 var startTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 100; running: true; repeat: false }', notificationItem)
                 startTimer.triggered.connect(function() {
-                    // Use captured reference
                     if (!timerStarted && notifRef) {
-                        console.log("onNotificationChanged: Starting auto-dismiss timer now with captured notification")
-                        // Ensure storedNotification is set
-                        if (!storedNotification) {
-                            storedNotification = notifRef
-                        }
+                        if (!storedNotification) storedNotification = notifRef
                         startAutoDismissTimer()
-                    } else {
-                        console.log("onNotificationChanged: Timer not started - timerStarted:", timerStarted, "notifRef:", !!notifRef, "storedNotification:", !!storedNotification)
                     }
                 })
             }
-        } else {
-            console.log("  notification is null! (This is normal on first initialization)")
-            // Don't overwrite storedNotification if it's already set
-            // storedNotification should keep the previous value
         }
     }
     
-    
+    // Premium Entrance Animation
     ParallelAnimation {
         id: enterAnimation
         NumberAnimation {
             target: notificationItem
             property: "slideOffset"
-            from: 400
+            from: 450
             to: 0
-            duration: 400
-            easing.type: Easing.OutCubic
+            duration: 600
+            easing.type: Easing.OutExpo
         }
         NumberAnimation {
             target: notificationItem
             property: "fadeOpacity"
             from: 0.0
             to: 1.0
-            duration: 400
-            easing.type: Easing.OutCubic
+            duration: 500
+            easing.type: Easing.OutQuart
+        }
+        NumberAnimation {
+            target: notificationItem
+            property: "itemScale"
+            from: 0.9
+            to: 1.0
+            duration: 650
+            easing.type: Easing.OutBack
+            easing.amplitude: 1.1
         }
     }
     
     // Exit animation
     function startExitAnimation() {
-        console.log("=== Starting exit animation ===")
-        console.log("Current slideOffset:", slideOffset)
-        console.log("Current fadeOpacity:", fadeOpacity)
-        if (exitAnimation.running) {
-            console.log("Exit animation already running, stopping it first")
-            exitAnimation.stop()
-        }
+        if (exitAnimation.running) exitAnimation.stop()
         exitAnimation.start()
     }
     
@@ -602,25 +529,28 @@ Rectangle {
             NumberAnimation {
                 target: notificationItem
                 property: "slideOffset"
-                to: 400
-                duration: 350
-                easing.type: Easing.InCubic
+                to: 450
+                duration: 500
+                easing.type: Easing.InExpo
             }
             NumberAnimation {
                 target: notificationItem
                 property: "fadeOpacity"
                 to: 0.0
-                duration: 350
-                easing.type: Easing.InCubic
+                duration: 400
+                easing.type: Easing.InQuart
+            }
+            NumberAnimation {
+                target: notificationItem
+                property: "itemScale"
+                to: 0.95
+                duration: 500
+                easing.type: Easing.InBack
             }
         }
         ScriptAction {
             script: {
-                console.log("=== Exit animation completed ===")
-                console.log("Emitting notificationClosed signal")
-                // Animation finished, now emit signal to remove from list
                 notificationItem.notificationClosed()
-                console.log("notificationClosed signal emitted")
             }
         }
     }

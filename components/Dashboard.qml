@@ -21,22 +21,25 @@ PanelWindow {
     property int currentTab: 0
     property var sharedData: null
     
-    // Ukryj całkowicie gdy nie jest widoczny, aby nie blokować kliknięć
-    visible: (sharedData && sharedData.menuVisible) ? true : false
+    // Visibility control - always visible, controlled by slideOffset
+    visible: true
     color: "transparent"
     
     property int sidebarTopOffset: (sharedData && sharedData.menuVisible && sharedData.sidebarVisible && sharedData.sidebarPosition === "top") ? 36 : 0
     
+    // Slide down animation from top - negative value moves up (off screen)
+    property int slideOffset: (sharedData && sharedData.menuVisible) ? 0 : -implicitHeight
+    
     margins {
-        top: sidebarTopOffset
+        top: sidebarTopOffset + slideOffset
         left: 0
         right: 0
     }
     
-    Behavior on visible {
+    Behavior on slideOffset {
         NumberAnimation {
-            duration: 400
-            easing.type: Easing.OutQuart
+            duration: 500
+            easing.type: Easing.OutExpo
         }
     }
     
@@ -48,11 +51,11 @@ PanelWindow {
         
         property bool isShowing: dashboardRoot.visible
         
-        opacity: isShowing ? 1.0 : 0.0
+        opacity: (sharedData && sharedData.menuVisible) ? 1.0 : 0.0
         
         Behavior on opacity {
             NumberAnimation { 
-                duration: 400
+                duration: 350
                 easing.type: Easing.OutQuart
             }
         }
@@ -100,7 +103,7 @@ PanelWindow {
                         model: [
                             { icon: "󰕮", label: "Dashboard" },
                             { icon: "󰎆", label: "Media" },
-                            { icon: "󰻠", label: "Performance" }
+                            { icon: "󰂚", label: "Notifications" }
                         ]
                         
                         Rectangle {
@@ -223,6 +226,7 @@ PanelWindow {
                         }
                     }
                 }
+                
             }
 
             // ============ CONTENT AREA ============
@@ -270,7 +274,7 @@ PanelWindow {
                         columnSpacing: 12
                         rowSpacing: 12
                         
-                        // Weather Card (Top Left)
+                        // Network Stats Card (Top Left)
                         Rectangle {
                             Layout.column: 0
                             Layout.row: 0
@@ -281,44 +285,75 @@ PanelWindow {
                             radius: 0
                             color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
                             
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 12
+                            Column {
+                                anchors.centerIn: parent
                                 spacing: 8
                                 
-                                Text {
-                                    text: "☀️"
-                                    font.pixelSize: 52
-                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                    Layout.alignment: Qt.AlignVCenter
-                                    Layout.preferredWidth: 60
-                                }
-                                
-                                Column {
-                                    Layout.fillWidth: true
-                                    Layout.alignment: Qt.AlignVCenter
-                                    spacing: 4
-                                    
+                                Row {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    spacing: 8
                                     Text {
-                                        text: weatherTemp
-                                        font.pixelSize: 28
-                                        font.weight: Font.Bold
+                                        text: "󰤨"
+                                        font.pixelSize: 24
                                         font.family: "sans-serif"
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        anchors.verticalCenter: parent.verticalCenter
                                     }
                                     
                                     Text {
-                                        text: weatherCondition
-                                        font.pixelSize: 12
+                                        text: "Network"
+                                        font.pixelSize: 16
+                                        font.weight: Font.Bold
                                         font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                        elide: Text.ElideRight
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+                                
+                                Column {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    spacing: 6
+                                    
+                                    Row {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        spacing: 8
+                                        Text {
+                                            text: "↓"
+                                            font.pixelSize: 14
+                                            font.family: "sans-serif"
+                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        }
+                                        
+                                        Text {
+                                            text: networkDownloadSpeed
+                                            font.pixelSize: 13
+                                            font.family: "sans-serif"
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        }
+                                    }
+                                    
+                                    Row {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        spacing: 8
+                                        Text {
+                                            text: "↑"
+                                            font.pixelSize: 14
+                                            font.family: "sans-serif"
+                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        }
+                                        
+                                        Text {
+                                            text: networkUploadSpeed
+                                            font.pixelSize: 13
+                                            font.family: "sans-serif"
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        }
                                     }
                                 }
                             }
                         }
                         
-                        // System Info Card (Top Middle)
+                        // Quick Actions Card (Top Middle)
                         Rectangle {
                             Layout.column: 1
                             Layout.row: 0
@@ -329,42 +364,262 @@ PanelWindow {
                             radius: 0
                             color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
                             
-                            RowLayout {
+                            Column {
                                 anchors.fill: parent
-                                anchors.margins: 12
-                                spacing: 12
+                                anchors.margins: 10
+                                spacing: 6
                                 
-                                Text {
-                                    text: "󰣇"
-                                    font.pixelSize: 40
-                                    font.family: "sans-serif"
-                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                Row {
+                                    spacing: 6
+                                    Text {
+                                        text: "󰍜"
+                                        font.pixelSize: 18
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    
+                                    Text {
+                                        text: "Quick Actions"
+                                        font.pixelSize: 13
+                                        font.weight: Font.Bold
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
                                 }
                                 
-                                Column {
-                                    Layout.fillWidth: true
+                                Grid {
+                                    columns: 2
                                     spacing: 4
+                                    width: parent.width
                                     
-                                    Text {
-                                        text: "A: Arch Linux"
-                                        font.pixelSize: 14
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                    // Toggle Sidebar button
+                                    Rectangle {
+                                        width: (parent.width - 4) / 2
+                                        height: 26
+                                        radius: 0
+                                        clip: true
+                                        color: toggleSidebarQuickMouseArea.containsMouse ? 
+                                            ((sharedData && sharedData.colorAccent) ? Qt.darker(sharedData.colorAccent, 1.2) : "#3a7fcc") :
+                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
+                                        
+                                        Behavior on color {
+                                            ColorAnimation {
+                                                duration: 150
+                                                easing.type: Easing.OutCubic
+                                            }
+                                        }
+                                        
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+                                            width: Math.min(parent.width - 8, implicitWidth)
+                                            
+                                            Text {
+                                                text: "󰍜"
+                                                font.pixelSize: 12
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                            
+                                            Text {
+                                                text: "Toggle Sidebar"
+                                                font.pixelSize: 10
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                elide: Text.ElideRight
+                                                maximumLineCount: 1
+                                                width: Math.max(0, parent.width - 20)
+                                            }
+                                        }
+                                        
+                                        MouseArea {
+                                            id: toggleSidebarQuickMouseArea
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            hoverEnabled: true
+                                            onClicked: {
+                                                if (sharedData && sharedData.sidebarVisible !== undefined) {
+                                                    sharedData.sidebarVisible = !sharedData.sidebarVisible
+                                                }
+                                            }
+                                        }
                                     }
                                     
-                                    Text {
-                                        text: "󰨳: Hyprland"
-                                        font.pixelSize: 14
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                    // Do Not Disturb button
+                                    Rectangle {
+                                        width: (parent.width - 4) / 2
+                                        height: 26
+                                        radius: 0
+                                        clip: true
+                                        color: dndQuickMouseArea.containsMouse ? 
+                                            ((sharedData && sharedData.colorAccent) ? Qt.darker(sharedData.colorAccent, 1.2) : "#3a7fcc") :
+                                            ((sharedData && sharedData.notificationsEnabled === false) ? 
+                                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
+                                                ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"))
+                                        
+                                        Behavior on color {
+                                            ColorAnimation {
+                                                duration: 150
+                                                easing.type: Easing.OutCubic
+                                            }
+                                        }
+                                        
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+                                            width: Math.min(parent.width - 8, implicitWidth)
+                                            
+                                            Text {
+                                                text: "󰂛"
+                                                font.pixelSize: 12
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                opacity: (sharedData && sharedData.notificationsEnabled === false) ? 1.0 : 0.6
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                            
+                                            Text {
+                                                text: "Do Not Disturb"
+                                                font.pixelSize: 10
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                elide: Text.ElideRight
+                                                maximumLineCount: 1
+                                                width: Math.max(0, parent.width - 20)
+                                            }
+                                        }
+                                        
+                                        MouseArea {
+                                            id: dndQuickMouseArea
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            hoverEnabled: true
+                                            onClicked: {
+                                                if (sharedData && sharedData.notificationsEnabled !== undefined) {
+                                                    sharedData.notificationsEnabled = !sharedData.notificationsEnabled
+                                                }
+                                            }
+                                        }
                                     }
                                     
-                                    Text {
-                                        id: uptimeText
-                                        text: "󰥔: up 1 hour, 23 minutes"
-                                        font.pixelSize: 14
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                    // Lock button
+                                    Rectangle {
+                                        width: (parent.width - 4) / 2
+                                        height: 26
+                                        radius: 0
+                                        clip: true
+                                        color: lockQuickMouseArea.containsMouse ? 
+                                            ((sharedData && sharedData.colorAccent) ? Qt.darker(sharedData.colorAccent, 1.2) : "#3a7fcc") :
+                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
+                                        
+                                        Behavior on color {
+                                            ColorAnimation {
+                                                duration: 150
+                                                easing.type: Easing.OutCubic
+                                            }
+                                        }
+                                        
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+                                            width: Math.min(parent.width - 8, implicitWidth)
+                                            
+                                            Text {
+                                                text: "󰌾"
+                                                font.pixelSize: 12
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                            
+                                            Text {
+                                                text: "Lock"
+                                                font.pixelSize: 10
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                elide: Text.ElideRight
+                                                maximumLineCount: 1
+                                                width: Math.max(0, parent.width - 20)
+                                            }
+                                        }
+                                        
+                                        MouseArea {
+                                            id: lockQuickMouseArea
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            hoverEnabled: true
+                                            onClicked: {
+                                                // Try loginctl lock-session first, fallback to swaylock
+                                                Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'loginctl lock-session $(loginctl list-sessions | grep $(whoami) | awk \"{print \\$1}\" | head -1) 2>/dev/null || swaylock 2>/dev/null || loginctl lock-session 2>/dev/null']; running: true }", dashboardRoot)
+                                                // Close dashboard after locking
+                                                if (sharedData) {
+                                                    sharedData.menuVisible = false
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Poweroff button
+                                    Rectangle {
+                                        width: (parent.width - 4) / 2
+                                        height: 26
+                                        radius: 0
+                                        clip: true
+                                        color: poweroffQuickMouseArea.containsMouse ? 
+                                            ((sharedData && sharedData.colorAccent) ? Qt.darker(sharedData.colorAccent, 1.2) : "#3a7fcc") :
+                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
+                                        
+                                        Behavior on color {
+                                            ColorAnimation {
+                                                duration: 150
+                                                easing.type: Easing.OutCubic
+                                            }
+                                        }
+                                        
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 4
+                                            width: Math.min(parent.width - 8, implicitWidth)
+                                            
+                                            Text {
+                                                text: "󰐥"
+                                                font.pixelSize: 12
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                            
+                                            Text {
+                                                text: "Poweroff"
+                                                font.pixelSize: 10
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                elide: Text.ElideRight
+                                                maximumLineCount: 1
+                                                width: Math.max(0, parent.width - 20)
+                                            }
+                                        }
+                                        
+                                        MouseArea {
+                                            id: poweroffQuickMouseArea
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            hoverEnabled: true
+                                            onClicked: {
+                                                Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'poweroff']; running: true }", dashboardRoot)
+                                                // Close dashboard after poweroff
+                                                if (sharedData) {
+                                                    sharedData.menuVisible = false
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -386,48 +641,39 @@ PanelWindow {
                                 anchors.margins: 20
                                 spacing: 20
                                 
-                                // Large Date Display
+                                // Clock Display (left of calendar)
                                 Column {
                                     Layout.preferredWidth: 100
                                     Layout.alignment: Qt.AlignVCenter
-                                    spacing: 2
-                                    
-                                    Item {
-                                        width: 1
-                                        height: 1
-                                    }
+                                    spacing: -12
                                     
                                     Text {
-                                        id: dayNumber
-                                        text: "21"
-                                        font.pixelSize: 68
-                                        font.weight: Font.Bold
+                                        id: calendarHoursDisplay
+                                        text: "00"
+                                        font.pixelSize: 76
                                         font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        font.weight: Font.Bold
+                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                         anchors.horizontalCenter: parent.horizontalCenter
                                     }
                                     
                                     Text {
-                                        id: monthNumber
-                                        text: "06"
-                                        font.pixelSize: 68
-                                        font.weight: Font.Bold
+                                        id: calendarMinutesDisplay
+                                        text: "00"
+                                        font.pixelSize: 76
                                         font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        font.weight: Font.Bold
+                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-                                    
-                                    Item {
-                                        width: 1
-                                        height: 1
                                     }
                                 }
+                                
                                 
                                 // Calendar Grid
                                 Column {
                                     Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
                                     spacing: 8
-                                    anchors.verticalCenter: parent.verticalCenter
                                     
                                     // Day headers
                                     Row {
@@ -1180,9 +1426,9 @@ PanelWindow {
                     }
                 }
 
-                // ============ TAB 2: PERFORMANCE ============
+                // ============ TAB 2: NOTIFICATIONS ============
                 Item {
-                    id: performanceTab
+                    id: notificationsTab
                     anchors.fill: parent
                     visible: currentTab === 2
                     opacity: currentTab === 2 ? 1.0 : 0.0
@@ -1210,402 +1456,218 @@ PanelWindow {
                         }
                     }
                     
-                    // Performance tab content - GridLayout jak w Dashboard
-                    GridLayout {
+                    // Notifications content
+                    Column {
                         anchors.fill: parent
-                        anchors.margins: 12
-                        columns: 2
-                        rows: 3
-                        columnSpacing: 12
-                        rowSpacing: 12
+                        anchors.margins: 24
+                        spacing: 16
                         
-                        // CPU Card
-                        Rectangle {
-                            Layout.column: 0
-                            Layout.row: 0
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: 140
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
+                        // Header with title and clear button
+                        RowLayout {
+                            width: parent.width
                             
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: 16
-                                spacing: 12
+                            Text {
+                                text: "󰂚 Notification Center"
+                                font.pixelSize: 24
+                                font.family: "sans-serif"
+                                font.weight: Font.Bold
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                Layout.fillWidth: true
+                            }
+                            
+                            // Clear all button
+                            Rectangle {
+                                Layout.preferredWidth: 100
+                                Layout.preferredHeight: 32
+                                radius: 0
+                                color: clearAllMouseArea.containsMouse ? 
+                                    ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
+                                    ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a")
                                 
-                                Row {
-                                    width: parent.width
-                                    spacing: 10
-                                    
-                                    Text {
-                                        text: "󰻠"
-                                        font.pixelSize: 24
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                    }
-                                    
-                                    Column {
-                                        spacing: 4
-                                        
-                                        Text {
-                                            text: "CPU"
-                                            font.pixelSize: 16
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        }
-                                        
-                                        Text {
-                                            text: cpuUsageValue + "%"
-                                            font.pixelSize: 28
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        }
-                                    }
-                                }
-                                
-                                Rectangle {
-                                    width: parent.width
-                                    height: 12
-                                    radius: 0
-                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-                                    
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        width: parent.width * (cpuUsageValue / 100)
-                                        height: parent.height
-                                        radius: 0
-                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        
-                                        Behavior on width {
-                                            NumberAnimation {
-                                                duration: 400
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                    }
+                                Behavior on color {
+                                    ColorAnimation { duration: 150 }
                                 }
                                 
                                 Text {
-                                    text: "Temperature: " + cpuTempValue + "°C"
+                                    anchors.centerIn: parent
+                                    text: "󰎟 Clear All"
                                     font.pixelSize: 12
                                     font.family: "sans-serif"
-                                    color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
+                                    color: "#ffffff"
+                                }
+                                
+                                MouseArea {
+                                    id: clearAllMouseArea
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        if (sharedData) sharedData.notificationHistory = []
+                                    }
                                 }
                             }
                         }
                         
-                        // RAM Card
-                        Rectangle {
-                            Layout.column: 1
-                            Layout.row: 0
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: 140
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                            
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: 16
-                                spacing: 12
-                                
-                                Row {
-                                    width: parent.width
-                                    spacing: 10
-                                    
-                                    Text {
-                                        text: "󰍛"
-                                        font.pixelSize: 24
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                    }
-                                    
-                                    Column {
-                                        spacing: 4
-                                        
-                                        Text {
-                                            text: "RAM"
-                                            font.pixelSize: 16
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        }
-                                        
-                                        Text {
-                                            text: ramUsageValue + "%"
-                                            font.pixelSize: 28
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        }
-                                    }
-                                }
-                                
-                                Rectangle {
-                                    width: parent.width
-                                    height: 12
-                                    radius: 0
-                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-                                    
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        width: parent.width * (ramUsageValue / 100)
-                                        height: parent.height
-                                        radius: 0
-                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        
-                                        Behavior on width {
-                                            NumberAnimation {
-                                                duration: 400
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                Text {
-                                    text: "Available: " + Math.round((100 - ramUsageValue) / 100 * ramTotalGB) + "GB / " + ramTotalGB + "GB"
-                                    font.pixelSize: 12
-                                    font.family: "sans-serif"
-                                    color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                }
-                            }
+                        // Notification count
+                        Text {
+                            text: ((sharedData && sharedData.notificationHistory) ? sharedData.notificationHistory.length : 0) + " notifications"
+                            font.pixelSize: 12
+                            font.family: "sans-serif"
+                            color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                         }
                         
-                        // GPU Card
-                        Rectangle {
-                            Layout.column: 0
-                            Layout.row: 1
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: 140
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
+                        // Notifications list
+                        ListView {
+                            id: notificationHistoryList
+                            width: parent.width
+                            height: parent.height - 100
+                            clip: true
+                            spacing: 8
+                            model: (sharedData && sharedData.notificationHistory) ? sharedData.notificationHistory : []
                             
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: 16
-                                spacing: 12
-                                
-                                Row {
-                                    width: parent.width
-                                    spacing: 10
-                                    
-                                    Text {
-                                        text: "󰾲"
-                                        font.pixelSize: 24
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                    }
-                                    
-                                    Column {
-                                        spacing: 4
-                                        
-                                        Text {
-                                            text: "GPU"
-                                            font.pixelSize: 16
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        }
-                                        
-                                        Text {
-                                            text: gpuUsageValue + "%"
-                                            font.pixelSize: 28
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        }
-                                    }
-                                }
-                                
-                                Rectangle {
-                                    width: parent.width
-                                    height: 12
-                                    radius: 0
-                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-                                    
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        width: parent.width * (gpuUsageValue / 100)
-                                        height: parent.height
-                                        radius: 0
-                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        
-                                        Behavior on width {
-                                            NumberAnimation {
-                                                duration: 400
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                Text {
-                                    text: "Temperature: " + gpuTempValue + "°C"
-                                    font.pixelSize: 12
-                                    font.family: "sans-serif"
-                                    color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                }
+                            // Empty state
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰂛 No notifications"
+                                font.pixelSize: 16
+                                font.family: "sans-serif"
+                                color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
+                                visible: !sharedData || !sharedData.notificationHistory || sharedData.notificationHistory.length === 0
                             }
-                        }
-                        
-                        // Top Processes Card
-                        Rectangle {
-                            Layout.column: 1
-                            Layout.row: 1
-                            Layout.rowSpan: 2
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
                             
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: 16
-                                spacing: 12
+                            delegate: Rectangle {
+                                width: notificationHistoryList.width
+                                height: notifContent.height + 24
+                                radius: 0
+                                color: notifItemMouseArea.containsMouse ? 
+                                    ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
+                                    ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a")
                                 
-                                Text {
-                                    text: "󰨳 Top Processes"
-                                    font.pixelSize: 16
-                                    font.family: "sans-serif"
-                                    font.weight: Font.Bold
-                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                Behavior on color {
+                                    ColorAnimation { duration: 150 }
+                                }
+                                
+                                MouseArea {
+                                    id: notifItemMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
                                 }
                                 
                                 Column {
-                                    width: parent.width
-                                    spacing: 8
+                                    id: notifContent
+                                    anchors.left: parent.left
+                                    anchors.right: notifActions.left
+                                    anchors.top: parent.top
+                                    anchors.margins: 12
+                                    anchors.rightMargin: 8
+                                    spacing: 4
                                     
-                                    Repeater {
-                                        model: topProcessesModel.length > 0 ? topProcessesModel.slice(0, 8) : []
+                                    // App name and time
+                                    RowLayout {
+                                        width: parent.width
                                         
-                                        Row {
-                                            width: parent.width
-                                            spacing: 10
-                                            
-                                            Text {
-                                                text: (index + 1) + "."
-                                                font.pixelSize: 12
-                                                font.family: "sans-serif"
-                                                color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                                width: 25
-                                            }
-                                            
-                                            Text {
-                                                text: modelData.name.length > 20 ? modelData.name.substring(0, 20) + "..." : modelData.name
-                                                font.pixelSize: 12
-                                                font.family: "sans-serif"
-                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                                width: parent.width - 120
-                                            }
-                                            
-                                            Text {
-                                                text: modelData.cpu + "%"
-                                                font.pixelSize: 12
-                                                font.family: "sans-serif"
-                                                font.weight: Font.Bold
-                                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                                width: 45
-                                            }
-                                            
-                                            Text {
-                                                text: modelData.mem + "%"
-                                                font.pixelSize: 12
-                                                font.family: "sans-serif"
-                                                color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                                width: 45
+                                        Text {
+                                            text: modelData.appName || "Unknown"
+                                            font.pixelSize: 11
+                                            font.family: "sans-serif"
+                                            font.weight: Font.Medium
+                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        }
+                                        
+                                        Item { Layout.fillWidth: true }
+                                        
+                                        Text {
+                                            text: modelData.time || ""
+                                            font.pixelSize: 10
+                                            font.family: "sans-serif"
+                                            color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
+                                        }
+                                    }
+                                    
+                                    // Title
+                                    Text {
+                                        text: modelData.title || ""
+                                        font.pixelSize: 13
+                                        font.family: "sans-serif"
+                                        font.weight: Font.Bold
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        width: parent.width
+                                        elide: Text.ElideRight
+                                    }
+                                    
+                                    // Body
+                                    Text {
+                                        text: modelData.body || ""
+                                        font.pixelSize: 12
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
+                                        width: parent.width
+                                        wrapMode: Text.WordWrap
+                                        maximumLineCount: 3
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                                
+                                // Action buttons
+                                Row {
+                                    id: notifActions
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    anchors.margins: 8
+                                    spacing: 4
+                                    visible: notifItemMouseArea.containsMouse
+                                    
+                                    // Copy button
+                                    Rectangle {
+                                        width: 28
+                                        height: 28
+                                        radius: 0
+                                        color: copyBtnMouseArea.containsMouse ? 
+                                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
+                                            "transparent"
+                                        
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "󰆏"
+                                            font.pixelSize: 14
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        }
+                                        
+                                        MouseArea {
+                                            id: copyBtnMouseArea
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            hoverEnabled: true
+                                            onClicked: {
+                                                var textToCopy = (modelData.title || "") + "\n" + (modelData.body || "")
+                                                dashboardRoot.copyToClipboard(textToCopy)
                                             }
                                         }
                                     }
-                                }
-                            }
-                        }
-                        
-                        // Disk Usage Card
-                        Rectangle {
-                            Layout.column: 0
-                            Layout.row: 2
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                            
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: 16
-                                spacing: 12
-                                
-                                Text {
-                                    text: "󰋼 Disk Usage"
-                                    font.pixelSize: 16
-                                    font.family: "sans-serif"
-                                    font.weight: Font.Bold
-                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                }
-                                
-                                Column {
-                                    width: parent.width
-                                    spacing: 10
                                     
-                                    Repeater {
-                                        model: diskUsageModel.length > 0 ? diskUsageModel.slice(0, 4) : []
+                                    // Delete button
+                                    Rectangle {
+                                        width: 28
+                                        height: 28
+                                        radius: 0
+                                        color: deleteBtnMouseArea.containsMouse ? "#ff4444" : "transparent"
                                         
-                                        Column {
-                                            width: parent.width
-                                            spacing: 6
-                                            
-                                            Row {
-                                                width: parent.width
-                                                spacing: 10
-                                                
-                                                Text {
-                                                    text: modelData.mount
-                                                    font.pixelSize: 12
-                                                    font.family: "sans-serif"
-                                                    font.weight: Font.Bold
-                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                                    width: 60
-                                                }
-                                                
-                                                Text {
-                                                    text: modelData.usage + "%"
-                                                    font.pixelSize: 12
-                                                    font.family: "sans-serif"
-                                                    font.weight: Font.Bold
-                                                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                                    width: 45
-                                                }
-                                                
-                                                Item { width: parent.width - 120; height: 1 }
-                                                
-                                                Text {
-                                                    text: modelData.used + " / " + modelData.total
-                                                    font.pixelSize: 11
-                                                    font.family: "sans-serif"
-                                                    color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                                }
-                                            }
-                                            
-                                            Rectangle {
-                                                width: parent.width
-                                                height: 6
-                                                radius: 0
-                                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-                                                
-                                                Rectangle {
-                                                    anchors.left: parent.left
-                                                    width: parent.width * (modelData.usage / 100)
-                                                    height: parent.height
-                                                    radius: 0
-                                                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                                    
-                                                    Behavior on width {
-                                                        NumberAnimation {
-                                                            duration: 400
-                                                            easing.type: Easing.OutCubic
-                                                        }
-                                                    }
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "󰆴"
+                                            font.pixelSize: 14
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        }
+                                        
+                                        MouseArea {
+                                            id: deleteBtnMouseArea
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            hoverEnabled: true
+                                            onClicked: {
+                                                if (sharedData && sharedData.notificationHistory) {
+                                                    var newHistory = sharedData.notificationHistory.filter(function(item, i) { return i !== index })
+                                                    sharedData.notificationHistory = newHistory
                                                 }
                                             }
                                         }
@@ -1638,9 +1700,14 @@ PanelWindow {
     // Calendar days model
     property var calendarDays: []
     
-    // Weather properties
-    property string weatherTemp: "15°C"
-    property string weatherCondition: "Clear"
+    // Network properties
+    property string networkDownloadSpeed: "0 KB/s"
+    property string networkUploadSpeed: "0 KB/s"
+    property int networkDownloadBytes: 0
+    property int networkUploadBytes: 0
+    property int networkDownloadBytesPrev: 0
+    property int networkUploadBytesPrev: 0
+    
     
     // Performance tab models
     property var diskUsageModel: []
@@ -1675,6 +1742,104 @@ PanelWindow {
         }
         xhr.send()
     }
+    
+    function updateDistro() {
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(grep \"^PRETTY_NAME=\" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \\\"\\\" || grep \"^NAME=\" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \\\"\\\" || echo \"Linux\") > /tmp/quickshell_distro']; running: true }", dashboardRoot)
+        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: dashboardRoot.readDistro() }", dashboardRoot)
+    }
+    
+    function readDistro() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///tmp/quickshell_distro")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                var distro = xhr.responseText.trim()
+                if (distro && distro.length > 0) {
+                    // Remove quotes if present
+                    distro = distro.replace(/^["']|["']$/g, '')
+                    distroName = distro
+                }
+            }
+        }
+        xhr.send()
+    }
+    
+    function readNetworkStats() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///proc/net/dev")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                var lines = xhr.responseText.split("\n")
+                var totalRx = 0
+                var totalTx = 0
+                
+                // Parse /proc/net/dev - sum all interfaces except lo
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim()
+                    if (line && line.indexOf(":") > 0 && !line.startsWith("lo:")) {
+                        // Format: interface: rx_bytes rx_packets ... tx_bytes tx_packets ...
+                        var parts = line.split(/\s+/)
+                        if (parts.length >= 10) {
+                            // parts[0] is "interface:", parts[1] is rx_bytes, parts[9] is tx_bytes
+                            var rxBytes = Number(parts[1]) || 0
+                            var txBytes = Number(parts[9]) || 0
+                            totalRx += rxBytes
+                            totalTx += txBytes
+                        }
+                    }
+                }
+                
+                // Check if we have previous values to calculate speed
+                if (networkDownloadBytesPrev > 0 || networkUploadBytesPrev > 0) {
+                    // Calculate speed: difference / 2 seconds (timer interval)
+                    var rxDiff = Math.max(0, totalRx - networkDownloadBytesPrev)
+                    var txDiff = Math.max(0, totalTx - networkUploadBytesPrev)
+                    networkDownloadSpeed = formatSpeed(rxDiff / 2) // Per second
+                    networkUploadSpeed = formatSpeed(txDiff / 2) // Per second
+                } else {
+                    // First measurement, just store values (will show 0 until next measurement)
+                    networkDownloadSpeed = "0 KB/s"
+                    networkUploadSpeed = "0 KB/s"
+                }
+                
+                // Update previous values for next calculation
+                networkDownloadBytesPrev = networkDownloadBytes
+                networkUploadBytesPrev = networkUploadBytes
+                // Update current values
+                networkDownloadBytes = totalRx
+                networkUploadBytes = totalTx
+            }
+        }
+        xhr.send()
+    }
+    
+    function formatSpeed(bytes) {
+        if (bytes < 1024) return bytes + " B/s"
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB/s"
+        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB/s"
+        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB/s"
+    }
+    
+    
+    function updateWindowManager() {
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(echo $XDG_CURRENT_DESKTOP 2>/dev/null | cut -d: -f1 || echo $DESKTOP_SESSION 2>/dev/null || ps -e | grep -E \"(hyprland|sway|i3|kwin|mutter|xfwm4|openbox|dwm)\" | head -1 | awk \"{print \\$4}\" | tr -d \\\"\\\" || echo \"Unknown\") > /tmp/quickshell_wm']; running: true }", dashboardRoot)
+        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: dashboardRoot.readWindowManager() }", dashboardRoot)
+    }
+    
+    function readWindowManager() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///tmp/quickshell_wm")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                var wm = xhr.responseText.trim()
+                if (wm && wm.length > 0) {
+                    windowManager = wm
+                }
+            }
+        }
+        xhr.send()
+    }
+    
     function updateCalendar() {
         var now = new Date()
         var firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -1847,6 +2012,31 @@ PanelWindow {
 
     // ============ TIMERS ============
     Timer {
+        id: calendarClockTimer
+        interval: 1000
+        repeat: true
+        running: true
+        onTriggered: {
+            var now = new Date()
+            var h = now.getHours()
+            var m = now.getMinutes()
+            var hStr = h < 10 ? "0" + h : h.toString()
+            var mStr = m < 10 ? "0" + m : m.toString()
+            calendarHoursDisplay.text = hStr
+            calendarMinutesDisplay.text = mStr
+        }
+        Component.onCompleted: {
+            var now = new Date()
+            var h = now.getHours()
+            var m = now.getMinutes()
+            var hStr = h < 10 ? "0" + h : h.toString()
+            var mStr = m < 10 ? "0" + m : m.toString()
+            calendarHoursDisplay.text = hStr
+            calendarMinutesDisplay.text = mStr
+        }
+    }
+    
+    Timer {
         id: dateTimer
         interval: 1000
         repeat: true
@@ -2000,13 +2190,14 @@ PanelWindow {
     }
 
     Timer {
-        id: weatherTimer
-        interval: 300000 // Update every 5 minutes
+        id: networkTimer
+        interval: 2000 // Update every 2 seconds
         repeat: true
         running: true
-        Component.onCompleted: updateWeather()
-        onTriggered: updateWeather()
+        onTriggered: readNetworkStats()
+        Component.onCompleted: readNetworkStats()
     }
+    
     
     // ============ PERFORMANCE TAB FUNCTIONS ============
     function updateDiskUsage() {
@@ -2303,10 +2494,15 @@ PanelWindow {
     }
 
     Component.onCompleted: {
+        // Initialize weatherCity from sharedData if available
+        if (sharedData && sharedData.weatherCity !== undefined) {
+            weatherCity = sharedData.weatherCity
+        }
         updateCalendar()
         updateDate()
         updateUptime()
-        updateWeather()
+        updateDistro()
+        updateWindowManager()
         // Initialize project path
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_cava_path 2>/dev/null || pwd > /tmp/quickshell_cava_path']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: dashboardRoot.readCavaPath() }", dashboardRoot)
@@ -2322,6 +2518,33 @@ PanelWindow {
                 dashboardContainer.focus = false
             }
         }
+    }
+    
+    // ============ POWER MENU FUNCTIONS ============
+    function suspendSystem() {
+        console.log("Suspending system...")
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'suspend']; running: true }", dashboardRoot)
+    }
+    
+    function rebootSystem() {
+        console.log("Rebooting system...")
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'reboot']; running: true }", dashboardRoot)
+    }
+    
+    function shutdownSystem() {
+        console.log("Shutting down system...")
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'poweroff']; running: true }", dashboardRoot)
+    }
+    
+    function logoutSystem() {
+        console.log("Logging out...")
+        // Try loginctl first, fallback to pkill
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'loginctl terminate-session $(loginctl list-sessions | grep $(whoami) | awk \"{print $1}\" | head -1) 2>/dev/null || pkill -KILL -u $(whoami)']; running: true }", dashboardRoot)
+    }
+    
+    // ============ NOTIFICATION FUNCTIONS ============
+    function copyToClipboard(text) {
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['wl-copy', '" + text.replace(/'/g, "'\\''").replace(/\n/g, "\\n") + "']; running: true }", dashboardRoot)
     }
 }
 

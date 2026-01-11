@@ -116,28 +116,32 @@ PanelWindow {
     function loadDefaultSinkDescription() {
         if (!defaultSink || defaultSink.length === 0) return
         var escapedSink = defaultSink.replace(/'/g, "'\\''")
-        Qt.createQmlObject('import Quickshell.Io; Process { command: ["sh", "-c", "pactl list sinks | grep -A 20 "Name: ' + escapedSink + '" | grep "Description:" | head -1 | sed "s/.*Description: //" > /tmp/quickshell_sink_description 2>/dev/null"]; running: true }', settingsApplicationRoot)
+        var cmd = "pactl list sinks | grep -A 20 'Name: " + escapedSink + "' | grep 'Description:' | head -1 | sed 's/.*Description: //' > /tmp/quickshell_sink_description 2>/dev/null"
+        Qt.createQmlObject('import Quickshell.Io; Process { command: ["sh", "-c", "' + cmd.replace(/"/g, '\\"') + '"]; running: true }', settingsApplicationRoot)
         Qt.createQmlObject('import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: function() { var xhr = new XMLHttpRequest(); xhr.open("GET", "file:///tmp/quickshell_sink_description"); xhr.onreadystatechange = function() { if (xhr.readyState === XMLHttpRequest.DONE && (xhr.status === 200 || xhr.status === 0)) { var desc = xhr.responseText.trim(); if (desc.length > 0) defaultSinkDescription = desc; } }; xhr.send(); } }', settingsApplicationRoot)
     }
 
     function loadDefaultSourceDescription() {
         if (!defaultSource || defaultSource.length === 0) return
         var escapedSource = defaultSource.replace(/'/g, "'\\''")
-        Qt.createQmlObject('import Quickshell.Io; Process { command: ["sh", "-c", "pactl list sources | grep -A 20 "Name: ' + escapedSource + '" | grep "Description:" | head -1 | sed "s/.*Description: //" > /tmp/quickshell_source_description 2>/dev/null"]; running: true }', settingsApplicationRoot)
+        var cmd = "pactl list sources | grep -A 20 'Name: " + escapedSource + "' | grep 'Description:' | head -1 | sed 's/.*Description: //' > /tmp/quickshell_source_description 2>/dev/null"
+        Qt.createQmlObject('import Quickshell.Io; Process { command: ["sh", "-c", "' + cmd.replace(/"/g, '\\"') + '"]; running: true }', settingsApplicationRoot)
         Qt.createQmlObject('import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: function() { var xhr = new XMLHttpRequest(); xhr.open("GET", "file:///tmp/quickshell_source_description"); xhr.onreadystatechange = function() { if (xhr.readyState === XMLHttpRequest.DONE && (xhr.status === 200 || xhr.status === 0)) { var desc = xhr.responseText.trim(); if (desc.length > 0) defaultSourceDescription = desc; } }; xhr.send(); } }', settingsApplicationRoot)
     }
 
     function loadDefaultSinkVolume() {
         if (!defaultSink || defaultSink.length === 0) return
         var escapedSink = defaultSink.replace(/'/g, "'\\''")
-        Qt.createQmlObject('import Quickshell.Io; Process { command: ["sh", "-c", "pactl get-sink-volume "' + escapedSink + '" | grep -oP "\\\\d+%" | head -1 | sed "s/%//" > /tmp/quickshell_sink_volume 2>/dev/null"]; running: true }', settingsApplicationRoot)
+        var cmd = "pactl get-sink-volume '" + escapedSink + "' | grep -oP '\\d+%' | head -1 | sed 's/%//' > /tmp/quickshell_sink_volume 2>/dev/null"
+        Qt.createQmlObject('import Quickshell.Io; Process { command: ["sh", "-c", "' + cmd.replace(/"/g, '\\"') + '"]; running: true }', settingsApplicationRoot)
         Qt.createQmlObject('import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: function() { var xhr = new XMLHttpRequest(); xhr.open("GET", "file:///tmp/quickshell_sink_volume"); xhr.onreadystatechange = function() { if (xhr.readyState === XMLHttpRequest.DONE && (xhr.status === 200 || xhr.status === 0)) { var vol = parseInt(xhr.responseText.trim()); if (!isNaN(vol)) defaultSinkVolume = vol; } }; xhr.send(); } }', settingsApplicationRoot)
     }
 
     function loadDefaultSourceVolume() {
         if (!defaultSource || defaultSource.length === 0) return
         var escapedSource = defaultSource.replace(/'/g, "'\\''")
-        Qt.createQmlObject('import Quickshell.Io; Process { command: ["sh", "-c", "pactl get-source-volume "' + escapedSource + '" | grep -oP "\\\\d+%" | head -1 | sed "s/%//" > /tmp/quickshell_source_volume 2>/dev/null"]; running: true }', settingsApplicationRoot)
+        var cmd = "pactl get-source-volume '" + escapedSource + "' | grep -oP '\\d+%' | head -1 | sed 's/%//' > /tmp/quickshell_source_volume 2>/dev/null"
+        Qt.createQmlObject('import Quickshell.Io; Process { command: ["sh", "-c", "' + cmd.replace(/"/g, '\\"') + '"]; running: true }', settingsApplicationRoot)
         Qt.createQmlObject('import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: function() { var xhr = new XMLHttpRequest(); xhr.open("GET", "file:///tmp/quickshell_source_volume"); xhr.onreadystatechange = function() { if (xhr.readyState === XMLHttpRequest.DONE && (xhr.status === 200 || xhr.status === 0)) { var vol = parseInt(xhr.responseText.trim()); if (!isNaN(vol)) defaultSourceVolume = vol; } }; xhr.send(); } }', settingsApplicationRoot)
     }
 
@@ -336,8 +340,8 @@ PanelWindow {
     }
 
     // Window properties
-    width: 800
-    height: 600
+    implicitWidth: 800
+    implicitHeight: 600
     color: "transparent"
 
     // Color properties
@@ -590,8 +594,8 @@ PanelWindow {
         console.log("Wallpapers path set to:", wallpapersPath)
 
         // Create necessary directories
-        Qt.createQmlObject("import Quickshell.Io; Process { command: ['mkdir', '-p', '~/Pictures/Wallpapers']; running: true }", settingsApplicationRoot)
-        Qt.createQmlObject("import Quickshell.Io; Process { command: ['mkdir', '-p', '~/Documents/Notes']; running: true }", settingsApplicationRoot)
+        Qt.createQmlObject("import Quickshell.Io; Process { command: ['mkdir', '-p', '" + wallpapersPath + "']; running: true }", settingsApplicationRoot)
+        Qt.createQmlObject("import Quickshell.Io; Process { command: ['mkdir', '-p', '/home/" + username + "/Documents/Notes']; running: true }", settingsApplicationRoot)
     }
 
 

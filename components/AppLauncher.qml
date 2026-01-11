@@ -548,8 +548,6 @@ PanelWindow {
     
     implicitWidth: isNotesMode ? notesWidth : baseWidth
     implicitHeight: isNotesMode ? notesHeight : baseHeight
-    width: implicitWidth
-    height: implicitHeight
     
     Behavior on implicitWidth {
         NumberAnimation {
@@ -581,14 +579,14 @@ PanelWindow {
     color: "transparent"  // Transparent, background will be in container with gradient
     
     // Slide up animation from bottom - negative value moves down (off screen)
-    property int slideOffset: (sharedData && sharedData.launcherVisible) ? 0 : -500
+    property int slideOffset: (sharedData && sharedData.launcherVisible) ? 0 : -600
     
     margins.bottom: slideOffset
     
     Behavior on slideOffset {
         NumberAnimation { 
-            duration: 300
-            easing.type: Easing.OutCubic
+            duration: 500
+            easing.type: Easing.OutExpo
         }
     }
     
@@ -1592,15 +1590,16 @@ PanelWindow {
         
         Behavior on opacity {
             NumberAnimation {
-                duration: 300
-                easing.type: Easing.OutCubic
+                duration: 350
+                easing.type: Easing.OutQuart
             }
         }
         
         Behavior on scale {
             NumberAnimation {
-                duration: 300
-                easing.type: Easing.OutCubic
+                duration: 450
+                easing.type: Easing.OutBack
+                easing.amplitude: 1.1
             }
         }
         
@@ -1619,13 +1618,6 @@ PanelWindow {
                 Qt.callLater(function() {
                     launcherContainer.forceActiveFocus()
                 })
-            }
-        }
-        
-        Behavior on opacity {
-            NumberAnimation { 
-                duration: 400
-                easing.type: Easing.OutQuart
             }
         }
         
@@ -2039,7 +2031,7 @@ PanelWindow {
                 Rectangle {
                     anchors.bottom: parent.bottom
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: selectedIndex === index ? parent.width * 0.8 : 0
+                    width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                     height: 3
                     color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                     radius: 1.5
@@ -2275,35 +2267,77 @@ PanelWindow {
                                     }
                                 }
                                 
+                                // Staggered entry for items
+                                add: Transition {
+                                    ParallelAnimation {
+                                        NumberAnimation {
+                                            property: "opacity"
+                                            from: 0
+                                            to: 1
+                                            duration: 400
+                                            easing.type: Easing.OutQuart
+                                        }
+                                        NumberAnimation {
+                                            property: "scale"
+                                            from: 0.9
+                                            to: 1
+                                            duration: 500
+                                            easing.type: Easing.OutBack
+                                        }
+                                        NumberAnimation {
+                                            property: "x"
+                                            from: -20
+                                            to: 0
+                                            duration: 500
+                                            easing.type: Easing.OutExpo
+                                        }
+                                    }
+                                }
+                                
                                 addDisplaced: Transition {
                                     NumberAnimation {
                                         properties: "y"
-                                        duration: 220
-                                        easing.type: Easing.OutQuart
+                                        duration: 400
+                                        easing.type: Easing.OutBack
                                     }
                                 }
                                 
                                 removeDisplaced: Transition {
                                     NumberAnimation {
                                         properties: "y"
-                                        duration: 180
+                                        duration: 300
                                         easing.type: Easing.OutQuart
                                     }
                                 }
                                 
                                 delegate: Rectangle {
-                                id: appItem
-                                width: appsList.width
-                                height: 72
-                                color: "transparent"
-                                radius: 0
-                                scale: (selectedIndex === index || appItemMouseArea.containsMouse) ? 1.02 : 1.0
+                                    id: appItem
+                                    width: appsList.width
+                                    height: 72
+                                    color: (selectedIndex === index) ? (sharedData && sharedData.colorPrimary ? Qt.darker(sharedData.colorPrimary, 0.85) : "#2a2a2a") : "transparent"
+                                    radius: 0
+                                    scale: (selectedIndex === index || appItemMouseArea.containsMouse) ? 1.02 : 1.0
+                                    
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 250
+                                            easing.type: Easing.OutQuart
+                                        }
+                                    }
+                                    
+                                    Behavior on scale {
+                                        SpringAnimation {
+                                            spring: 4.5
+                                            damping: 0.45
+                                            epsilon: 0.005
+                                        }
+                                    }
 
                                 // Bottom accent line for selected items
                                 Rectangle {
                                     anchors.bottom: parent.bottom
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    width: selectedIndex === index ? parent.width * 0.8 : 0
+                                    width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                                     height: 3
                                     color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                     radius: 1.5
@@ -2434,7 +2468,7 @@ PanelWindow {
                     Rectangle {
                         anchors.bottom: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: selectedIndex === index ? parent.width * 0.8 : 0
+                        width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                         height: 3
                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                         radius: 1.5
@@ -2542,7 +2576,7 @@ PanelWindow {
                     Rectangle {
                         anchors.bottom: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: selectedIndex === index ? parent.width * 0.8 : 0
+                        width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                         height: 3
                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                         radius: 1.5
@@ -2750,7 +2784,7 @@ PanelWindow {
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                width: selectedIndex === index ? parent.width * 0.8 : 0
+                                width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                                 height: 3
                                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                 radius: 1.5
@@ -2941,7 +2975,7 @@ PanelWindow {
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                width: selectedIndex === index ? parent.width * 0.8 : 0
+                                width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                                 height: 3
                                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                 radius: 1.5
@@ -3046,7 +3080,7 @@ PanelWindow {
                     Rectangle {
                         anchors.bottom: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: selectedIndex === index ? parent.width * 0.8 : 0
+                        width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                         height: 3
                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                         radius: 1.5
@@ -3270,7 +3304,7 @@ PanelWindow {
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                width: selectedIndex === index ? parent.width * 0.8 : 0
+                                width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                                 height: 3
                                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                 radius: 1.5
@@ -3461,7 +3495,7 @@ PanelWindow {
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                width: selectedIndex === index ? parent.width * 0.8 : 0
+                                width: (selectedIndex === index && parent) ? parent.width * 0.8 : 0
                                 height: 3
                                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                 radius: 1.5
@@ -3649,7 +3683,8 @@ PanelWindow {
                                 clip: true
 
                                 delegate: Rectangle {
-                                    width: parent.width
+                                    id: noteItem
+                                    width: notesList.width
                                     height: 50
                                     color: (notesMenuIndex === index + 1) ? colorAccent : (notesItemMouseArea.containsMouse ? colorPrimary : "transparent")
                                     radius: 0
@@ -3685,7 +3720,7 @@ PanelWindow {
                                     Rectangle {
                                         anchors.bottom: parent.bottom
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        width: selectedIndex === index ? parent.width * 0.8 : 0
+                                        width: selectedIndex === index ? notesList.width * 0.8 : 0
                                         height: 3
                                         color: colorAccent
                                         radius: 1.5

@@ -21,6 +21,9 @@ ShellRoot {
         property bool notificationsEnabled: true  // Enable/disable notifications
         property bool notificationSoundsEnabled: true  // Enable/disable notification sounds
         
+        // Notification history for notification center
+        property var notificationHistory: []
+
         // Color theme properties
         property string colorBackground: "#0a0a0a"
         property string colorPrimary: "#1a1a1a"
