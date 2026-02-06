@@ -1,68 +1,67 @@
 # Dart (Alloy Shell)
 
-<div align="center">
+**A performance-focused desktop shell for Quickshell & Wayland**
 
-**A premium, high-performance desktop shell for Quickshell & Wayland**
+[![Quickshell](https://img.shields.io/badge/Quickshell-Compatible-00D9FF?style=flat-square&logo=qt)](https://github.com/Quickshell/Quickshell)
+[![Wayland](https://img.shields.io/badge/Wayland-Supported-FF6B6B?style=flat-square&logo=wayland)](https://wayland.freedesktop.org/)
 
-[![Quickshell](https://img.shields.io/badge/Quickshell-Compatible-00D9FF?style=for-the-badge&logo=qt)](https://github.com/Quickshell/Quickshell)
-[![Wayland](https://img.shields.io/badge/Wayland-Supported-FF6B6B?style=for-the-badge&logo=wayland)](https://wayland.freedesktop.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+Dart provides a fluid UI with integrated system monitoring and deep customization via the Fuse App.
 
-*Dart is a modern, animation-focused shell environment built on Quickshell. It features a fluid UI, integrated system monitoring, and deep customization through a unified design system.*
+---
 
-</div>
+## 🖼️ Showcase
+
+<table align="center">
+  <tr>
+    <td align="center"><b>Dashboard</b><br/><img src="showcase/dashboard.png" width="300"/></td>
+    <td align="center"><b>Launcher</b><br/><img src="showcase/launcher.png" width="300"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Clipboard</b><br/><img src="showcase/clipboard.png" width="300"/></td>
+    <td align="center"><b>Media</b><br/><img src="showcase/media.png" width="300"/></td>
+  </tr>
+</table>
 
 ---
 
 ## 🚀 Key Features
 
-### 🖥️ Shell Components
-- **Unified Sidebar & Top Bar**: Toggle between positions with real-time scaling and smooth transitions.
-- **Dynamic Dashboard**: 
-    - **System & Weather**: Current conditions, system uptime, and hardware specs.
-    - **Performance Monitoring**: Real-time CPU, RAM, and GPU graphs.
-    - **Calendar**: integrated monthly view.
-    - **GitHub Activity**: Scraped contribution graph visualization.
-- **Smart App Launcher**: Category-based filtering, web search shortcuts (`!y`, `!g`, `!r`), and a built-in calculator.
+- **Unified Sidebar & Top Bar**: Toggle between positions with real-time scaling.
+- **Dynamic Dashboard**:
+    - **System Monitoring**: Real-time CPU, RAM, and GPU telemetry.
+    - **Network**: Accurate upload and download traffic monitoring.
+    - **GitHub Activity**: Scraped contribution graph.
+    - **Calendar**: Integrated monthly view.
+- **Smart Launcher**: Application filtering with math calculation (`= 2+2`) and web search shortcuts (`!y`, `!g`, `!r`).
 - **Clipboard Manager**: History tracking with smart deduplication and instant copy-back.
-- **Media Controller**: Elegant playback controls with blurred album art and audio visualization.
-- **Notification Center**: D-Bus compliant notifications with urgency-based styling and smooth exit animations.
-
-### 🎨 Design & Performance
-- **Premium Aesthetics**: Glassmorphism effects, variable border radii (0-25px), and curated color palettes.
-- **Micro-animations**: Spring-based physics for modals and hover-scaling for interactive elements.
-- **ProcessHelper Integration**: Highly efficient external command execution for minimal system overhead.
-- **Native Wallpaper System**: Per-screen wallpaper management with high-resolution previews.
-
-> [!IMPORTANT]
-> **Fuse Integration**: Several core features including the **Settings Application**, **System Controls**, and **Advanced Theming** require the [Fuse](https://github.com/artwik22/fuse) suite to be installed and accessible in your PATH.
+- **Media Controls**: Integrated playback control and metadata display (requires `playerctl`).
+- **Notification Center**: D-Bus compliant notifications with urgency-based styling.
 
 ---
 
 ## 🛠️ Requirements
 
 - **Quickshell** (Latest master recommended)
-- **Wayland Compositor** (Optimized for Hyprland)
-- **Fuse Suite** (Required for settings and system integration) [Repo](https://github.com/artwik22/fuse)
+- **DE/WM**: Tested **only** on **Hyprland**.
+- **Fuse Suite**: Required for settings and system integration. [Repo](https://github.com/artwik22/fuse)
 
 ### Optional Dependencies
-- `cava` (Audio visualizer)
-- `playerctl` (Media tracking)
-- `grim` + `slurp` (Screenshots)
+- `cava`: Audio visualization.
+- `playerctl`: Media tracking and control.
+- `grim` + `slurp`: Screenshot functionality.
 
 ---
 
 ## 📦 Installation
 
-### Standard Setup
 ```bash
-git clone https://github.com/artwik22/sharpshell.git ~/.config/alloy/dart
+mkdir ~/.config/alloy
+git clone https://github.com/artwik22/dart.git ~/.config/alloy/dart
 cd ~/.config/alloy/dart
-chmod +x run.sh toggle-menu.sh open-launcher.sh
 ./run.sh
 ```
 
-### Compositor Integration (Hyprland)
+### ⌨️ Hyprland Bindings
 Add these to your `hyprland.conf`:
 ```ini
 bind = SUPER, R, exec, ~/.config/alloy/dart/open-launcher.sh
@@ -72,26 +71,33 @@ bind = SUPER, V, exec, ~/.config/alloy/dart/open-clipboard.sh
 
 ---
 
-## 📁 Project Structure
-
-- `shell.qml`: Main entry point and layout definition.
-- `components/`: Modular QML components (Dashboard, Launcher, Sidebar, etc.).
-- `scripts/`: Helper scripts for CAVA, screenshots, and system updates.
-- `colors.json`: Centralized configuration for themes, scaling, and behavior.
-
----
-
 ## 🔧 Customization
 
-Dart's behavior can be tuned in `colors.json` or through the integrated settings:
-- **UI Scaling**: 75%, 100%, 125%.
-- **Theme Engine**: 24+ curated presets or custom HEX values.
-- **Performance Mode**: Toggle animations for lower-end hardware.
+Primary customization is managed through the **Fuse** application. Available options include:
+- **Design System**: Switch between 9+ curated color presets or define custom HEX colors.
+- **UI Layout**:
+    - **Sidebar**: Toggle visibility and change position (Left/Right/Top/Bottom).
+    - **Dashboard**: Configure which system resources (CPU, RAM, GPU, Network) are displayed.
+    - **Side Panel**: Switch between a classic Calendar or a live GitHub Activity graph.
+- **Behavior**:
+    - **UI Scaling**: Adjust the interface scale (75%, 100%, 125%).
+    - **Performance**: Enable Low Performance mode to optimize for older hardware.
+    - **Notifications**: Global toggle for D-Bus notifications and sound alerts.
+
+<details>
+<summary><b>Manual Configuration</b></summary>
+
+Edit `~/.config/alloy/colors.json` directly for manual tweaks:
+- `uiScale`: Toggle between `75`, `100`, or `125`.
+- `lowPerformanceMode`: Set to `true` (or create `~/.config/alloy/low-perf`) to disable heavy animations.
+- `sidebarPosition`: `"left"`, `"top"`, `"right"`, or `"bottom"`.
+- `sidepanelContent`: `"calendar"` or `"github"`.
+- `dashboardTileLeft`: `"battery"` or `"network"`.
+- `accent`: HEX value for the primary accent color.
+
+</details>
 
 ---
-
-## 📜 License
-Distributed under the MIT License.
 
 ## 🤝 Acknowledgments
 - [Quickshell](https://github.com/Quickshell/Quickshell) - The core engine.
