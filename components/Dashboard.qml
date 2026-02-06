@@ -1,6 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+<<<<<<< HEAD
+=======
+import QtQml
+>>>>>>> master
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -9,6 +13,7 @@ import "."
 PanelWindow {
     id: dashboardRoot
 
+<<<<<<< HEAD
     anchors { top: true }
     implicitWidth: 840  // 1200 * 0.7
     implicitHeight: 420  // 600 * 0.7
@@ -16,10 +21,89 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qsdashboard"
     WlrLayershell.keyboardFocus: (sharedData && sharedData.menuVisible) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+=======
+    signal perfUpdated()
+    
+    // Resource History Arrays
+    property var cpuHistory: []
+    property var ramHistory: []
+    property var gpuHistory: []
+    property var networkHistory: []
+    
+    // Resource Current Values (Implicitly defined by usage in timers, but declaring for clarity/safety)
+    property int cpuUsageValue: 0
+    property int ramUsageValue: 0
+    property int gpuUsageValue: 0
+    property real networkRxMBs: 0
+    property real networkTxMBs: 0
+    property int ramTotalGB: 0
+    property int cpuTempValue: 0
+    property int gpuTempValue: 0
+    
+    // Helper to push to history
+    function pushHistory(arr, val) {
+        if (!arr) arr = []
+        arr.push(val)
+        if (arr.length > 60) arr.shift()
+        return arr
+    }
+
+    function getResourceHistory(res) {
+        if (res === "ram") return ramHistory
+        if (res === "gpu") return gpuHistory
+        if (res === "network") return networkHistory
+        return cpuHistory
+    }
+    
+    function getResourceLabel(res) {
+        if (res === "ram") return "RAM Usage"
+        if (res === "gpu") return "GPU Usage"
+        if (res === "network") return "Network"
+        return "CPU Usage"
+    }
+    
+    function getResourceIcon(res) {
+        if (res === "ram") return "󰍛"
+        if (res === "gpu") return "󰢮"
+        if (res === "network") return "󰇚"
+        return "󰻠"
+    }
+    
+    function getResourceValueText(res) {
+        if (res === "ram") return ramUsageValue + "%"
+        if (res === "gpu") return gpuUsageValue + "%"
+        if (res === "network") return (networkRxMBs + networkTxMBs).toFixed(1) + " MB/s"
+        return cpuUsageValue + "%"
+    }
+    
+    function getResourceSubText(res) {
+        if (res === "ram") return (ramTotalGB > 0 ? ramTotalGB + " GB Total" : "")
+        if (res === "gpu") return (gpuTempValue > 0 ? gpuTempValue + "°C" : "")
+        if (res === "network") return "↓ " + networkRxMBs.toFixed(1) + " ↑ " + networkTxMBs.toFixed(1)
+        return (cpuTempValue > 0 ? cpuTempValue + "°C" : "")
+    }
+
+    property string panelPos: (sharedData && sharedData.dashboardPosition) ? sharedData.dashboardPosition : "right"
+    property bool isHorizontal: panelPos === "top" || panelPos === "bottom"
+    
+    // Configurable anchors based on panelPos
+    anchors.right: panelPos === "left" ? false : true 
+    anchors.left: panelPos === "right" ? false : true
+    anchors.top: panelPos === "bottom" ? false : true
+    anchors.bottom: panelPos === "top" ? false : true
+    
+    implicitWidth: !isHorizontal ? 449 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].width : 1920
+    implicitHeight: isHorizontal ? 449 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].height : 1440
+    
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "qsdashboard"
+    WlrLayershell.keyboardFocus: (showProgress > 0.5) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+>>>>>>> master
     exclusiveZone: 0
 
     property int currentTab: 0
     property var sharedData: null
+<<<<<<< HEAD
     
     // Visibility control - always visible, controlled by slideOffset
     visible: true
@@ -44,10 +128,31 @@ PanelWindow {
     }
     
     // No animation on sidebarTopOffset - should update immediately when position changes
+=======
+
+    // --- Animacja wejścia/wyjścia (bez glitchy) ---
+    // showProgress 0..1, start zawsze 0; Binding ustawia cel, Behavior animuje
+    property real showProgress: 0
+    Binding on showProgress {
+        value: (sharedData && sharedData.menuVisible) ? 1.0 : 0.0
+    }
+    Behavior on showProgress {
+        NumberAnimation { duration: 450; easing.type: Easing.OutExpo }
+    }
+    visible: true
+    color: "transparent"
+    margins {
+        top: panelPos === "top" ? -implicitHeight * (1.0 - showProgress) : 0
+        bottom: panelPos === "bottom" ? -implicitHeight * (1.0 - showProgress) : 0
+        right: panelPos === "right" ? -implicitWidth * (1.0 - showProgress) : 0
+        left: panelPos === "left" ? -implicitWidth * (1.0 - showProgress) : 0
+    }
+>>>>>>> master
 
     Item {
         id: dashboardContainer
         anchors.fill: parent
+<<<<<<< HEAD
         
         property bool isShowing: dashboardRoot.visible
         
@@ -62,6 +167,11 @@ PanelWindow {
         
         enabled: isShowing && opacity > 0.1
         focus: (sharedData && sharedData.menuVisible)
+=======
+        opacity: showProgress
+        enabled: showProgress > 0.02
+        focus: showProgress > 0.02
+>>>>>>> master
         
         Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Escape) {
@@ -72,12 +182,20 @@ PanelWindow {
             }
         }
         
+<<<<<<< HEAD
         // Main dashboard background
+=======
+        // Swiss Design dashboard background - Strict, flat, bordered
+>>>>>>> master
         Rectangle {
             id: dashboardBackground
             anchors.fill: parent
             radius: 0
+<<<<<<< HEAD
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0a0a0a"
+=======
+            color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff"
+>>>>>>> master
         }
 
         Column {
@@ -89,7 +207,11 @@ PanelWindow {
             Rectangle {
                 id: navBar
                 width: parent.width
+<<<<<<< HEAD
                 height: 45
+=======
+                height: 50
+>>>>>>> master
                 color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
                 
                 RowLayout {
@@ -102,7 +224,11 @@ PanelWindow {
                         id: navRepeater
                         model: [
                             { icon: "󰕮", label: "Dashboard" },
+<<<<<<< HEAD
                             { icon: "󰎆", label: "Media" },
+=======
+                            { icon: "󰨸", label: "Clipboard" },
+>>>>>>> master
                             { icon: "󰂚", label: "Notifications" }
                         ]
                         
@@ -118,6 +244,7 @@ PanelWindow {
                             // Background color on hover/active
                             Rectangle {
                                 anchors.fill: parent
+<<<<<<< HEAD
                                 color: tabRect.isActive ? 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") :
                                     (tabRect.isHovered ? 
@@ -131,6 +258,15 @@ PanelWindow {
                                         easing.type: Easing.OutQuart
                                     }
                                 }
+=======
+                                anchors.margins: 0
+                                color: tabRect.isActive ? 
+                                    ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
+                                    (tabRect.isHovered ? 
+                                        ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
+                                        "transparent")
+                                radius: 0
+>>>>>>> master
                             }
                             
                             Row {
@@ -139,6 +275,7 @@ PanelWindow {
                                 
                                 Text {
                                     text: modelData.icon
+<<<<<<< HEAD
                                     font.pixelSize: 18
                                     color: tabRect.isActive ? 
                                         ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
@@ -146,6 +283,13 @@ PanelWindow {
                                             ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
                                             ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"))
                                     opacity: tabRect.isActive ? 1.0 : (tabRect.isHovered ? 1.0 : 0.6)
+=======
+                                    font.pixelSize: 15
+                                    color: tabRect.isActive ? 
+                                        ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : // Accent text on active
+                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#000000")
+                                    opacity: 1.0
+>>>>>>> master
                                     anchors.verticalCenter: parent.verticalCenter
                                     
                                     Behavior on color {
@@ -165,6 +309,7 @@ PanelWindow {
                                 
                                 Text {
                                     text: modelData.label
+<<<<<<< HEAD
                                     font.pixelSize: 14
                                     font.family: "sans-serif"
                                     font.weight: tabRect.isActive ? Font.Bold : Font.Normal
@@ -174,6 +319,15 @@ PanelWindow {
                                             ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
                                             ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"))
                                     opacity: tabRect.isActive ? 1.0 : (tabRect.isHovered ? 1.0 : 0.6)
+=======
+                                    font.pixelSize: 12
+                                    font.family: "sans-serif"
+                                    font.weight: tabRect.isActive ? Font.Bold : Font.Normal
+                                    color: tabRect.isActive ? 
+                                        ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : // Accent text on active
+                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#000000")
+                                    opacity: 1.0
+>>>>>>> master
                                     anchors.verticalCenter: parent.verticalCenter
                                     
                                     Behavior on color {
@@ -192,6 +346,7 @@ PanelWindow {
                                 }
                             }
                             
+<<<<<<< HEAD
                             // Active indicator line at bottom
                             Rectangle {
                                 anchors.bottom: parent.bottom
@@ -215,6 +370,9 @@ PanelWindow {
                                     }
                                 }
                             }
+=======
+
+>>>>>>> master
                             
                             MouseArea {
                                 id: tabMouseArea
@@ -266,6 +424,7 @@ PanelWindow {
                         }
                     }
                     
+<<<<<<< HEAD
                     GridLayout {
                         anchors.fill: parent
                         anchors.margins: 12
@@ -419,20 +578,251 @@ PanelWindow {
                                             Text {
                                                 text: "󰍜"
                                                 font.pixelSize: 12
+=======
+                    ColumnLayout {
+                        id: dashboardTabColumn
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 5
+                        
+                        // Row with left tile (Battery or Network) and Quick Actions side by side
+                        Row {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: false
+                            Layout.preferredHeight: 90
+                            spacing: 5
+                            
+                            opacity: showProgress > 0.01 ? 1.0 : 0.0
+                            scale: showProgress > 0.01 ? 1.0 : 0.9
+                            transform: Translate {
+                                y: showProgress > 0.01 ? 0 : 40
+                                Behavior on y {
+                                    SequentialAnimation {
+                                        PauseAnimation { duration: 50 }
+                                        NumberAnimation { duration: 700; easing.type: Easing.OutBack }
+                                    }
+                                }
+                            }
+                            
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 50 }
+                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            Behavior on scale {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 50 }
+                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                }
+                            }
+
+                            // Left tile container: Battery or Network (Pobieranie i wysyłanie)
+                            Item {
+                                width: (parent.width - 12) / 2
+                                height: parent.height
+                                
+                                // Battery % Card - Swiss Style Poster
+                                Rectangle {
+                                    anchors.fill: parent
+                                    visible: !(sharedData && sharedData.dashboardTileLeft === "network")
+                                    radius: 0
+                                    color: "transparent"
+
+                                    Column {
+                                        anchors.fill: parent
+                                        anchors.margins: 0
+                                        spacing: 0
+                                        
+                                        // Small metadata label
+                                        Text {
+                                            text: "SYSTEM / POWER"
+                                            font.pixelSize: 9
+                                            font.weight: Font.Bold
+                                            font.family: "sans-serif"
+                                            font.capitalization: Font.AllUppercase
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                            opacity: 0.6
+                                        }
+                                        
+                                        Item { height: 4; width: 1 }
+
+                                        // Sub-label
+                                        Text {
+                                            text: "BATTERY LEVEL"
+                                            font.pixelSize: 18
+                                            font.weight: Font.Bold
+                                            font.family: "sans-serif"
+                                            font.capitalization: Font.AllUppercase
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                            opacity: 0.9
+                                        }
+
+                                        Item { height: 0; width: 1; Layout.fillHeight: true }
+
+                                        // Hero Number - Large but fitting
+                                        Text {
+                                            text: batteryPercent >= 0 ? batteryPercent : "—"
+                                            font.pixelSize: 52 
+                                            font.family: "sans-serif"
+                                            font.weight: Font.Bold
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                            
+                                            Text {
+                                                text: "%"
+                                                font.pixelSize: 18
+                                                font.weight: Font.Bold
+                                                anchors.left: parent.right
+                                                anchors.top: parent.top
+                                                anchors.topMargin: 8
+                                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
+                                            }
+                                        }
+                                    }
+                                }
+                                                                // Network (Pobieranie i wysyłanie) Card - Swiss Style Poster
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        visible: (sharedData && sharedData.dashboardTileLeft === "network")
+                                        radius: 0
+                                        color: "transparent"
+
+                                        Column {
+                                            anchors.fill: parent
+                                            anchors.margins: 0 // Flush to edges for poster look
+                                            spacing: 0
+                                            
+                                            // Small metadata label
+                                            Text {
+                                                text: "NETWORK IO / PRECIS"
+                                                font.pixelSize: 9
+                                                font.weight: Font.Bold
+                                                font.family: "sans-serif"
+                                                font.capitalization: Font.AllUppercase
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                                opacity: 0.6
+                                            }
+
+                                            Item { height: 10; width: 1 }
+
+                                            // Hero Typography
+                                            Row {
+                                                spacing: 5
+                                                Text {
+                                                    text: "↓"
+                                                    font.pixelSize: 24
+                                                    font.weight: Font.Bold
+                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                                    anchors.baseline: valDown.baseline
+                                                }
+                                                Text {
+                                                    id: valDown
+                                                    text: (networkRxMBs < 0.01 ? "0.0" : networkRxMBs.toFixed(1))
+                                                    font.pixelSize: 28
+                                                    font.family: "sans-serif"
+                                                    font.weight: Font.Black
+                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                                    lineHeight: 0.8
+                                                }
+                                            }
+                                            
+                                            Row {
+                                                spacing: 5
+                                                Text {
+                                                    text: "↑"
+                                                    font.pixelSize: 24
+                                                    font.weight: Font.Bold
+                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                                    anchors.baseline: valUp.baseline
+                                                }
+                                                Text {
+                                                    id: valUp
+                                                    text: (networkTxMBs < 0.01 ? "0.0" : networkTxMBs.toFixed(1))
+                                                    font.pixelSize: 28
+                                                    font.family: "sans-serif"
+                                                    font.weight: Font.Black
+                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                                    lineHeight: 0.8
+                                                }
+                                            }
+                                            
+                                            Item { Layout.fillHeight: true; width: 1 }
+                                            
+                                            Text {
+                                                text: "MB/S TRANSFER RATE"
+                                                font.pixelSize: 9
+                                                font.weight: Font.Bold
+                                                font.letterSpacing: 1
+                                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
+                                            }
+                                        }
+                                    }                          }
+                            
+                            // Swiss Style Quick Actions Card (right)
+                        Rectangle {
+                                width: (parent.width - 12) / 2
+                                height: parent.height
+                            radius: 0
+                            color: "transparent" // Transparent, only border
+                            
+                            
+                                Column {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    spacing: 5
+                                    
+                                    Grid {
+                                        id: quickActionsGrid
+                                    columns: 2
+                                    spacing: 5
+                                    width: parent.width
+                                        height: parent.height - 16
+                                    
+                                    // Toggle Sidebar Button (Swiss Block)
+                                    Rectangle {
+                                        width: (quickActionsGrid.width - 4) / 2
+                                        height: 33
+                                        radius: 0
+                                        clip: true
+
+                                        // Softer style
+                                        color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                        opacity: toggleSidebarQuickMouseArea.containsMouse ? 0.8 : 1.0
+                                        
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 6
+                                            width: Math.min(parent.width - 7, implicitWidth)
+                                            
+                                            Text {
+                                                text: "󰍜"
+                                                font.pixelSize: 11
+>>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             
                                             Text {
+<<<<<<< HEAD
                                                 text: "Toggle Sidebar"
                                                 font.pixelSize: 10
+=======
+                                                text: "SIDEBAR"
+                                                font.pixelSize: 9
+                                                font.weight: Font.Bold
+                                                font.capitalization: Font.AllUppercase
+>>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 elide: Text.ElideRight
                                                 maximumLineCount: 1
+<<<<<<< HEAD
                                                 width: Math.max(0, parent.width - 20)
+=======
+                                                width: Math.max(0, parent.width - 18)
+>>>>>>> master
                                             }
                                         }
                                         
@@ -449,6 +839,7 @@ PanelWindow {
                                         }
                                     }
                                     
+<<<<<<< HEAD
                                     // Do Not Disturb button
                                     Rectangle {
                                         width: (parent.width - 4) / 2
@@ -479,10 +870,37 @@ PanelWindow {
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 opacity: (sharedData && sharedData.notificationsEnabled === false) ? 1.0 : 0.6
+=======
+                                    // Quick Action Button Style (Swiss Block)
+                                    Rectangle {
+                                        width: (quickActionsGrid.width - 4) / 2
+                                        height: 33
+                                        radius: 0
+                                        clip: true
+                                        
+                                        // Softer style
+                                        color: ((dndQuickMouseArea.containsMouse) || (sharedData && sharedData.notificationsEnabled === false)) ? 
+                                               ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : // Green on active/hover
+                                               ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a") // Dark default
+
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 6
+                                            width: Math.min(parent.width - 7, implicitWidth)
+                                            
+                                            Text {
+                                                text: "󰂛"
+                                                font.pixelSize: 11
+                                                font.family: "sans-serif"
+                                                color: ((dndQuickMouseArea.containsMouse) || (sharedData && sharedData.notificationsEnabled === false)) ? 
+                                                       ((sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff") : // White text on green
+                                                       ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") // White text on dark
+>>>>>>> master
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             
                                             Text {
+<<<<<<< HEAD
                                                 text: "Do Not Disturb"
                                                 font.pixelSize: 10
                                                 font.family: "sans-serif"
@@ -491,6 +909,20 @@ PanelWindow {
                                                 elide: Text.ElideRight
                                                 maximumLineCount: 1
                                                 width: Math.max(0, parent.width - 20)
+=======
+                                                text: "NO DISTURB"
+                                                font.pixelSize: 9
+                                                font.weight: Font.Bold
+                                                font.family: "sans-serif"
+                                                font.capitalization: Font.AllUppercase
+                                                color: ((dndQuickMouseArea.containsMouse) || (sharedData && sharedData.notificationsEnabled === false)) ? 
+                                                       ((sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff") : // White text on green
+                                                       ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") // White text on dark
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                elide: Text.ElideRight
+                                                maximumLineCount: 1
+                                                width: Math.max(0, parent.width - 18)
+>>>>>>> master
                                             }
                                         }
                                         
@@ -507,6 +939,7 @@ PanelWindow {
                                         }
                                     }
                                     
+<<<<<<< HEAD
                                     // Lock button
                                     Rectangle {
                                         width: (parent.width - 4) / 2
@@ -532,20 +965,51 @@ PanelWindow {
                                             Text {
                                                 text: "󰌾"
                                                 font.pixelSize: 12
+=======
+                                    // Lock Button (Swiss Block)
+                                    Rectangle {
+                                        width: (quickActionsGrid.width - 4) / 2
+                                        height: 33
+                                        radius: 0
+                                        clip: true
+
+                                        color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                        opacity: lockQuickMouseArea.containsMouse ? 0.8 : 1.0
+                                        
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 6
+                                            width: Math.min(parent.width - 7, implicitWidth)
+                                            
+                                            Text {
+                                                text: "󰌾"
+                                                font.pixelSize: 11
+>>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             
                                             Text {
+<<<<<<< HEAD
                                                 text: "Lock"
                                                 font.pixelSize: 10
+=======
+                                                text: "LOCK"
+                                                font.pixelSize: 9
+                                                font.weight: Font.Bold
+                                                font.capitalization: Font.AllUppercase
+>>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 elide: Text.ElideRight
                                                 maximumLineCount: 1
+<<<<<<< HEAD
                                                 width: Math.max(0, parent.width - 20)
+=======
+                                                width: Math.max(0, parent.width - 18)
+>>>>>>> master
                                             }
                                         }
                                         
@@ -555,16 +1019,23 @@ PanelWindow {
                                             cursorShape: Qt.PointingHandCursor
                                             hoverEnabled: true
                                             onClicked: {
+<<<<<<< HEAD
                                                 // Try loginctl lock-session first, fallback to swaylock
                                                 Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'loginctl lock-session $(loginctl list-sessions | grep $(whoami) | awk \"{print \\$1}\" | head -1) 2>/dev/null || swaylock 2>/dev/null || loginctl lock-session 2>/dev/null']; running: true }", dashboardRoot)
                                                 // Close dashboard after locking
                                                 if (sharedData) {
+=======
+                                                // Własny lock screen – overlay z polem hasła (bez swaylock/loginctl)
+                                                if (sharedData) {
+                                                    sharedData.lockScreenVisible = true
+>>>>>>> master
                                                     sharedData.menuVisible = false
                                                 }
                                             }
                                         }
                                     }
                                     
+<<<<<<< HEAD
                                     // Poweroff button
                                     Rectangle {
                                         width: (parent.width - 4) / 2
@@ -590,20 +1061,51 @@ PanelWindow {
                                             Text {
                                                 text: "󰐥"
                                                 font.pixelSize: 12
+=======
+                                    // Poweroff Button (Swiss Block)
+                                    Rectangle {
+                                        width: (quickActionsGrid.width - 4) / 2
+                                        height: 33
+                                        radius: 0
+                                        clip: true
+
+                                        color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                        opacity: poweroffQuickMouseArea.containsMouse ? 0.8 : 1.0
+                                        
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 6
+                                            width: Math.min(parent.width - 7, implicitWidth)
+                                            
+                                            Text {
+                                                text: "󰐥"
+                                                font.pixelSize: 11
+>>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             
                                             Text {
+<<<<<<< HEAD
                                                 text: "Poweroff"
                                                 font.pixelSize: 10
+=======
+                                                text: "POWEROFF"
+                                                font.pixelSize: 9
+                                                font.weight: Font.Bold
+                                                font.capitalization: Font.AllUppercase
+>>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 elide: Text.ElideRight
                                                 maximumLineCount: 1
+<<<<<<< HEAD
                                                 width: Math.max(0, parent.width - 20)
+=======
+                                                width: Math.max(0, parent.width - 18)
+>>>>>>> master
                                             }
                                         }
                                         
@@ -613,11 +1115,19 @@ PanelWindow {
                                             cursorShape: Qt.PointingHandCursor
                                             hoverEnabled: true
                                             onClicked: {
+<<<<<<< HEAD
                                                 Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'poweroff']; running: true }", dashboardRoot)
+=======
+                                                if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'poweroff'])
+>>>>>>> master
                                                 // Close dashboard after poweroff
                                                 if (sharedData) {
                                                     sharedData.menuVisible = false
                                                 }
+<<<<<<< HEAD
+=======
+                                                }
+>>>>>>> master
                                             }
                                         }
                                     }
@@ -625,6 +1135,7 @@ PanelWindow {
                             }
                         }
                         
+<<<<<<< HEAD
                         // Date/Calendar Card (Left/Center, spans 2 rows)
                         Rectangle {
                             Layout.column: 0
@@ -680,18 +1191,89 @@ PanelWindow {
                                         spacing: 8
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         
+=======
+                        // Date/Calendar or GitHub Activity Card – Swiss Style
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.preferredHeight: 220
+                            Layout.minimumHeight: 192
+                            radius: 0
+                            color: "transparent"
+
+                            opacity: showProgress > 0.01 ? 1.0 : 0.0
+                            scale: showProgress > 0.01 ? 1.0 : 0.9
+                            transform: Translate {
+                                y: showProgress > 0.01 ? 0 : 40
+                                Behavior on y {
+                                    SequentialAnimation {
+                                        PauseAnimation { duration: 100 }
+                                        NumberAnimation { duration: 700; easing.type: Easing.OutBack }
+                                    }
+                                }
+                            }
+                            
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 100 }
+                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            Behavior on scale {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 100 }
+                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                }
+                            }
+
+                            Loader {
+                                id: dashboardCalendarGithubLoader
+                                anchors.fill: parent
+                                anchors.margins: 16
+                                active: true
+                                sourceComponent: (sharedData && sharedData.sidepanelContent === "github")
+                                                 ? githubActivityDashboardComponent
+                                                 : calendarDashboardComponent
+                            }
+                        }
+
+                        Component {
+                            id: calendarDashboardComponent
+                            Item {
+                                anchors.fill: parent
+
+                                Column {
+                                    anchors.fill: parent
+                                    anchors.margins: 0
+                                    spacing: 5
+
+                                    // Day headers
+                                    Row {
+                                        spacing: 5
+                                        anchors.horizontalCenter: parent.horizontalCenter
+
+>>>>>>> master
                                         Repeater {
                                             model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
                                             Text {
                                                 text: modelData
+<<<<<<< HEAD
                                                 font.pixelSize: 11
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
                                                 width: 24
+=======
+                                                font.pixelSize: 9
+                                                font.weight: Font.Bold
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                                width: 22
+>>>>>>> master
                                                 horizontalAlignment: Text.AlignHCenter
                                             }
                                         }
                                     }
+<<<<<<< HEAD
                                     
                                     // Calendar grid
                                     Grid {
@@ -719,6 +1301,35 @@ PanelWindow {
                                                         (modelData.isCurrentMonth ? 
                                                             ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
                                                             ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#888888"))
+=======
+
+                                    // Calendar grid
+                                    Grid {
+                                        columns: 7
+                                        spacing: 5
+                                        anchors.horizontalCenter: parent.horizontalCenter
+
+                                        Repeater {
+                                            model: calendarDays
+
+                                            Rectangle {
+                                                width: 22
+                                                height: 22
+                                                radius: 0
+                                                color: modelData.isToday ?
+                                                           ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
+                                                           "transparent"
+
+                                                Text {
+                                                    text: modelData.day
+                                                    font.pixelSize: 10
+                                                    font.family: "sans-serif"
+                                                    color: modelData.isToday ?
+                                                               ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") :
+                                                               (modelData.isCurrentMonth ?
+                                                                    ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") :
+                                                                    ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#888888"))
+>>>>>>> master
                                                     anchors.centerIn: parent
                                                 }
                                             }
@@ -727,6 +1338,7 @@ PanelWindow {
                                 }
                             }
                         }
+<<<<<<< HEAD
                         
                         // Resource Usage Card (Right of Calendar, spans 2 rows)
                         Rectangle {
@@ -815,12 +1427,170 @@ PanelWindow {
                                                     }
                                                 }
                                             }
+=======
+
+                        Component {
+                            id: githubActivityDashboardComponent
+                            GithubActivity {
+                                sharedData: dashboardRoot.sharedData
+                            }
+                        }
+                        
+                        // Resource 1 Card - Swiss Style
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.preferredHeight: 190
+                            Layout.minimumHeight: 165
+                            radius: 0
+                            color: "transparent"
+                            
+                            property string resource: (sharedData && sharedData.dashboardResource1) ? sharedData.dashboardResource1 : "cpu"
+                            
+                            opacity: showProgress > 0.01 ? 1.0 : 0.0
+                            scale: showProgress > 0.01 ? 1.0 : 0.9
+                            transform: Translate {
+                                y: showProgress > 0.01 ? 0 : 40
+                                Behavior on y {
+                                    SequentialAnimation {
+                                        PauseAnimation { duration: 150 }
+                                        NumberAnimation { duration: 700; easing.type: Easing.OutBack }
+                                    }
+                                }
+                            }
+                            
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 150 }
+                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            Behavior on scale {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 150 }
+                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                }
+                            }
+                                    
+                            Column {
+                                anchors.fill: parent
+                                anchors.margins: 12
+                                spacing: 5
+                                
+                                Row {
+                                    spacing: 5
+                                    Text {
+                                        text: getResourceIcon(parent.parent.resource)
+                                        font.pixelSize: 12
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: getResourceLabel(parent.parent.resource).toUpperCase()
+                                        font.pixelSize: 11
+                                        font.family: "sans-serif"
+                                        font.weight: Font.Bold
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: getResourceValueText(parent.parent.resource)
+                                        font.pixelSize: 11
+                                        font.family: "sans-serif"
+                                        font.weight: Font.Bold
+                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: getResourceSubText(parent.parent.resource)
+                                        font.pixelSize: 10
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000" 
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        visible: text !== ""
+                                    }
+                                }
+                                
+                                Canvas {
+                                    id: res1Chart
+                                    width: parent.width
+                                    height: 128
+                                    
+                                    onPaint: {
+                                        var ctx = getContext("2d")
+                                        ctx.clearRect(0, 0, width, height)
+                                        
+                                        var hist = getResourceHistory(parent.parent.resource)
+                                        if (!hist || hist.length < 2) return
+                                        
+                                        var chartWidth = width
+                                        var chartHeight = height
+                                        var maxValue = 100
+                                        if (parent.parent.resource === "network") {
+                                            var max = 1.0 
+                                            for(var k=0; k<hist.length; k++) if(hist[k] > max) max = hist[k]
+                                            maxValue = max * 1.2
+                                        }
+                                        
+                                        // Draw background
+                                        ctx.fillStyle = (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                                        ctx.fillRect(0, 0, chartWidth, chartHeight)
+                                        
+                                        // Draw grid lines
+                                        ctx.strokeStyle = (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#2a2a2a"
+                                        ctx.lineWidth = 1
+                                        for (var i = 0; i <= 4; i++) {
+                                            var y = (chartHeight / 4) * i
+                                            ctx.beginPath()
+                                            ctx.moveTo(0, y)
+                                            ctx.lineTo(chartWidth, y)
+                                            ctx.stroke()
+                                        }
+                                        
+                                        // Draw graph
+                                        ctx.strokeStyle = (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        ctx.lineWidth = 2
+                                        ctx.beginPath()
+                                        
+                                        var stepX = chartWidth / (Math.max(hist.length, 2) - 1)
+                                        function getY(val) { return chartHeight - (val / maxValue) * chartHeight }
+                                        
+                                        ctx.moveTo(0, getY(hist[0]))
+                                        for (var j = 1; j < hist.length - 2; j++) {
+                                            var xc = (j * stepX + (j + 1) * stepX) / 2
+                                            var yc = (getY(hist[j]) + getY(hist[j+1])) / 2
+                                            ctx.quadraticCurveTo(j * stepX, getY(hist[j]), xc, yc)
+                                        }
+                                        if (hist.length > 2) {
+                                            var lastIdx = hist.length - 2
+                                            ctx.quadraticCurveTo(lastIdx * stepX, getY(hist[lastIdx]), (lastIdx+1) * stepX, getY(hist[lastIdx+1]))
+                                        } else if (hist.length === 2) {
+                                            ctx.lineTo(stepX, getY(hist[1]))
+                                        }
+                                        
+                                        ctx.stroke()
+                                        
+                                        ctx.lineTo(chartWidth, chartHeight)
+                                        ctx.lineTo(0, chartHeight)
+                                        ctx.closePath()
+                                        ctx.fillStyle = (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        ctx.globalAlpha = 0.15
+                                        ctx.fill()
+                                        ctx.globalAlpha = 1.0
+                                    }
+                                    
+                                    Connections {
+                                        target: dashboardRoot
+                                        function onPerfUpdated() {
+                                            res1Chart.requestPaint()
+>>>>>>> master
                                         }
                                     }
                                 }
                             }
                         }
                         
+<<<<<<< HEAD
                         // Media Player Card (Right)
                         Rectangle {
                             Layout.column: 3
@@ -847,6 +1617,212 @@ PanelWindow {
                                     
                                     Image {
                                         id: mediaAlbumArt
+=======
+                        // Resource 2 Card - Swiss Style
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.preferredHeight: 190
+                            Layout.minimumHeight: 165
+                            radius: 0
+                            color: "transparent"
+                            
+                            property string resource: (sharedData && sharedData.dashboardResource2) ? sharedData.dashboardResource2 : "ram"
+                            
+                            opacity: showProgress > 0.01 ? 1.0 : 0.0
+                            scale: showProgress > 0.01 ? 1.0 : 0.9
+                            transform: Translate {
+                                y: showProgress > 0.01 ? 0 : 40
+                                Behavior on y {
+                                    SequentialAnimation {
+                                        PauseAnimation { duration: 200 }
+                                        NumberAnimation { duration: 700; easing.type: Easing.OutBack }
+                                    }
+                                }
+                            }
+                            
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 200 }
+                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            Behavior on scale {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 200 }
+                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                }
+                            }
+                            
+                            Column {
+                                anchors.fill: parent
+                                anchors.margins: 12
+                                spacing: 5
+                                
+                                Row {
+                                    spacing: 5
+                                    Text {
+                                        text: getResourceIcon(parent.parent.resource)
+                                        font.pixelSize: 12
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: getResourceLabel(parent.parent.resource).toUpperCase()
+                                        font.pixelSize: 11
+                                        font.family: "sans-serif"
+                                        font.weight: Font.Bold
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: getResourceValueText(parent.parent.resource)
+                                        font.pixelSize: 11
+                                        font.family: "sans-serif"
+                                        font.weight: Font.Bold
+                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: getResourceSubText(parent.parent.resource)
+                                        font.pixelSize: 10
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        visible: text !== ""
+                                    }
+                                }
+                                
+                                Canvas {
+                                    id: res2Chart
+                                    width: parent.width
+                                    height: 128
+                                    
+                                    onPaint: {
+                                        var ctx = getContext("2d")
+                                        ctx.clearRect(0, 0, width, height)
+                                        
+                                        var hist = getResourceHistory(parent.parent.resource)
+                                        if (!hist || hist.length < 2) return
+                                        
+                                        var chartWidth = width
+                                        var chartHeight = height
+                                        var maxValue = 100
+                                        if (parent.parent.resource === "network") {
+                                            var max = 1.0 
+                                            for(var k=0; k<hist.length; k++) if(hist[k] > max) max = hist[k]
+                                            maxValue = max * 1.2
+                                        }
+                                        
+                                        // Draw background
+                                        ctx.fillStyle = (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                                        ctx.fillRect(0, 0, chartWidth, chartHeight)
+                                        
+                                        // Draw grid lines
+                                        ctx.strokeStyle = (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#2a2a2a"
+                                        ctx.lineWidth = 1
+                                        for (var i = 0; i <= 4; i++) {
+                                            var y = (chartHeight / 4) * i
+                                            ctx.beginPath()
+                                            ctx.moveTo(0, y)
+                                            ctx.lineTo(chartWidth, y)
+                                            ctx.stroke()
+                                        }
+                                        
+                                        // Draw graph
+                                        ctx.strokeStyle = (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        ctx.lineWidth = 2
+                                        ctx.beginPath()
+                                        
+                                        var stepX = chartWidth / (Math.max(hist.length, 2) - 1)
+                                        function getY(val) { return chartHeight - (val / maxValue) * chartHeight }
+                                        
+                                        ctx.moveTo(0, getY(hist[0]))
+                                        for (var j = 1; j < hist.length - 2; j++) {
+                                            var xc = (j * stepX + (j + 1) * stepX) / 2
+                                            var yc = (getY(hist[j]) + getY(hist[j+1])) / 2
+                                            ctx.quadraticCurveTo(j * stepX, getY(hist[j]), xc, yc)
+                                        }
+                                        if (hist.length > 2) {
+                                            var lastIdx = hist.length - 2
+                                            ctx.quadraticCurveTo(lastIdx * stepX, getY(hist[lastIdx]), (lastIdx+1) * stepX, getY(hist[lastIdx+1]))
+                                        } else if (hist.length === 2) {
+                                            ctx.lineTo(stepX, getY(hist[1]))
+                                        }
+                                        
+                                        ctx.stroke()
+                                        
+                                        ctx.lineTo(chartWidth, chartHeight)
+                                        ctx.lineTo(0, chartHeight)
+                                        ctx.closePath()
+                                        ctx.fillStyle = (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        ctx.globalAlpha = 0.15
+                                        ctx.fill()
+                                        ctx.globalAlpha = 1.0
+                                    }
+                                    
+                                    Connections {
+                                        target: dashboardRoot
+                                        function onPerfUpdated() {
+                                            res2Chart.requestPaint()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Media Player Card - Swiss Style
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.preferredHeight: 190
+                            Layout.minimumHeight: 165
+                            radius: 0
+                            color: "transparent"
+                            
+                            opacity: showProgress > 0.01 ? 1.0 : 0.0
+                            scale: showProgress > 0.01 ? 1.0 : 0.9
+                            transform: Translate {
+                                y: showProgress > 0.01 ? 0 : 40
+                                Behavior on y {
+                                    SequentialAnimation {
+                                        PauseAnimation { duration: 250 }
+                                        NumberAnimation { duration: 700; easing.type: Easing.OutBack }
+                                    }
+                                }
+                            }
+                            
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 250 }
+                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            Behavior on scale {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: 250 }
+                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                }
+                            }
+                            
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 16
+                                spacing: 16
+                                
+                                // Cover art – kwadrat, po lewej, wyśrodkowany w pionie
+                                Rectangle {
+                                    Layout.preferredWidth: 100
+                                    Layout.preferredHeight: 100
+                                    Layout.minimumWidth: 100
+                                    Layout.minimumHeight: 100
+                                    Layout.alignment: Qt.AlignVCenter
+                                    radius: 0
+                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                                    
+                                    Image {
+                                        id: mediaAlbumArtCard
+>>>>>>> master
                                         anchors.fill: parent
                                         anchors.margins: 1
                                         fillMode: Image.PreserveAspectCrop
@@ -865,13 +1841,18 @@ PanelWindow {
                                     
                                     Text {
                                         text: "󰎆"
+<<<<<<< HEAD
                                         font.pixelSize: 60
+=======
+                                        font.pixelSize: 40
+>>>>>>> master
                                         anchors.centerIn: parent
                                         visible: !mpArt
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                     }
                                 }
                                 
+<<<<<<< HEAD
                                 // Track Info
                                 Column {
                                     width: parent.width
@@ -967,10 +1948,64 @@ PanelWindow {
                                             hoverEnabled: true
                                             onClicked: {
                                                 playerPrev()
+=======
+                                // Track info + kontrolki – po prawej, przesunięte w dół
+                                Column {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: 10
+                                    
+                                    Item { width: 1; height: 12 }
+                                    
+                                    Column {
+                                        width: parent.width - 20
+                                        spacing: 2
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        
+                                        Text {
+                                            text: (mpTitle ? mpTitle : "NOTHING PLAYING").toUpperCase()
+                                            font.pixelSize: 12
+                                            font.family: "sans-serif"
+                                            font.weight: Font.Black
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+                                        
+                                        Text {
+                                            text: (mpArtist ? mpArtist : "—").toUpperCase()
+                                            font.pixelSize: 10
+                                            font.family: "sans-serif"
+                                            font.weight: Font.Bold
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                            opacity: 0.6
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+
+                                        Item { width: 1; height: 4 } // Spacer
+
+                                        // Progress Bar (Inline)
+                                        Rectangle {
+                                            width: parent.width
+                                            height: 2
+                                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                            
+                                            Rectangle {
+                                                width: (dashboardRoot.mpLength > 0 ? (parent.width * (dashboardRoot.mpPosition / dashboardRoot.mpLength)) : 0)
+                                                height: parent.height
+                                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                                
+                                                Behavior on width { NumberAnimation { duration: 200 } }
+>>>>>>> master
                                             }
                                         }
                                     }
                                     
+<<<<<<< HEAD
                                     Rectangle {
                                         id: playButton
                                         width: 50
@@ -1084,6 +2119,96 @@ PanelWindow {
                                             hoverEnabled: true
                                             onClicked: {
                                                 playerNext()
+=======
+
+
+                                    // Kontrolki prev | play | next – Swiss Block Style
+                                    Row {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        spacing: 2 
+                                        
+                                        Rectangle {
+                                            width: 34
+                                            height: 34
+                                            radius: 0
+                                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                            opacity: prevAreaCard.pressed ? 0.7 : (prevAreaCard.containsMouse ? 0.9 : 1.0)
+                                            scale: prevAreaCard.pressed ? 0.90 : (prevAreaCard.containsMouse ? 1.05 : 1.0)
+                                            z: prevAreaCard.containsMouse ? 2 : 1
+                                            
+                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                                            
+                                            Text {
+                                                text: "󰒮"
+                                                font.pixelSize: 12
+                                                anchors.centerIn: parent
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                            }
+                                            
+                                            MouseArea {
+                                                id: prevAreaCard
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                hoverEnabled: true
+                                                onClicked: playerPrev()
+                                            }
+                                        }
+                                        
+                                        Rectangle {
+                                            width: 50
+                                            height: 34
+                                            radius: 0
+                                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                            opacity: playAreaCard.pressed ? 0.7 : (playAreaCard.containsMouse ? 0.9 : 1.0)
+                                            scale: playAreaCard.pressed ? 0.90 : (playAreaCard.containsMouse ? 1.05 : 1.0)
+                                            z: playAreaCard.containsMouse ? 2 : 1
+                                            
+                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                                            
+                                            Text {
+                                                text: mpPlaying ? "󰏤" : "󰐊"
+                                                font.pixelSize: 14
+                                                anchors.centerIn: parent
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                            }
+                                            
+                                            MouseArea {
+                                                id: playAreaCard
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                hoverEnabled: true
+                                                onClicked: playerPlayPause()
+                                            }
+                                        }
+                                        
+                                        Rectangle {
+                                            width: 34
+                                            height: 34
+                                            radius: 0
+                                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                            opacity: nextAreaCard.pressed ? 0.7 : (nextAreaCard.containsMouse ? 0.9 : 1.0)
+                                            scale: nextAreaCard.pressed ? 0.90 : (nextAreaCard.containsMouse ? 1.05 : 1.0)
+                                            z: nextAreaCard.containsMouse ? 2 : 1
+                                            
+                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                                            
+                                            Text {
+                                                text: "󰒭"
+                                                font.pixelSize: 12
+                                                anchors.centerIn: parent
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                            }
+                                            
+                                            MouseArea {
+                                                id: nextAreaCard
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                hoverEnabled: true
+                                                onClicked: playerNext()
+>>>>>>> master
                                             }
                                         }
                                     }
@@ -1093,9 +2218,17 @@ PanelWindow {
                     }
                 }
 
+<<<<<<< HEAD
                 // ============ TAB 1: MEDIA ============
                 Item {
                     id: mediaTab
+=======
+
+
+                // ============ TAB 2: CLIPBOARD ============
+                Item {
+                    id: clipboardTab
+>>>>>>> master
                     anchors.fill: parent
                     visible: currentTab === 1
                     opacity: currentTab === 1 ? 1.0 : 0.0
@@ -1123,6 +2256,7 @@ PanelWindow {
                         }
                     }
                     
+<<<<<<< HEAD
                     Item {
                         anchors.fill: parent
                         
@@ -1195,11 +2329,71 @@ PanelWindow {
                                     Behavior on opacity {
                                         NumberAnimation {
                                             duration: 400
+=======
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 5
+                        
+                        // Header
+                        Row {
+                            width: parent.width
+                            spacing: 5
+                            
+                            Text {
+                                text: "󰨸 Clipboard"
+                                font.pixelSize: 10
+                                font.family: "sans-serif"
+                                font.weight: Font.Bold
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                            }
+                            
+                            Item { width: parent.width - 160; height: 1 }
+                            
+                            Rectangle {
+                                width: 25
+                                height: 25
+                                radius: 0
+                                color: clearClipboardButtonMouseArea.containsMouse ? 
+                                    ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
+                                    ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
+                                
+                                property real buttonScale: clearClipboardButtonMouseArea.pressed ? 0.9 : (clearClipboardButtonMouseArea.containsMouse ? 1.1 : 1.0)
+                                
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
+                                
+                                Behavior on buttonScale {
+                                    NumberAnimation {
+                                        duration: 150
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
+                                
+                                scale: buttonScale
+                                
+                                Text {
+                                    text: "󰆐"
+                                    font.pixelSize: 9
+                                    anchors.centerIn: parent
+                                    color: clearClipboardButtonMouseArea.containsMouse ? 
+                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
+                                        ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
+                                    
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+>>>>>>> master
                                             easing.type: Easing.OutQuart
                                         }
                                     }
                                 }
                                 
+<<<<<<< HEAD
                                 Text {
                                     text: "󰎆"
                                     font.pixelSize: 60
@@ -1418,6 +2612,90 @@ PanelWindow {
                                             onClicked: {
                                                 playerNext()
                                             }
+=======
+                                MouseArea {
+                                    id: clearClipboardButtonMouseArea
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        dashboardClipboardHistoryModel.clear()
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // History list
+                        ScrollView {
+                            width: parent.width
+                            height: parent.height - 48
+                            
+                            ListView {
+                                id: clipboardListView
+                                model: dashboardClipboardHistoryModel
+                                spacing: 5
+                                
+                                delegate: Rectangle {
+                                    width: clipboardListView.width
+                                    height: Math.max(32, contentTextClipboard.implicitHeight + 13)
+                                    radius: 0
+                                    // Material Design card color
+                                    color: itemClipboardMouseArea.containsMouse ? 
+                                        ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
+                                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a")
+                                    
+                                    property real cardElevation: itemClipboardMouseArea.containsMouse ? 2 : 1
+                                    
+                                    // Material Design elevation shadow
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        anchors.margins: -cardElevation
+                                        color: "transparent"
+                                        border.color: Qt.rgba(0, 0, 0, 0.15 + cardElevation * 0.05)
+                                        border.width: cardElevation
+                                        z: -1
+                                        
+                                        Behavior on border.color {
+                                            ColorAnimation {
+                                                duration: 200
+                                                easing.type: Easing.OutQuart
+                                            }
+                                        }
+                                    }
+                                    
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                            easing.type: Easing.OutQuart
+                                        }
+                                    }
+                                    
+                                    Text {
+                                        id: contentTextClipboard
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.leftMargin: 12
+                                        anchors.rightMargin: 12
+                                        text: {
+                                            var txt = model.text || ""
+                                            return txt.length > 100 ? txt.substring(0, 100) + "..." : txt
+                                        }
+                                        font.pixelSize: 10
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        wrapMode: Text.Wrap
+                                        elide: Text.ElideRight
+                                    }
+                                    
+                                    MouseArea {
+                                        id: itemClipboardMouseArea
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            dashboardRoot.copyToClipboard(model.text)
+>>>>>>> master
                                         }
                                     }
                                 }
@@ -1426,7 +2704,11 @@ PanelWindow {
                     }
                 }
 
+<<<<<<< HEAD
                 // ============ TAB 2: NOTIFICATIONS ============
+=======
+                // ============ TAB 3: NOTIFICATIONS ============
+>>>>>>> master
                 Item {
                     id: notificationsTab
                     anchors.fill: parent
@@ -1460,7 +2742,11 @@ PanelWindow {
                     Column {
                         anchors.fill: parent
                         anchors.margins: 24
+<<<<<<< HEAD
                         spacing: 16
+=======
+                        spacing: 13
+>>>>>>> master
                         
                         // Header with title and clear button
                         RowLayout {
@@ -1468,7 +2754,11 @@ PanelWindow {
                             
                             Text {
                                 text: "󰂚 Notification Center"
+<<<<<<< HEAD
                                 font.pixelSize: 24
+=======
+                                font.pixelSize: 19
+>>>>>>> master
                                 font.family: "sans-serif"
                                 font.weight: Font.Bold
                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
@@ -1477,8 +2767,13 @@ PanelWindow {
                             
                             // Clear all button
                             Rectangle {
+<<<<<<< HEAD
                                 Layout.preferredWidth: 100
                                 Layout.preferredHeight: 32
+=======
+                                Layout.preferredWidth: 80
+                                Layout.preferredHeight: 25
+>>>>>>> master
                                 radius: 0
                                 color: clearAllMouseArea.containsMouse ? 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
@@ -1491,7 +2786,11 @@ PanelWindow {
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰎟 Clear All"
+<<<<<<< HEAD
                                     font.pixelSize: 12
+=======
+                                    font.pixelSize: 9
+>>>>>>> master
                                     font.family: "sans-serif"
                                     color: "#ffffff"
                                 }
@@ -1511,7 +2810,11 @@ PanelWindow {
                         // Notification count
                         Text {
                             text: ((sharedData && sharedData.notificationHistory) ? sharedData.notificationHistory.length : 0) + " notifications"
+<<<<<<< HEAD
                             font.pixelSize: 12
+=======
+                            font.pixelSize: 9
+>>>>>>> master
                             font.family: "sans-serif"
                             color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                         }
@@ -1520,6 +2823,7 @@ PanelWindow {
                         ListView {
                             id: notificationHistoryList
                             width: parent.width
+<<<<<<< HEAD
                             height: parent.height - 100
                             clip: true
                             spacing: 8
@@ -1530,6 +2834,21 @@ PanelWindow {
                                 anchors.centerIn: parent
                                 text: "󰂛 No notifications"
                                 font.pixelSize: 16
+=======
+                            height: parent.height - 80
+                            clip: true
+                            spacing: 5
+                            model: (sharedData && sharedData.notificationHistory) ? sharedData.notificationHistory : []
+                            
+                            // Empty state (no anchors – ListView is child of Column)
+                            Text {
+                                width: parent.width - 24
+                                height: implicitHeight
+                                x: (parent.width - width) / 2
+                                y: (parent.height - height) / 2
+                                text: "󰂛 No notifications"
+                                font.pixelSize: 9
+>>>>>>> master
                                 font.family: "sans-serif"
                                 color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                                 visible: !sharedData || !sharedData.notificationHistory || sharedData.notificationHistory.length === 0
@@ -1537,12 +2856,40 @@ PanelWindow {
                             
                             delegate: Rectangle {
                                 width: notificationHistoryList.width
+<<<<<<< HEAD
                                 height: notifContent.height + 24
                                 radius: 0
+=======
+                                height: notifContent.height + 19
+                                radius: 0
+                                // Material Design card color
+>>>>>>> master
                                 color: notifItemMouseArea.containsMouse ? 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
                                     ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a")
                                 
+<<<<<<< HEAD
+=======
+                                property real cardElevation: notifItemMouseArea.containsMouse ? 2 : 1
+                                
+                                // Material Design elevation shadow
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: -cardElevation
+                                    color: "transparent"
+                                    border.color: Qt.rgba(0, 0, 0, 0.15 + cardElevation * 0.05)
+                                    border.width: cardElevation
+                                    z: -1
+                                    
+                                    Behavior on border.color {
+                                        ColorAnimation {
+                                            duration: 150
+                                            easing.type: Easing.OutQuart
+                                        }
+                                    }
+                                }
+                                
+>>>>>>> master
                                 Behavior on color {
                                     ColorAnimation { duration: 150 }
                                 }
@@ -1560,7 +2907,11 @@ PanelWindow {
                                     anchors.top: parent.top
                                     anchors.margins: 12
                                     anchors.rightMargin: 8
+<<<<<<< HEAD
                                     spacing: 4
+=======
+                                    spacing: 5
+>>>>>>> master
                                     
                                     // App name and time
                                     RowLayout {
@@ -1568,7 +2919,11 @@ PanelWindow {
                                         
                                         Text {
                                             text: modelData.appName || "Unknown"
+<<<<<<< HEAD
                                             font.pixelSize: 11
+=======
+                                            font.pixelSize: 9
+>>>>>>> master
                                             font.family: "sans-serif"
                                             font.weight: Font.Medium
                                             color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
@@ -1578,7 +2933,11 @@ PanelWindow {
                                         
                                         Text {
                                             text: modelData.time || ""
+<<<<<<< HEAD
                                             font.pixelSize: 10
+=======
+                                            font.pixelSize: 8
+>>>>>>> master
                                             font.family: "sans-serif"
                                             color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                                         }
@@ -1587,7 +2946,11 @@ PanelWindow {
                                     // Title
                                     Text {
                                         text: modelData.title || ""
+<<<<<<< HEAD
                                         font.pixelSize: 13
+=======
+                                        font.pixelSize: 10
+>>>>>>> master
                                         font.family: "sans-serif"
                                         font.weight: Font.Bold
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
@@ -1598,7 +2961,11 @@ PanelWindow {
                                     // Body
                                     Text {
                                         text: modelData.body || ""
+<<<<<<< HEAD
                                         font.pixelSize: 12
+=======
+                                        font.pixelSize: 9
+>>>>>>> master
                                         font.family: "sans-serif"
                                         color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                                         width: parent.width
@@ -1614,13 +2981,22 @@ PanelWindow {
                                     anchors.right: parent.right
                                     anchors.top: parent.top
                                     anchors.margins: 8
+<<<<<<< HEAD
                                     spacing: 4
+=======
+                                    spacing: 5
+>>>>>>> master
                                     visible: notifItemMouseArea.containsMouse
                                     
                                     // Copy button
                                     Rectangle {
+<<<<<<< HEAD
                                         width: 28
                                         height: 28
+=======
+                                        width: 32
+                                        height: 32
+>>>>>>> master
                                         radius: 0
                                         color: copyBtnMouseArea.containsMouse ? 
                                             ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
@@ -1629,7 +3005,11 @@ PanelWindow {
                                         Text {
                                             anchors.centerIn: parent
                                             text: "󰆏"
+<<<<<<< HEAD
                                             font.pixelSize: 14
+=======
+                                            font.pixelSize: 8
+>>>>>>> master
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                         }
                                         
@@ -1647,15 +3027,24 @@ PanelWindow {
                                     
                                     // Delete button
                                     Rectangle {
+<<<<<<< HEAD
                                         width: 28
                                         height: 28
+=======
+                                        width: 32
+                                        height: 32
+>>>>>>> master
                                         radius: 0
                                         color: deleteBtnMouseArea.containsMouse ? "#ff4444" : "transparent"
                                         
                                         Text {
                                             anchors.centerIn: parent
                                             text: "󰆴"
+<<<<<<< HEAD
                                             font.pixelSize: 14
+=======
+                                            font.pixelSize: 8
+>>>>>>> master
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                         }
                                         
@@ -1683,12 +3072,24 @@ PanelWindow {
     }
 
     // ============ PROPERTIES ============
+<<<<<<< HEAD
     property int ramUsageValue: 0
     property int ramTotalGB: 16  // Will be calculated
     property int cpuUsageValue: 0
     property int gpuUsageValue: 0
     property int cpuTempValue: 0
     property int gpuTempValue: 0
+=======
+    Behavior on cpuUsageValue { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+    Behavior on ramUsageValue { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+    Behavior on gpuUsageValue { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+    
+    property real cpuUsageEMA: 0
+    property real ramUsageEMA: 0
+    property real gpuUsageEMA: 0
+    property real smoothingFactor: 0.15  // Lower = smoother
+    property int maxHistoryLength: 100  // Number of data points to show
+>>>>>>> master
     property string mpTitle: ""
     property string mpArtist: ""
     property string mpAlbum: ""
@@ -1700,6 +3101,7 @@ PanelWindow {
     // Calendar days model
     property var calendarDays: []
     
+<<<<<<< HEAD
     // Network properties
     property string networkDownloadSpeed: "0 KB/s"
     property string networkUploadSpeed: "0 KB/s"
@@ -1708,6 +3110,13 @@ PanelWindow {
     property int networkDownloadBytesPrev: 0
     property int networkUploadBytesPrev: 0
     
+=======
+    // Uptime (display string, set by updateUptime())
+    property string uptimeDisplayText: "󰥔: --"
+    
+    // Battery
+    property int batteryPercent: -1
+>>>>>>> master
     
     // Performance tab models
     property var diskUsageModel: []
@@ -1717,14 +3126,39 @@ PanelWindow {
     property var cavaValues: []
     property bool cavaRunning: false
     property string projectPath: ""
+<<<<<<< HEAD
+=======
+    onProjectPathChanged: { if (projectPath && projectPath.length > 0 && !cavaRunning) startCava() }
+
+    // Clipboard properties
+    property string lastClipboardContent: ""
+    
+    // Clipboard history model
+    ListModel {
+        id: dashboardClipboardHistoryModel
+    }
+    
+    // Monitor clipboard changes – only when dashboard is open and Clipboard tab is active
+    Timer {
+        id: dashboardClipboardMonitorTimer
+        interval: 500
+        running: (sharedData && sharedData.menuVisible) && (currentTab === 1)
+        repeat: true
+        onTriggered: dashboardRoot.checkClipboard()
+    }
+>>>>>>> master
     
     // ============ FUNCTIONS ============
     function updateWeather() {
         // Simple weather update - can be extended with API integration
         // For now, uses a simple approach that can be customized
         // Example: curl -s "wttr.in?format=%t+%C" or use a weather service
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','curl -s \"wttr.in?format=%t+%C\" 2>/dev/null | head -1 > /tmp/quickshell_weather || echo \"15°C Clear\" > /tmp/quickshell_weather']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readWeather() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','curl -s "wttr.in?format=%t+%C" 2>/dev/null | head -1 > /tmp/quickshell_weather || echo "15°C Clear" > /tmp/quickshell_weather'], readWeather)
+>>>>>>> master
     }
     
     function readWeather() {
@@ -1744,8 +3178,12 @@ PanelWindow {
     }
     
     function updateDistro() {
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(grep \"^PRETTY_NAME=\" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \\\"\\\" || grep \"^NAME=\" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \\\"\\\" || echo \"Linux\") > /tmp/quickshell_distro']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: dashboardRoot.readDistro() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(grep "^PRETTY_NAME=" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \'"\'"\' || grep "^NAME=" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \'"\'"\' || echo "Linux") > /tmp/quickshell_distro'], readDistro)
+>>>>>>> master
     }
     
     function readDistro() {
@@ -1764,6 +3202,7 @@ PanelWindow {
         xhr.send()
     }
     
+<<<<<<< HEAD
     function readNetworkStats() {
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file:///proc/net/dev")
@@ -1808,11 +3247,26 @@ PanelWindow {
                 // Update current values
                 networkDownloadBytes = totalRx
                 networkUploadBytes = totalTx
+=======
+    function updateBattery() {
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1 > /tmp/quickshell_battery || echo -1 > /tmp/quickshell_battery'], readBattery)
+    }
+    
+    function readBattery() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///tmp/quickshell_battery")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                var s = xhr.responseText.trim()
+                var p = parseInt(s, 10)
+                batteryPercent = (!isNaN(p) && p >= 0 && p <= 100) ? p : -1
+>>>>>>> master
             }
         }
         xhr.send()
     }
     
+<<<<<<< HEAD
     function formatSpeed(bytes) {
         if (bytes < 1024) return bytes + " B/s"
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB/s"
@@ -1824,6 +3278,38 @@ PanelWindow {
     function updateWindowManager() {
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(echo $XDG_CURRENT_DESKTOP 2>/dev/null | cut -d: -f1 || echo $DESKTOP_SESSION 2>/dev/null || ps -e | grep -E \"(hyprland|sway|i3|kwin|mutter|xfwm4|openbox|dwm)\" | head -1 | awk \"{print \\$4}\" | tr -d \\\"\\\" || echo \"Unknown\") > /tmp/quickshell_wm']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: dashboardRoot.readWindowManager() }", dashboardRoot)
+=======
+    function updateNetwork() {
+        if (sharedData && sharedData.runCommand) {
+            var script = "(A=$(tail -n +3 /proc/net/dev 2>/dev/null | awk '{r+=$2;t+=$10} END {print r+0,t+0}'); sleep 1; B=$(tail -n +3 /proc/net/dev 2>/dev/null | awk '{r+=$2;t+=$10} END {print r+0,t+0}'); echo \"$A $B\") > /tmp/quickshell_net_speed"
+            sharedData.runCommand(['sh','-c', script], readNetwork)
+        }
+    }
+    function readNetwork() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///tmp/quickshell_net_speed")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                var s = (xhr.responseText || "").trim()
+                var parts = s.split(/\s+/)
+                if (parts.length >= 4) {
+                    var rx0 = parseFloat(parts[0]) || 0, tx0 = parseFloat(parts[1]) || 0
+                    var rx1 = parseFloat(parts[2]) || 0, tx1 = parseFloat(parts[3]) || 0
+                    networkRxMBs = Math.max(0, (rx1 - rx0) / 1048576)
+                    networkTxMBs = Math.max(0, (tx1 - tx0) / 1048576)
+                    
+                    // Update History
+                    networkHistory = pushHistory(networkHistory, networkRxMBs + networkTxMBs) // Total bandwidth for chart
+                    dashboardRoot.perfUpdated()
+                }
+            }
+        }
+        xhr.send()
+    }
+    
+    function updateWindowManager() {
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(echo $XDG_CURRENT_DESKTOP 2>/dev/null | cut -d: -f1 || echo $DESKTOP_SESSION 2>/dev/null || ps -e | grep -E "(hyprland|sway|i3|kwin|mutter|xfwm4|openbox|dwm)" | head -1 | awk "{print \$4}" | tr -d \'"\'"\' || echo "Unknown") > /tmp/quickshell_wm'], readWindowManager)
+>>>>>>> master
     }
     
     function readWindowManager() {
@@ -1881,11 +3367,16 @@ PanelWindow {
     }
     
     function updateDate() {
+<<<<<<< HEAD
         var now = new Date()
         dayNumber.text = now.getDate().toString()
         monthNumber.text = (now.getMonth() + 1 < 10 ? "0" : "") + (now.getMonth() + 1).toString()
         
         // dayName was removed, so we don't update it
+=======
+        // Calendar grid is updated by updateCalendar().
+        // dayNumber/monthNumber elements were removed; no separate date display to update.
+>>>>>>> master
     }
     
     function updateUptime() {
@@ -1908,7 +3399,11 @@ PanelWindow {
                     if (!uptimeStr) {
                         uptimeStr = "0m"
                     }
+<<<<<<< HEAD
                     uptimeText.text = "󰥔: " + uptimeStr
+=======
+                    uptimeDisplayText = "󰥔: " + uptimeStr
+>>>>>>> master
                 }
             }
         }
@@ -1929,8 +3424,16 @@ PanelWindow {
     }
 
     function updatePlayerMetadata() {
+<<<<<<< HEAD
         Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["sh", "-c", "playerctl metadata --format \'{{artist}}\\n{{title}}\\n{{album}}\\n{{mpris:artUrl}}\\n{{mpris:length}}\\n{{status}}\' > /tmp/quickshell_player_info 2>/tmp/quickshell_player_err || echo > /tmp/quickshell_player_info"]; running: true }', dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: dashboardRoot.readPlayerMetadata() }", dashboardRoot)
+=======
+        // Delegate path resolution to shell to avoid QML ReferenceErrors
+        if (sharedData && sharedData.runCommand) {
+             var cmd = 'TARGET="${QUICKSHELL_PROJECT_PATH:-$HOME/.config/alloy/dart}/scripts/get-player-metadata.sh"; bash "$TARGET"'
+             sharedData.runCommand(["sh", "-c", cmd], readPlayerMetadata)
+        }
+>>>>>>> master
     }
     
     function readPlayerMetadata() {
@@ -1949,7 +3452,11 @@ PanelWindow {
                     mpLength = 0
                     return
                 }
+<<<<<<< HEAD
                 var lines = txt.split("\n")
+=======
+                var lines = txt.split("|###|")
+>>>>>>> master
                 mpArtist = lines[0] ? lines[0].trim() : ""
                 mpTitle = lines[1] ? lines[1].trim() : ""
                 mpAlbum = lines[2] ? lines[2].trim() : ""
@@ -1972,8 +3479,12 @@ PanelWindow {
     }
 
     function updatePlayerPosition() {
+<<<<<<< HEAD
         Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["sh", "-c", "playerctl position > /tmp/quickshell_player_pos 2>/dev/null || echo 0 > /tmp/quickshell_player_pos"]; running: true }', dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 150; running: true; repeat: false; onTriggered: dashboardRoot.readPlayerPosition() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(["sh", "-c", "playerctl position > /tmp/quickshell_player_pos 2>/dev/null || echo 0 > /tmp/quickshell_player_pos"], readPlayerPosition)
+>>>>>>> master
     }
     
     function readPlayerPosition() {
@@ -1995,6 +3506,7 @@ PanelWindow {
     }
 
     function playerPlayPause() {
+<<<<<<< HEAD
         Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["playerctl", "play-pause"]; running: true }', dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 250; running: true; repeat: false; onTriggered: dashboardRoot.updatePlayerMetadata() }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 400; running: true; repeat: false; onTriggered: dashboardRoot.updatePlayerPosition() }", dashboardRoot)
@@ -2036,37 +3548,74 @@ PanelWindow {
         }
     }
     
+=======
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(["playerctl", "play-pause"], function(){ updatePlayerMetadata(); updatePlayerPosition() })
+        }
+    }
+
+    function playerNext() {
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(["playerctl", "next"], updatePlayerMetadata)
+    }
+
+    function playerPrev() {
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(["playerctl", "previous"], updatePlayerMetadata)
+    }
+    
+
+
+    // ============ TIMERS ============
+>>>>>>> master
     Timer {
         id: dateTimer
         interval: 1000
         repeat: true
+<<<<<<< HEAD
         running: true
         onTriggered: updateDate()
         Component.onCompleted: updateDate()
+=======
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updateDate()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updateDate()
+>>>>>>> master
     }
     
     Timer {
         id: calendarTimer
         interval: 60000
         repeat: true
+<<<<<<< HEAD
         running: true
         onTriggered: updateCalendar()
         Component.onCompleted: updateCalendar()
+=======
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updateCalendar()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updateCalendar()
+>>>>>>> master
     }
     
     Timer {
         id: uptimeTimer
         interval: 60000
         repeat: true
+<<<<<<< HEAD
         running: true
         onTriggered: updateUptime()
         Component.onCompleted: updateUptime()
+=======
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updateUptime()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updateUptime()
+>>>>>>> master
     }
     
     Timer {
         id: playerMetadataTimer
         interval: 3000
         repeat: true
+<<<<<<< HEAD
         running: true
         onTriggered: updatePlayerMetadata()
         Component.onCompleted: updatePlayerMetadata()
@@ -2086,6 +3635,28 @@ PanelWindow {
         interval: 2000
         repeat: true
         running: true
+=======
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updatePlayerMetadata()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updatePlayerMetadata()
+    }
+    
+    Timer {
+        id: playerPositionTimer
+        interval: 1000
+        repeat: true
+        running: (sharedData && sharedData.menuVisible && mpPlaying)
+        onTriggered: updatePlayerPosition()
+    }
+
+
+
+    Timer {
+        id: ramTimer
+        interval: 500
+        repeat: true
+        running: (sharedData && sharedData.menuVisible)
+>>>>>>> master
         function readRam() {
             var xhr = new XMLHttpRequest()
             xhr.open("GET", "file:///proc/meminfo")
@@ -2101,7 +3672,14 @@ PanelWindow {
                     if (memTotal > 0) {
                         ramUsageValue = 100 - Math.round((memAvailable / memTotal) * 100)
                         ramTotalGB = Math.round(memTotal / 1024 / 1024)  // Convert from KB to GB
+<<<<<<< HEAD
                     }
+=======
+                        
+                        ramHistory = pushHistory(ramHistory, ramUsageValue)
+                    }
+                    dashboardRoot.perfUpdated()
+>>>>>>> master
                 }
             }
             xhr.send()
@@ -2112,9 +3690,15 @@ PanelWindow {
 
     Timer {
         id: cpuTimer
+<<<<<<< HEAD
         interval: 2000
         repeat: true
         running: true
+=======
+        interval: 500
+        repeat: true
+        running: (sharedData && sharedData.menuVisible)
+>>>>>>> master
 
         property int lastIdle: 0
         property int lastTotal: 0
@@ -2135,9 +3719,17 @@ PanelWindow {
                             var total = user + nice + system + idle
                             if (cpuTimer.lastTotal > 0) {
                                 cpuUsageValue = Math.round((total - cpuTimer.lastTotal - (idle - cpuTimer.lastIdle)) / (total - cpuTimer.lastTotal) * 100)
+<<<<<<< HEAD
                             }
                             cpuTimer.lastTotal = total
                             cpuTimer.lastIdle = idle
+=======
+                                cpuHistory = pushHistory(cpuHistory, cpuUsageValue)
+                            }
+                            cpuTimer.lastTotal = total
+                            cpuTimer.lastIdle = idle
+                            dashboardRoot.perfUpdated()
+>>>>>>> master
                             break
                         }
                     }
@@ -2151,16 +3743,26 @@ PanelWindow {
 
     Timer {
         id: gpuTimer
+<<<<<<< HEAD
         interval: 2000
         repeat: true
         running: true
+=======
+        interval: 500
+        repeat: true
+        running: (sharedData && sharedData.menuVisible)
+>>>>>>> master
         onTriggered: readGpu()
     }
     
     function readGpu() {
         // Read GPU usage using nvidia-smi (primary) or radeontop (fallback)
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d \" \" > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \"{print int(\\$2)}\" > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 800; running: true; repeat: false; onTriggered: dashboardRoot.readGpuData() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d " " > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk "{print int($2)}" > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage'], readGpuData)
+>>>>>>> master
     }
     
     function readGpuData() {
@@ -2181,28 +3783,69 @@ PanelWindow {
                     } else {
                         gpuUsageValue = 0
                     }
+<<<<<<< HEAD
                 } else {
                     gpuUsageValue = 0
                 }
+=======
+                    
+                    // Update History
+                    gpuHistory = pushHistory(gpuHistory, gpuUsageValue)
+                    dashboardRoot.perfUpdated()
+                } else {
+                    gpuUsageValue = 0
+                }
+                dashboardRoot.perfUpdated()
+>>>>>>> master
             }
         }
         xhr.send()
     }
 
     Timer {
+<<<<<<< HEAD
         id: networkTimer
         interval: 2000 // Update every 2 seconds
         repeat: true
         running: true
         onTriggered: readNetworkStats()
         Component.onCompleted: readNetworkStats()
+=======
+        id: batteryTimer
+        interval: 10000
+        repeat: true
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updateBattery()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updateBattery()
+    }
+    // Odśwież % baterii od razu po otwarciu menu (nie czekaj do pierwszego ticku timera)
+    Connections {
+        target: sharedData
+        enabled: !!sharedData
+        function onMenuVisibleChanged() {
+            if (sharedData && sharedData.menuVisible) updateBattery()
+        }
+    }
+    
+    Timer {
+        id: networkTimer
+        interval: 3000
+        repeat: true
+        running: (sharedData && sharedData.menuVisible) && (sharedData && sharedData.dashboardTileLeft === "network")
+        onTriggered: updateNetwork()
+        Component.onCompleted: if ((sharedData && sharedData.menuVisible) && (sharedData && sharedData.dashboardTileLeft === "network")) updateNetwork()
+>>>>>>> master
     }
     
     
     // ============ PERFORMANCE TAB FUNCTIONS ============
     function updateDiskUsage() {
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','df -h | grep -E \"^/dev\" | awk \"{print \\$6 \\\"|\\\" \\$2 \\\"|\\\" \\$3 \\\"|\\\" \\$5}\" | head -5 > /tmp/quickshell_disk_usage 2>/dev/null || echo > /tmp/quickshell_disk_usage']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readDiskUsage() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','df -h | grep -E "^/dev" | awk "{print $6 \"|\" $2 \"|\" $3 \"|\" $5}" | head -5 > /tmp/quickshell_disk_usage 2>/dev/null || echo > /tmp/quickshell_disk_usage'], readDiskUsage)
+>>>>>>> master
     }
     
     function readDiskUsage() {
@@ -2234,8 +3877,12 @@ PanelWindow {
     }
     
     function updateTopProcesses() {
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','ps aux --sort=-%cpu 2>/dev/null | tail -n +2 | head -8 | awk \"{print \\$11 \\\"|\\\" \\$3 \\\"|\\\" \\$4}\" > /tmp/quickshell_top_processes 2>/dev/null || echo > /tmp/quickshell_top_processes']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 600; running: true; repeat: false; onTriggered: dashboardRoot.readTopProcesses() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','ps aux --sort=-%cpu 2>/dev/null | tail -n +2 | head -8 | awk "{print $11 \"|\" $3 \"|\" $4}" > /tmp/quickshell_top_processes 2>/dev/null || echo > /tmp/quickshell_top_processes'], readTopProcesses)
+>>>>>>> master
     }
     
     function readTopProcesses() {
@@ -2272,8 +3919,12 @@ PanelWindow {
     }
     
     function updateCpuTemp() {
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(sensors 2>/dev/null | grep -i \"cpu\" | grep -oE \"[0-9]+\\.[0-9]+\" | head -1 | cut -d. -f1 > /tmp/quickshell_cpu_temp) || (cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -1 | awk \"{print int(\\$1/1000)}\" > /tmp/quickshell_cpu_temp) || echo 0 > /tmp/quickshell_cpu_temp']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readCpuTemp() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(sensors 2>/dev/null | grep -i "cpu" | grep -oE "[0-9]+\\.[0-9]+" | head -1 | cut -d. -f1 > /tmp/quickshell_cpu_temp) || (cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -1 | awk "{print int($1/1000)}" > /tmp/quickshell_cpu_temp) || echo 0 > /tmp/quickshell_cpu_temp'], readCpuTemp)
+>>>>>>> master
     }
     
     function readCpuTemp() {
@@ -2289,8 +3940,12 @@ PanelWindow {
     }
     
     function updateGpuTemp() {
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 > /tmp/quickshell_gpu_temp) || (sensors 2>/dev/null | grep -i \"gpu\\|radeon\\|amdgpu\" | grep -oE \"[0-9]+\\.[0-9]+\" | head -1 | cut -d. -f1 > /tmp/quickshell_gpu_temp) || echo 0 > /tmp/quickshell_gpu_temp']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readGpuTemp() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 > /tmp/quickshell_gpu_temp) || (sensors 2>/dev/null | grep -i "gpu\\|radeon\\|amdgpu" | grep -oE "[0-9]+\\.[0-9]+" | head -1 | cut -d. -f1 > /tmp/quickshell_gpu_temp) || echo 0 > /tmp/quickshell_gpu_temp'], readGpuTemp)
+>>>>>>> master
     }
     
     function readGpuTemp() {
@@ -2305,50 +3960,83 @@ PanelWindow {
         xhr.send()
     }
     
+<<<<<<< HEAD
     // Performance timers
+=======
+    // Performance timers – only when dashboard is open
+>>>>>>> master
     Timer {
         id: diskUsageTimer
         interval: 5000
         repeat: true
+<<<<<<< HEAD
         running: true
         onTriggered: updateDiskUsage()
         Component.onCompleted: updateDiskUsage()
+=======
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updateDiskUsage()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updateDiskUsage()
+>>>>>>> master
     }
     
     Timer {
         id: topProcessesTimer
         interval: 3000
         repeat: true
+<<<<<<< HEAD
         running: true
         onTriggered: updateTopProcesses()
         Component.onCompleted: updateTopProcesses()
+=======
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updateTopProcesses()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updateTopProcesses()
+>>>>>>> master
     }
     
     Timer {
         id: cpuTempTimer
         interval: 5000
         repeat: true
+<<<<<<< HEAD
         running: true
         onTriggered: updateCpuTemp()
         Component.onCompleted: updateCpuTemp()
+=======
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updateCpuTemp()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updateCpuTemp()
+>>>>>>> master
     }
     
     Timer {
         id: gpuTempTimer
         interval: 5000
         repeat: true
+<<<<<<< HEAD
         running: true
         onTriggered: updateGpuTemp()
         Component.onCompleted: updateGpuTemp()
+=======
+        running: (sharedData && sharedData.menuVisible)
+        onTriggered: updateGpuTemp()
+        Component.onCompleted: if (sharedData && sharedData.menuVisible) updateGpuTemp()
+>>>>>>> master
     }
     
     // ============ CAVA VISUALIZER FUNCTIONS ============
     function startCava() {
+<<<<<<< HEAD
         // Sprawdź czy cava jest zainstalowane
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','which cava > /dev/null 2>&1 && echo 1 > /tmp/quickshell_cava_available || echo 0 > /tmp/quickshell_cava_available']; running: true }", dashboardRoot)
         
         // Poczekaj i sprawdź dostępność
         Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: dashboardRoot.checkCavaAvailable() }", dashboardRoot)
+=======
+        if (sharedData && sharedData.lowPerformanceMode) return
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','which cava > /dev/null 2>&1 && echo 1 > /tmp/quickshell_cava_available || echo 0 > /tmp/quickshell_cava_available'], checkCavaAvailable)
+>>>>>>> master
     }
     
     function checkCavaAvailable() {
@@ -2361,6 +4049,7 @@ PanelWindow {
                     // Użyj skryptu start-cava.sh do uruchomienia cava
                     var scriptPath = projectPath ? (projectPath + "/scripts/start-cava.sh") : ""
                     if (!scriptPath || scriptPath === "/scripts/start-cava.sh") {
+<<<<<<< HEAD
                         // Try to get from environment
                         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_cava_path 2>/dev/null || echo \"\" > /tmp/quickshell_cava_path']; running: true }", dashboardRoot)
                         Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: dashboardRoot.readCavaPath() }", dashboardRoot)
@@ -2376,6 +4065,19 @@ PanelWindow {
                     cavaRunning = true
                     console.log("Cava started with script...")
                     Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readCavaData() }", dashboardRoot)
+=======
+                        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo "$QUICKSHELL_PROJECT_PATH" > /tmp/quickshell_cava_path 2>/dev/null || true'], readCavaPath)
+                        return
+                    }
+                    if (!scriptPath || scriptPath.length === 0 || scriptPath === "/scripts/start-cava.sh") {
+                        return
+                    }
+                    var absScriptPath = scriptPath
+                    if (sharedData && sharedData.runCommand) {
+                        cavaRunning = true
+                        sharedData.runCommand(["bash", absScriptPath], readCavaData)
+                    }
+>>>>>>> master
                 }
             }
         }
@@ -2392,9 +4094,16 @@ PanelWindow {
                     projectPath = path
                     var scriptPath = projectPath + "/scripts/start-cava.sh"
                     var absScriptPath = scriptPath
+<<<<<<< HEAD
                     Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["bash", "' + absScriptPath + '"]; running: true }', dashboardRoot)
                     cavaRunning = true
                     Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readCavaData() }", dashboardRoot)
+=======
+                    if (sharedData && sharedData.runCommand) {
+                        cavaRunning = true
+                        sharedData.runCommand(["bash", absScriptPath], readCavaData)
+                    }
+>>>>>>> master
                 }
             }
         }
@@ -2409,7 +4118,10 @@ PanelWindow {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status !== 200 && xhr.status !== 0) {
                     if (cavaRunning) {
+<<<<<<< HEAD
                         console.log("Cava file not accessible, status:", xhr.status)
+=======
+>>>>>>> master
                         cavaRunning = false
                         startCava()
                     }
@@ -2426,6 +4138,7 @@ PanelWindow {
                         var colorPrimary = (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"
                         var colorSecondary = (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#2a2a2a"
                         
+<<<<<<< HEAD
                         for (var i = 0; i < 72; i++) {
                             var val = 0
                             // Mapuj 36 wartości z cava na 72 paski (każda wartość odpowiada 2 paskom)
@@ -2448,6 +4161,13 @@ PanelWindow {
                                 }
                             }
                         }
+=======
+                        // Store cava values for potential future use (e.g. SidePanel visualizer)
+                        cavaValues = values
+                        
+                        // Note: Media visualizer was removed when Media tab was replaced with Clipboard tab
+                        // If visualizer is needed in the future, it should be added to SidePanel or another component
+>>>>>>> master
                     }
                 } else {
                     // No data, silently continue - cavaCheckTimer will handle restart if needed
@@ -2458,10 +4178,17 @@ PanelWindow {
         xhr.send()
     }
     
+<<<<<<< HEAD
     // Timer do odczytu danych z cava
     Timer {
         id: cavaDataTimer
         interval: 16  // ~60 FPS
+=======
+    // Timer do odczytu danych z cava (33ms≈30 FPS; 50ms gdy low-perf)
+    Timer {
+        id: cavaDataTimer
+        interval: (sharedData && sharedData.lowPerformanceMode) ? 50 : 33
+>>>>>>> master
         repeat: true
         running: cavaRunning
         onTriggered: readCavaData()
@@ -2480,7 +4207,10 @@ PanelWindow {
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === XMLHttpRequest.DONE) {
                         if (xhr.status !== 200 && xhr.status !== 0) {
+<<<<<<< HEAD
                             console.log("Cava file not accessible, restarting...")
+=======
+>>>>>>> master
                             cavaRunning = false
                             startCava()
                         }
@@ -2493,7 +4223,15 @@ PanelWindow {
         }
     }
 
+<<<<<<< HEAD
     Component.onCompleted: {
+=======
+
+
+    
+    Component.onCompleted: {
+        
+>>>>>>> master
         // Initialize weatherCity from sharedData if available
         if (sharedData && sharedData.weatherCity !== undefined) {
             weatherCity = sharedData.weatherCity
@@ -2503,17 +4241,30 @@ PanelWindow {
         updateUptime()
         updateDistro()
         updateWindowManager()
+<<<<<<< HEAD
         // Initialize project path
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_cava_path 2>/dev/null || pwd > /tmp/quickshell_cava_path']; running: true }", dashboardRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: dashboardRoot.readCavaPath() }", dashboardRoot)
         startCava()
+=======
+        if (projectPath && projectPath.length > 0) {
+            startCava()
+        } else if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'echo "$QUICKSHELL_PROJECT_PATH" > /tmp/quickshell_cava_path 2>/dev/null || pwd > /tmp/quickshell_cava_path'], readCavaPath)
+        }
+        checkClipboard()
+>>>>>>> master
     }
     
     Connections {
         target: sharedData
         function onMenuVisibleChanged() {
             if (sharedData && sharedData.menuVisible) {
+<<<<<<< HEAD
                 Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: { if (dashboardRoot.dashboardContainer) dashboardRoot.dashboardContainer.forceActiveFocus() } }", dashboardRoot)
+=======
+                if (dashboardRoot.dashboardContainer) dashboardRoot.dashboardContainer.forceActiveFocus()
+>>>>>>> master
             } else {
                 dashboardContainer.focus = false
             }
@@ -2522,6 +4273,7 @@ PanelWindow {
     
     // ============ POWER MENU FUNCTIONS ============
     function suspendSystem() {
+<<<<<<< HEAD
         console.log("Suspending system...")
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'suspend']; running: true }", dashboardRoot)
     }
@@ -2540,11 +4292,83 @@ PanelWindow {
         console.log("Logging out...")
         // Try loginctl first, fallback to pkill
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'loginctl terminate-session $(loginctl list-sessions | grep $(whoami) | awk \"{print $1}\" | head -1) 2>/dev/null || pkill -KILL -u $(whoami)']; running: true }", dashboardRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'suspend'])
+    }
+    
+    function rebootSystem() {
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'reboot'])
+    }
+    
+    function shutdownSystem() {
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'poweroff'])
+    }
+    
+    function logoutSystem() {
+        // Try loginctl first, fallback to pkill
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'loginctl terminate-session $(loginctl list-sessions | grep $(whoami) | awk "{print $1}" | head -1) 2>/dev/null || pkill -KILL -u $(whoami)'])
+>>>>>>> master
     }
     
     // ============ NOTIFICATION FUNCTIONS ============
     function copyToClipboard(text) {
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['wl-copy', '" + text.replace(/'/g, "'\\''").replace(/\n/g, "\\n") + "']; running: true }", dashboardRoot)
+=======
+        var esc = text.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$").replace(/`/g, "\\`")
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo -n "' + esc + '" > /tmp/quickshell_clipboard_copy'], copyFromFile)
+        lastClipboardContent = text
+    }
+    
+    function copyFromFile() {
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'cat /tmp/quickshell_clipboard_copy | wl-copy'])
+    }
+    
+    // ============ CLIPBOARD FUNCTIONS ============
+    function checkClipboard() {
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'wl-paste > /tmp/quickshell_clipboard_content 2>/dev/null || echo "" > /tmp/quickshell_clipboard_content'], readClipboardContent)
+    }
+    
+    function readClipboardContent() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///tmp/quickshell_clipboard_content")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200 || xhr.status === 0) {
+                    var content = xhr.responseText
+                    processClipboardContent(content)
+                }
+            }
+        }
+        xhr.send()
+    }
+    
+    function processClipboardContent(content) {
+        if (!content || content.trim() === "") return
+        
+        var trimmed = content.trim()
+        
+        // Skip if same as last content
+        if (trimmed === lastClipboardContent) return
+        
+        // Skip if already in history
+        for (var i = 0; i < dashboardClipboardHistoryModel.count; i++) {
+            if (dashboardClipboardHistoryModel.get(i).text === trimmed) {
+                // Move to top
+                dashboardClipboardHistoryModel.move(i, 0, 1)
+                lastClipboardContent = trimmed
+                return
+            }
+        }
+        
+        // Add to history (max 50 items)
+        if (dashboardClipboardHistoryModel.count >= 50) {
+            dashboardClipboardHistoryModel.remove(dashboardClipboardHistoryModel.count - 1)
+        }
+        
+        dashboardClipboardHistoryModel.insert(0, { text: trimmed })
+        lastClipboardContent = trimmed
+>>>>>>> master
     }
 }
 

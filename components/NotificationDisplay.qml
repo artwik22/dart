@@ -7,6 +7,7 @@ import "."
 PanelWindow {
     id: notificationDisplayRoot
 
+<<<<<<< HEAD
     anchors { 
         top: true
         right: true
@@ -29,6 +30,27 @@ PanelWindow {
         right: 0
         bottom: 0
         left: 0
+=======
+    required property var screen  // ekran z Variants (screen: modelData) – PanelWindow go używa do outputu
+    property var sharedData: null
+
+    anchors.top: true
+    anchors.right: true
+
+    implicitWidth: notifications.length > 0 ? 304 : 0
+    implicitHeight: notifications.length > 0 ? 640 : 0
+
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "qsnotifications" + (screen && screen.name ? "-" + screen.name : "")
+    exclusiveZone: 0
+
+    visible: notifications.length > 0
+    color: "transparent"
+
+    margins {
+        top: 0
+        right: 0
+>>>>>>> master
     }
     
     // NotificationServer - receives notifications
@@ -36,11 +58,14 @@ PanelWindow {
         id: notificationServer
         
         onNotification: function(notification) {
+<<<<<<< HEAD
             console.log("=== New Notification Received ===")
             console.log("Summary:", notification.summary)
             console.log("Body:", notification.body)
             console.log("AppName:", notification.appName)
             console.log("AppIcon:", notification.appIcon)
+=======
+>>>>>>> master
             
             // Add to notification history
             if (sharedData) {
@@ -57,13 +82,21 @@ PanelWindow {
             
             // Check if notifications are enabled
             if (sharedData && !sharedData.notificationsEnabled) {
+<<<<<<< HEAD
                 console.log("Notifications disabled, ignoring")
+=======
+>>>>>>> master
                 return
             }
             
             // Play notification sound if enabled
+<<<<<<< HEAD
             if (sharedData && sharedData.notificationSoundsEnabled) {
                 Qt.createQmlObject('import Quickshell.Io; Process { command: ["paplay", "/usr/share/sounds/freedesktop/stereo/message.oga"]; running: true }', notificationDisplayRoot)
+=======
+            if (sharedData && sharedData.notificationSoundsEnabled && sharedData.runCommand) {
+                sharedData.runCommand(["paplay", "/usr/share/sounds/freedesktop/stereo/message.oga"])
+>>>>>>> master
             }
             
             addNotification(notification)
@@ -75,7 +108,10 @@ PanelWindow {
     property int maxNotifications: 5
     
     function addNotification(notification) {
+<<<<<<< HEAD
         console.log("addNotification called with notification:", notification ? notification.summary : "null")
+=======
+>>>>>>> master
         
         // Remove oldest if we exceed max
         if (notifications.length >= maxNotifications) {
@@ -97,7 +133,10 @@ PanelWindow {
         })
         
         if (notificationItem) {
+<<<<<<< HEAD
             console.log("NotificationItem created directly, notification:", notificationItem.notification ? notificationItem.notification.summary : "null")
+=======
+>>>>>>> master
             
             // Update array in a way that triggers QML property change (using spread or concat)
             notifications = [...notifications, notificationItem]
@@ -110,7 +149,10 @@ PanelWindow {
     }
     
     function removeNotification(item) {
+<<<<<<< HEAD
         console.log("removeNotification called")
+=======
+>>>>>>> master
         var currentNotifs = notifications
         var index = currentNotifs.indexOf(item)
         if (index !== -1) {
@@ -122,7 +164,10 @@ PanelWindow {
             // Wait a bit for animation to complete, then destroy
             var destroyTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 400; running: true; repeat: false }', notificationDisplayRoot)
             destroyTimer.triggered.connect(function() {
+<<<<<<< HEAD
                 console.log("Destroying notification item after animation")
+=======
+>>>>>>> master
                 if (item) {
                     item.destroy()
                 }
@@ -137,6 +182,7 @@ PanelWindow {
         }
     }
     
+<<<<<<< HEAD
     // Column to stack notifications - positioned at top-right corner
     Column {
         id: notificationColumn
@@ -146,6 +192,12 @@ PanelWindow {
         anchors.rightMargin: 0
         width: parent.width
         spacing: 8
+=======
+    Column {
+        id: notificationColumn
+        anchors.fill: parent
+        spacing: 7
+>>>>>>> master
 
         // Premium smooth animation for notification repositioning
         move: Transition {

@@ -1,4 +1,8 @@
 import QtQuick
+<<<<<<< HEAD
+=======
+import QtQml
+>>>>>>> master
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -14,11 +18,15 @@ PanelWindow {
     property string projectPath: "" // Will be set by Component.onCompleted
     
     function loadProjectPath() {
+<<<<<<< HEAD
         // Try to read path from environment variable
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_project_path 2>/dev/null || echo \"\" > /tmp/quickshell_project_path']; running: true }", appLauncherRoot)
         
         // Wait a moment and read the result
         Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: appLauncherRoot.readProjectPath() }", appLauncherRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo "$QUICKSHELL_PROJECT_PATH" > /tmp/quickshell_project_path 2>/dev/null || true'], readProjectPath)
+>>>>>>> master
     }
     
     function readProjectPath() {
@@ -29,6 +37,7 @@ PanelWindow {
                 var path = xhr.responseText.trim()
                 if (path && path.length > 0) {
                     projectPath = path
+<<<<<<< HEAD
                     console.log("Project path loaded from environment:", projectPath)
                 } else {
                     // Try to detect from current script location
@@ -39,6 +48,16 @@ PanelWindow {
                         // Last resort fallback
                         projectPath = "/tmp/sharpshell"
                         console.log("Using fallback project path (no Qt.application.arguments):", projectPath)
+=======
+                } else {
+                    // Try to detect from current script location
+                    if (Qt.application && Qt.application.arguments && Qt.application.arguments.length > 0 && sharedData && sharedData.runCommand) {
+                        var args = Qt.application.arguments
+                        sharedData.runCommand(['sh', '-c', 'dirname "$(readlink -f "$1" 2>/dev/null || echo "$1")" 2>/dev/null | head -1 > /tmp/quickshell_script_dir || true', 'sh', args[0] || ''], readScriptDir)
+                    } else {
+                        // Last resort fallback
+                        projectPath = "/tmp/sharpshell"
+>>>>>>> master
                     }
                 }
             }
@@ -54,11 +73,17 @@ PanelWindow {
                 var dir = xhr.responseText.trim()
                 if (dir && dir.length > 0) {
                     projectPath = dir
+<<<<<<< HEAD
                     console.log("Project path auto-detected:", projectPath)
                 } else {
                     // Last resort: use current working directory concept
                     projectPath = "/tmp/sharpshell"
                     console.log("Using fallback project path:", projectPath)
+=======
+                } else {
+                    // Last resort: use current working directory concept
+                    projectPath = "/tmp/sharpshell"
+>>>>>>> master
                 }
             }
         }
@@ -67,7 +92,11 @@ PanelWindow {
     
     Component.onCompleted: {
         initializePaths()
+<<<<<<< HEAD
         loadProjectPath()
+=======
+        if (!(projectPath && projectPath.length > 0)) loadProjectPath()
+>>>>>>> master
         loadApps()
         if (sharedData) {
             // Load colors from sharedData if available
@@ -113,11 +142,22 @@ PanelWindow {
                 colorAccent = sharedData.colorAccent
             }
         }
+<<<<<<< HEAD
+=======
+
+        // Gdy launcher się otwiera i lista aplikacji jest pusta – załaduj aplikacje (np. po starcie runCommand nie był gotowy)
+        function onLauncherVisibleChanged() {
+            if (sharedData && sharedData.launcherVisible && apps.length === 0) {
+                loadApps()
+            }
+        }
+>>>>>>> master
     }
     
     // Initialize paths from environment
     function initializePaths() {
         // Get home directory from environment
+<<<<<<< HEAD
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$HOME\" > /tmp/quickshell_home 2>/dev/null || echo \"\" > /tmp/quickshell_home']; running: true }", appLauncherRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: appLauncherRoot.readHomePath() }", appLauncherRoot)
     }
@@ -239,6 +279,9 @@ PanelWindow {
         } else {
             console.log("Cannot apply content - notesEditText exists:", !!notesEditText, "pending content length:", pendingNoteContent.length)
         }
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo "$HOME" > /tmp/quickshell_home 2>/dev/null || true'], readHomePath)
+>>>>>>> master
     }
 
     function readHomePath() {
@@ -248,6 +291,7 @@ PanelWindow {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 var home = xhr.responseText.trim()
                 if (home && home.length > 0) {
+<<<<<<< HEAD
                     colorConfigPath = home + "/.config/sharpshell/colors.json"
                     notesDir = home + "/Documents/Notes"
                     console.log("Paths initialized - home:", home, "colorConfig:", colorConfigPath, "notes:", notesDir)
@@ -256,6 +300,27 @@ PanelWindow {
                     colorConfigPath = "/tmp/sharpshell/colors.json"
                     notesDir = "/tmp/Documents/Notes"
                     console.log("Using fallback paths")
+=======
+                    // Try ~/.config/alloy/colors.json first
+                    var alloyPath = home + "/.config/alloy/colors.json"
+                    var checkXhr = new XMLHttpRequest()
+                    checkXhr.open("GET", "file://" + alloyPath)
+                    checkXhr.onreadystatechange = function() {
+                        if (checkXhr.readyState === XMLHttpRequest.DONE) {
+                            if (checkXhr.status === 200 || checkXhr.status === 0) {
+                                colorConfigPath = alloyPath
+                            } else {
+                                colorConfigPath = home + "/.config/sharpshell/colors.json"
+                            }
+                            notesDir = ""
+                        }
+                    }
+                    checkXhr.send()
+                } else {
+                    // Fallback to defaults
+                    colorConfigPath = "/tmp/sharpshell/colors.json"
+                    notesDir = ""
+>>>>>>> master
                 }
             }
         }
@@ -263,6 +328,7 @@ PanelWindow {
     }
     
     // Color management functions
+<<<<<<< HEAD
     function saveColors() {
         // Validate paths before saving
         if (!projectPath || projectPath.length === 0) {
@@ -278,54 +344,93 @@ PanelWindow {
         var cmd = 'python3 "' + scriptPath + '" "' + colorBackground + '" "' + colorPrimary + '" "' + colorSecondary + '" "' + colorText + '" "' + colorAccent + '" "' + colorConfigPath + '"'
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + cmd + "']; running: true }", appLauncherRoot)
         console.log("Saving colors to:", colorConfigPath)
+=======
+    // optionalPresetName: when applying a preset, pass its name so it's written to colors.json (arg 8).
+    // Quickshell loadColors uses presets[colorPreset] – without saving the name, reload would apply the old preset.
+    function saveColors(optionalPresetName) {
+        if (!projectPath || projectPath.length === 0) {
+            return
+        }
+        if (!colorConfigPath || colorConfigPath.length === 0) {
+            return
+        }
+        var scriptPath = projectPath + "/scripts/save-colors.py"
+        var presetArg = (optionalPresetName && String(optionalPresetName).length > 0) ? String(optionalPresetName).replace(/"/g, '\\"') : ""
+        var cmd = 'python3 "' + scriptPath + '" "' + colorBackground + '" "' + colorPrimary + '" "' + colorSecondary + '" "' + colorText + '" "' + colorAccent + '" "' + colorConfigPath + '" "" "' + presetArg + '"'
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + cmd.replace(/'/g, "'\"'\"'") + "']; running: true }", appLauncherRoot)
+>>>>>>> master
     }
     
     
     
     function updateColor(colorType, value) {
+<<<<<<< HEAD
         console.log("Updating color:", colorType, "to", value)
+=======
+>>>>>>> master
         var oldValue = ""
         switch(colorType) {
             case "background": 
                 oldValue = colorBackground
                 colorBackground = value
                 if (sharedData) sharedData.colorBackground = value
+<<<<<<< HEAD
                 console.log("colorBackground changed from", oldValue, "to", colorBackground)
+=======
+>>>>>>> master
                 break
             case "primary": 
                 oldValue = colorPrimary
                 colorPrimary = value
                 if (sharedData) sharedData.colorPrimary = value
+<<<<<<< HEAD
                 console.log("colorPrimary changed from", oldValue, "to", colorPrimary)
+=======
+>>>>>>> master
                 break
             case "secondary": 
                 oldValue = colorSecondary
                 colorSecondary = value
                 if (sharedData) sharedData.colorSecondary = value
+<<<<<<< HEAD
                 console.log("colorSecondary changed from", oldValue, "to", colorSecondary)
+=======
+>>>>>>> master
                 break
             case "text": 
                 oldValue = colorText
                 colorText = value
                 if (sharedData) sharedData.colorText = value
+<<<<<<< HEAD
                 console.log("colorText changed from", oldValue, "to", colorText)
+=======
+>>>>>>> master
                 break
             case "accent": 
                 oldValue = colorAccent
                 colorAccent = value
                 if (sharedData) sharedData.colorAccent = value
+<<<<<<< HEAD
                 console.log("colorAccent changed from", oldValue, "to", colorAccent)
                 break
         }
         saveColors()
         console.log("Colors saved and sharedData updated")
+=======
+                break
+        }
+        saveColors()
+>>>>>>> master
     }
     
     // Color presets
     function applyPreset(presetName) {
         var preset = colorPresets[presetName]
         if (!preset) {
+<<<<<<< HEAD
             console.log("Preset not found:", presetName)
+=======
+>>>>>>> master
             return
         }
         
@@ -345,6 +450,7 @@ PanelWindow {
             sharedData.colorAccent = preset.accent
         }
         
+<<<<<<< HEAD
         // Save to file
         saveColors()
         
@@ -512,6 +618,93 @@ PanelWindow {
             secondary: "#151a23",
             text: "#ffffff",
             accent: "#7986cb"
+=======
+        // Save to file – must pass preset name so colors.json has colorPreset set; otherwise Quickshell reload applies the old preset.
+        saveColors(presetName)
+        // Trigger Quickshell reload after save finishes (script is async)
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'sleep 0.5 && echo 1 > /tmp/quickshell_color_change'])
+        }
+    }
+    
+    property var colorPresets: {
+        "Monochrome": {
+            background: "#000000",
+            primary: "#1a1a1a",
+            secondary: "#0d0d0d",
+            text: "#ffffff",
+            accent: "#b0b0b0"
+        },
+        "Professional Modern": {
+            background: "#0a0a0a",
+            primary: "#1a1a1a",
+            secondary: "#151515",
+            text: "#ffffff",
+            accent: "#4a9eff"
+        },
+        "Dark Warm": {
+            background: "#0d0d0d",
+            primary: "#1f1f1f",
+            secondary: "#181818",
+            text: "#f5f5f5",
+            accent: "#ff6b35"
+        },
+        "Cool Blue": {
+            background: "#080d14",
+            primary: "#0f1419",
+            secondary: "#0a1016",
+            text: "#e1e5e9",
+            accent: "#00d4ff"
+        },
+        "Minimal Gray": {
+            background: "#0c0c0c",
+            primary: "#161616",
+            secondary: "#121212",
+            text: "#f0f0f0",
+            accent: "#a0a0a0"
+        },
+        "Forest Green": {
+            background: "#0a0f0a",
+            primary: "#141914",
+            secondary: "#0e120e",
+            text: "#e8f5e8",
+            accent: "#4ade80"
+        },
+        "Sunset Orange": {
+            background: "#0f0a05",
+            primary: "#1a140d",
+            secondary: "#140f09",
+            text: "#f5e8d8",
+            accent: "#ff9500"
+        },
+        "Ocean Blue": {
+            background: "#050a0f",
+            primary: "#0d1419",
+            secondary: "#091116",
+            text: "#d8e8f5",
+            accent: "#3b82f6"
+        },
+        "Deep Purple": {
+            background: "#0a0514",
+            primary: "#140d1f",
+            secondary: "#0f0916",
+            text: "#e8d8f5",
+            accent: "#8b5cf6"
+        },
+        "GNOME Monochrome": {
+            background: "#242424",
+            primary: "#303030",
+            secondary: "#2a2a2a",
+            text: "#ffffff",
+            accent: "#3584e4"
+        },
+        "Pure Black": {
+            background: "#030303",
+            primary: "#0a0a0a",
+            secondary: "#060606",
+            text: "#ffffff",
+            accent: "#c0c0c0"
+>>>>>>> master
         }
     }
     
@@ -536,6 +729,7 @@ PanelWindow {
         bottom: true
     }
     
+<<<<<<< HEAD
     // Base size
     property int baseWidth: 540
     property int baseHeight: 315  // 70% of 450 (30% shorter)
@@ -548,6 +742,15 @@ PanelWindow {
     
     implicitWidth: isNotesMode ? notesWidth : baseWidth
     implicitHeight: isNotesMode ? notesHeight : baseHeight
+=======
+    // Base size – zbalansowane proporcje
+    property int baseWidth: 500
+    property int baseHeight: 320
+    
+
+    implicitWidth: baseWidth
+    implicitHeight: baseHeight
+>>>>>>> master
     
     Behavior on implicitWidth {
         NumberAnimation {
@@ -571,6 +774,7 @@ PanelWindow {
     
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qslauncher"
+<<<<<<< HEAD
     WlrLayershell.keyboardFocus: (sharedData && sharedData.launcherVisible) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusiveZone: 0
     
@@ -589,6 +793,26 @@ PanelWindow {
             easing.type: Easing.OutExpo
         }
     }
+=======
+    WlrLayershell.keyboardFocus: (launcherShowProgress > 0.02) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    exclusiveZone: 0
+
+    // Jeden sterownik animacji (jak w Dashboard) – start od 0, Binding = brak skoku na pierwszej klatce
+    property real launcherShowProgress: 0
+    Binding on launcherShowProgress {
+        value: (sharedData && sharedData.launcherVisible) ? 1.0 : 0.0
+    }
+    Behavior on launcherShowProgress {
+        NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+    }
+
+    visible: launcherShowProgress > 0.01
+    color: "transparent"
+    property int launcherSlideAmount: 400
+    // Fix: Use margins.bottom for window positioning (0 = flush with edge)
+    // Animation will be handled by the margins to move the window surface
+    margins.bottom: -implicitHeight * (1.0 - launcherShowProgress)
+>>>>>>> master
     
     // Applications list
     property var apps: []
@@ -598,12 +822,16 @@ PanelWindow {
     // Calculator properties
     property string calculatorResult: ""
     property bool isCalculatorMode: false
+<<<<<<< HEAD
     property int currentMode: -1  // -1 = mode selection, 0 = Launcher, 1 = Packages, 2 = Settings, 3 = Notes
     property int currentNotesMode: -1  // -1 = menu, 0 = new note, 1 = edit note
     property string notesFileName: ""  // Current note file name
     property string pendingNoteContent: ""  // Content to load into editor
     property string notesDir: ""  // Notes directory path
     property int notesMenuIndex: 0  // Selected index in notes menu (0 = new note button, 1+ = notes list)
+=======
+    property int currentMode: -1  // -1 = mode selection, 0 = Launcher, 1 = Packages, 2 = Fuse
+>>>>>>> master
     property int currentPackageMode: -1  // -1 = Packages option selection, 0 = install source selection (Pacman/AUR), 1 = Pacman search, 2 = AUR search, 3 = remove source selection (Pacman/AUR), 4 = Pacman remove search, 5 = AUR remove search
     property int installSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
     property int removeSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
@@ -649,7 +877,10 @@ PanelWindow {
         // Open kitty, set as floating, size 1200x700 and center
         var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
         
+<<<<<<< HEAD
         console.log("Executing update command:", command)
+=======
+>>>>>>> master
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
         
         // Close launcher after execution
@@ -692,6 +923,7 @@ PanelWindow {
     }
     
     function toggleBluetooth() {
+<<<<<<< HEAD
         console.log("Toggling Bluetooth, current state:", bluetoothEnabled)
         if (bluetoothEnabled) {
             console.log("Turning Bluetooth OFF")
@@ -699,6 +931,12 @@ PanelWindow {
             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'rfkill block bluetooth; /usr/bin/bluetoothctl power off']; running: true }", appLauncherRoot)
         } else {
             console.log("Turning Bluetooth ON")
+=======
+        if (bluetoothEnabled) {
+            // Block with rfkill and turn off
+            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'rfkill block bluetooth; /usr/bin/bluetoothctl power off']; running: true }", appLauncherRoot)
+        } else {
+>>>>>>> master
             // Unblock with rfkill, wait, then turn on
             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'rfkill unblock bluetooth; sleep 1; /usr/bin/bluetoothctl power on']; running: true }", appLauncherRoot)
         }
@@ -709,7 +947,10 @@ PanelWindow {
         if (!bluetoothEnabled || bluetoothScanning) return
         bluetoothScanning = true
         bluetoothDevicesModel.clear()
+<<<<<<< HEAD
         console.log("Starting Bluetooth scan...")
+=======
+>>>>>>> master
         
         // Use bluetoothctl with timeout - this will scan for 10 seconds and then automatically stop
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'bluetoothctl --timeout 10 scan on > /tmp/quickshell_bt_scan_output 2>&1']; running: true }", appLauncherRoot)
@@ -719,7 +960,10 @@ PanelWindow {
     }
     
     function getBluetoothDevices() {
+<<<<<<< HEAD
         console.log("Getting Bluetooth devices...")
+=======
+>>>>>>> master
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'bluetoothctl devices > /tmp/quickshell_bt_devices']; running: true }", appLauncherRoot)
         Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: appLauncherRoot.readBluetoothDevices() }", appLauncherRoot)
     }
@@ -731,6 +975,7 @@ PanelWindow {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 bluetoothDevicesModel.clear()
                 var content = xhr.responseText || ""
+<<<<<<< HEAD
                 console.log("Bluetooth devices file content:", content)
                 console.log("Content length:", content.length)
                 var lines = content.trim().split("\n")
@@ -738,10 +983,16 @@ PanelWindow {
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i].trim()
                     console.log("Processing line", i, ":", line)
+=======
+                var lines = content.trim().split("\n")
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim()
+>>>>>>> master
                     if (line.length > 0) {
                         if (line.startsWith("Device")) {
                             // Format: "Device MAC_ADDRESS Device_Name"
                             var parts = line.split(" ")
+<<<<<<< HEAD
                             console.log("Line parts:", parts.length, parts)
                             if (parts.length >= 3) {
                                 var mac = parts[1]
@@ -757,6 +1008,18 @@ PanelWindow {
                     }
                 }
                 console.log("Total devices found:", bluetoothDevicesModel.count)
+=======
+                            if (parts.length >= 3) {
+                                var mac = parts[1]
+                                var name = parts.slice(2).join(" ") || "Unknown Device"
+                                bluetoothDevicesModel.append({ mac: mac, name: name, connected: false })
+                            } else {
+                            }
+                        } else {
+                        }
+                    }
+                }
+>>>>>>> master
                 bluetoothScanning = false
             }
         }
@@ -764,14 +1027,19 @@ PanelWindow {
     }
     
     function connectBluetoothDevice(mac) {
+<<<<<<< HEAD
         console.log("=== connectBluetoothDevice called ===")
         console.log("MAC received:", mac, "type:", typeof mac)
         if (bluetoothConnecting) {
             console.log("Already connecting, skipping")
+=======
+        if (bluetoothConnecting) {
+>>>>>>> master
             return
         }
         bluetoothConnecting = true
         var macStr = String(mac).trim()
+<<<<<<< HEAD
         console.log("Pairing and connecting to device MAC:", macStr)
         
         // First pair, then connect
@@ -788,6 +1056,18 @@ PanelWindow {
     
     function connectAfterPair(mac) {
         console.log("Connecting to paired device:", mac)
+=======
+        
+        // First pair, then connect
+        // Step 1: Pair the device
+        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['/usr/bin/bluetoothctl', 'pair', '" + macStr + "']; running: true }", appLauncherRoot)
+        
+        // Step 2: Wait a bit, then connect
+        
+    }
+    
+    function connectAfterPair(mac) {
+>>>>>>> master
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['/usr/bin/bluetoothctl', 'connect', '" + mac + "']; running: true }", appLauncherRoot)
     }
     
@@ -1019,8 +1299,12 @@ PanelWindow {
             // Remove multiple spaces and trim
             exec = exec.replace(/\s+/g, " ").trim()
             
+<<<<<<< HEAD
             // Run via sh -c for better compatibility
             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + exec.replace(/'/g, "\\'") + " &']; running: true }", appLauncherRoot)
+=======
+            if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', exec.replace(/'/g, "'\"'\"'") + ' &'])
+>>>>>>> master
             
             if (sharedData) {
                 sharedData.launcherVisible = false
@@ -1029,22 +1313,46 @@ PanelWindow {
     }
     
     // Function to load applications
+<<<<<<< HEAD
     function loadApps() {
+=======
+    property int _loadAppsRetries: 0
+    function loadApps() {
+        if (!(sharedData && sharedData.runCommand)) {
+            // runCommand może nie być gotowe przy starcie – spróbuj ponownie po chwili albo gdy użytkownik otworzy launcher
+            if (_loadAppsRetries < 5) {
+                _loadAppsRetries++
+                Qt.callLater(function() {
+                    var t = Qt.createQmlObject("import QtQuick; Timer { interval: 400; running: true; repeat: false; onTriggered: appLauncherRoot.loadApps() }", appLauncherRoot)
+                })
+            }
+            return
+        }
+        _loadAppsRetries = 0
+>>>>>>> master
         apps = []
         filteredApps.clear()
         loadedAppsCount = 0
         totalFilesToLoad = 0
+<<<<<<< HEAD
         
         // Load applications from .desktop files (more applications)
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'find /usr/share/applications ~/.local/share/applications -name \"*.desktop\" 2>/dev/null | head -100 > /tmp/quickshell_apps_list']; running: true }", appLauncherRoot)
         
         // After a moment, read the list and load applications
         Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: appLauncherRoot.readAppsList() }", appLauncherRoot)
+=======
+        sharedData.runCommand(['sh', '-c', 'find /usr/share/applications ~/.local/share/applications -name "*.desktop" 2>/dev/null | head -200 > /tmp/quickshell_apps_list'], readAppsList)
+>>>>>>> master
     }
     
     function readAppsList() {
         var xhr = new XMLHttpRequest()
+<<<<<<< HEAD
         xhr.open("GET", "file:///tmp/quickshell_apps_list")
+=======
+        xhr.open("GET", "file:///tmp/quickshell_apps_list?_=" + Date.now())
+>>>>>>> master
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 var files = xhr.responseText.trim().split("\n").filter(function(f) { return f.trim().length > 0 })
@@ -1171,7 +1479,10 @@ PanelWindow {
             return
         }
         
+<<<<<<< HEAD
         console.log("Searching for packages:", query)
+=======
+>>>>>>> master
         
         // Run search in background
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'pacman -Ss \"" + query.replace(/"/g, '\\"') + "\" 2>/dev/null | head -50 > /tmp/quickshell_pacman_search']; running: true }", appLauncherRoot)
@@ -1182,17 +1493,25 @@ PanelWindow {
     
     // Function to read pacman search results
     function readPacmanSearchResults() {
+<<<<<<< HEAD
         console.log("Reading pacman search results...")
+=======
+>>>>>>> master
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file:///tmp/quickshell_pacman_search")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 filteredPackages.clear()
                 var output = xhr.responseText.trim()
+<<<<<<< HEAD
                 console.log("Search output length:", output.length)
                 
                 if (!output || output.length === 0) {
                     console.log("No search results found")
+=======
+                
+                if (!output || output.length === 0) {
+>>>>>>> master
                     return
                 }
                 
@@ -1224,7 +1543,10 @@ PanelWindow {
                                     version: parts[1],
                                     description: ""
                                 }
+<<<<<<< HEAD
                                 console.log("Found package:", currentPackage.name, "from repo:", repoAndName[0])
+=======
+>>>>>>> master
                             }
                         }
                     } else if (currentPackage && (line.startsWith("    ") || line.startsWith("\t"))) {
@@ -1241,7 +1563,10 @@ PanelWindow {
                     filteredPackages.append(currentPackage)
                 }
                 
+<<<<<<< HEAD
                 console.log("Total packages found:", filteredPackages.count)
+=======
+>>>>>>> master
                 
                 // Reset selectedIndex if out of range
                 if (selectedIndex >= filteredPackages.count) {
@@ -1262,7 +1587,10 @@ PanelWindow {
             return
         }
         
+<<<<<<< HEAD
         console.log("Searching AUR for packages:", query)
+=======
+>>>>>>> master
         
         // Check if yay or paru is available
         // Run search in background (use yay if available, otherwise paru)
@@ -1274,17 +1602,25 @@ PanelWindow {
     
     // Function to read AUR search results
     function readAurSearchResults() {
+<<<<<<< HEAD
         console.log("Reading AUR search results...")
+=======
+>>>>>>> master
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file:///tmp/quickshell_aur_search")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 filteredPackages.clear()
                 var output = xhr.responseText.trim()
+<<<<<<< HEAD
                 console.log("AUR search output length:", output.length)
                 
                 if (!output || output.length === 0 || output.indexOf("AUR helper not found") >= 0) {
                     console.log("No AUR search results found or helper not installed")
+=======
+                
+                if (!output || output.length === 0 || output.indexOf("AUR helper not found") >= 0) {
+>>>>>>> master
                     return
                 }
                 
@@ -1326,7 +1662,10 @@ PanelWindow {
                                 currentPackage.description = descMatch[1]
                             }
                             
+<<<<<<< HEAD
                             console.log("Found AUR package:", currentPackage.name)
+=======
+>>>>>>> master
                         }
                     } else if (currentPackage && (line.startsWith("    ") || line.startsWith("\t"))) {
                         // Linia z opisem (zaczyna się od spacji lub taba)
@@ -1342,7 +1681,10 @@ PanelWindow {
                     filteredPackages.append(currentPackage)
                 }
                 
+<<<<<<< HEAD
                 console.log("Total AUR packages found:", filteredPackages.count)
+=======
+>>>>>>> master
                 
                 // Resetuj selectedIndex jeśli jest poza zakresem
                 if (selectedIndex >= filteredPackages.count) {
@@ -1358,7 +1700,10 @@ PanelWindow {
     
     // Function to install pacman package
     function installPacmanPackage(packageName) {
+<<<<<<< HEAD
         console.log("installPacmanPackage called with:", packageName)
+=======
+>>>>>>> master
         if (packageName) {
             // Escape package name
             var safeName = packageName.replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/ /g, "\\ ")
@@ -1368,7 +1713,10 @@ PanelWindow {
             // Open kitty, set as floating, size 1200x700 and center
             var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + " " + safeName + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
             
+<<<<<<< HEAD
             console.log("Executing command:", command)
+=======
+>>>>>>> master
             
             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
             
@@ -1376,13 +1724,19 @@ PanelWindow {
                 sharedData.launcherVisible = false
             }
         } else {
+<<<<<<< HEAD
             console.log("Package name is empty or null")
+=======
+>>>>>>> master
         }
     }
     
     // Function to install AUR package
     function installAurPackage(packageName) {
+<<<<<<< HEAD
         console.log("installAurPackage called with:", packageName)
+=======
+>>>>>>> master
         if (packageName) {
             // Escape package name
             var safeName = packageName.replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/ /g, "\\ ")
@@ -1392,7 +1746,10 @@ PanelWindow {
             // Open kitty, set as floating, size 1200x700 and center
             var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + " " + safeName + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
             
+<<<<<<< HEAD
             console.log("Executing command:", command)
+=======
+>>>>>>> master
             
             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
             
@@ -1400,7 +1757,10 @@ PanelWindow {
                 sharedData.launcherVisible = false
             }
         } else {
+<<<<<<< HEAD
             console.log("Package name is empty or null")
+=======
+>>>>>>> master
         }
     }
     
@@ -1409,7 +1769,10 @@ PanelWindow {
         installedPackages = []
         filteredInstalledPackages.clear()
         
+<<<<<<< HEAD
         console.log("Loading installed packages...")
+=======
+>>>>>>> master
         
         // Run pacman -Q and save to file
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'pacman -Q 2>/dev/null > /tmp/quickshell_installed_packages']; running: true }", appLauncherRoot)
@@ -1420,7 +1783,10 @@ PanelWindow {
     
     // Function to read installed packages
     function readInstalledPackages() {
+<<<<<<< HEAD
         console.log("Reading installed packages...")
+=======
+>>>>>>> master
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file:///tmp/quickshell_installed_packages")
         xhr.onreadystatechange = function() {
@@ -1429,7 +1795,10 @@ PanelWindow {
                 var output = xhr.responseText.trim()
                 
                 if (!output || output.length === 0) {
+<<<<<<< HEAD
                     console.log("No installed packages found")
+=======
+>>>>>>> master
                     filterInstalledPackages()
                     return
                 }
@@ -1452,7 +1821,10 @@ PanelWindow {
                     }
                 }
                 
+<<<<<<< HEAD
                 console.log("Loaded", installedPackages.length, "installed packages")
+=======
+>>>>>>> master
                 filterInstalledPackages()
             }
         }
@@ -1491,7 +1863,10 @@ PanelWindow {
     
     // Function to remove pacman package
     function removePacmanPackage(packageName) {
+<<<<<<< HEAD
         console.log("removePacmanPackage called with:", packageName)
+=======
+>>>>>>> master
         if (packageName) {
             // Escape package name
             var safeName = packageName.replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/ /g, "\\ ")
@@ -1501,7 +1876,10 @@ PanelWindow {
             // Open kitty, set as floating, size 1200x700 and center
             var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + " " + safeName + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
             
+<<<<<<< HEAD
             console.log("Executing command:", command)
+=======
+>>>>>>> master
             
             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
             
@@ -1509,13 +1887,19 @@ PanelWindow {
                 sharedData.launcherVisible = false
             }
         } else {
+<<<<<<< HEAD
             console.log("Package name is empty or null")
+=======
+>>>>>>> master
         }
     }
     
     // Funkcja usuwania pakietu z AUR
     function removeAurPackage(packageName) {
+<<<<<<< HEAD
         console.log("removeAurPackage called with:", packageName)
+=======
+>>>>>>> master
         if (packageName) {
             // Escapuj nazwę pakietu
             var safeName = packageName.replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/ /g, "\\ ")
@@ -1525,7 +1909,10 @@ PanelWindow {
             // Otwórz kitty, ustaw jako floating, rozmiar 1200x700 i wyśrodkuj
             var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + " " + safeName + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
             
+<<<<<<< HEAD
             console.log("Executing command:", command)
+=======
+>>>>>>> master
             
             Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
             
@@ -1533,6 +1920,7 @@ PanelWindow {
                 sharedData.launcherVisible = false
             }
         } else {
+<<<<<<< HEAD
             console.log("Package name is empty or null")
         }
     }
@@ -1543,6 +1931,29 @@ PanelWindow {
         function onLauncherVisibleChanged() {
             if (sharedData && sharedData.launcherVisible) {
                 // Reset do wyboru trybu
+=======
+        }
+    }
+    
+    // Jeden Timer na focus przy otwarciu – krótki interval = focus od razu z pojawieniem się
+    Timer {
+        id: launcherOpenFocusTimer
+        interval: 30
+        repeat: false
+        running: false
+        onTriggered: {
+            if (launcherContainer && sharedData && sharedData.launcherVisible) {
+                launcherContainer.forceActiveFocus()
+            }
+        }
+    }
+
+    Connections {
+        target: sharedData
+        enabled: !!sharedData
+        function onLauncherVisibleChanged() {
+            if (sharedData && sharedData.launcherVisible) {
+>>>>>>> master
                 currentMode = -1
                 currentPackageMode = -1
                 installSourceMode = -1
@@ -1551,6 +1962,7 @@ PanelWindow {
                 searchText = ""
                 packageSearchText = ""
                 selectedIndex = 0
+<<<<<<< HEAD
                 
                 // Wymuś focus natychmiast (użyj Qt.callLater dla pewności)
                 Qt.callLater(function() {
@@ -1569,6 +1981,10 @@ PanelWindow {
                 Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: { if (appLauncherRoot.launcherContainer && appLauncherRoot.sharedData && appLauncherRoot.sharedData.launcherVisible) { appLauncherRoot.launcherContainer.forceActiveFocus() } } }", appLauncherRoot)
             } else {
                 // Gdy się zamyka, usuń focus
+=======
+                launcherOpenFocusTimer.restart()
+            } else {
+>>>>>>> master
                 searchInput.focus = false
                 pacmanSearchInput.focus = false
                 aurSearchInput.focus = false
@@ -1579,6 +1995,7 @@ PanelWindow {
         }
     }
     
+<<<<<<< HEAD
     // Kontener z zawartością
     Item {
         id: launcherContainer
@@ -1622,6 +2039,23 @@ PanelWindow {
         }
         
         // Tło z gradientem
+=======
+    // Kontener z zawartością – opacity/scale/enabled z jednego launcherShowProgress
+    Item {
+        id: launcherContainer
+        anchors.fill: parent
+        opacity: launcherShowProgress
+        enabled: launcherShowProgress > 0.02
+        focus: launcherShowProgress > 0.02
+        scale: 0.95 + 0.05 * launcherShowProgress
+        transformOrigin: Item.Bottom
+        
+        // Window movement handles the slide animation
+
+
+        // Tło z gradientem
+        // Material Design launcher background with elevation
+>>>>>>> master
         Rectangle {
             id: launcherBackground
             anchors.fill: parent
@@ -1629,6 +2063,19 @@ PanelWindow {
             
             // Użyj sharedData.colorBackground jeśli dostępny - jednolite tło bez gradientu
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : colorBackground
+<<<<<<< HEAD
+=======
+            
+            // Material Design elevation shadow
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -3
+                color: "transparent"
+                border.color: Qt.rgba(0, 0, 0, 0.25)  // Material shadow
+                border.width: 2
+                z: -1
+            }
+>>>>>>> master
         }
         
         // Obsługa klawiszy na kontenerze - przekieruj do TextInput tylko w trybie Launch App
@@ -1637,11 +2084,21 @@ PanelWindow {
         Keys.onPressed: function(event) {
             // Escape - zamknij launcher lub wróć do wyboru trybu
             if (event.key === Qt.Key_Escape) {
+<<<<<<< HEAD
                 if (currentMode === -1) {
                     // Jeśli jesteśmy w wyborze trybu, zamknij launcher
                     if (sharedData) {
                         sharedData.launcherVisible = false
                     }
+=======
+                if (currentMode === -1 || currentMode === 0) {
+                    // Wybór trybu lub Launch App – jeden Escape zamyka launcher
+                    if (sharedData) {
+                        sharedData.launcherVisible = false
+                    }
+                    event.accepted = true
+                    return
+>>>>>>> master
                 } else if (currentMode === 3 && currentNotesMode !== -1) {
                     // W edytorze notes - wróć do menu notes
                     currentNotesMode = -1
@@ -1788,6 +2245,7 @@ PanelWindow {
                         removeAurPackagesList.positionViewAtIndex(selectedIndex, ListView.Center)
                     }
                     event.accepted = true
+<<<<<<< HEAD
                     // W trybie Bluetooth - nawigacja po liście urządzeń
                     if (bluetoothSelectedIndex < bluetoothDevicesModel.count - 1) {
                         bluetoothSelectedIndex++
@@ -1795,6 +2253,8 @@ PanelWindow {
                         bluetoothDevicesList.positionViewAtIndex(bluetoothSelectedIndex, ListView.Center)
                     }
                     event.accepted = true
+=======
+>>>>>>> master
                 }
             } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 // Enter - wybierz tryb, pakiet lub aplikację
@@ -1803,6 +2263,7 @@ PanelWindow {
                     if (selectedIndex >= 0 && selectedIndex < modesList.count) {
                         var mode = modesList.model.get(selectedIndex)
                         if (mode.mode === 2) {
+<<<<<<< HEAD
                             // Launch settings application instead of entering settings mode
                             Qt.createQmlObject("import Quickshell.Io; Process { command: ['" + projectPath + "/open-settings.sh']; running: true }", appLauncherRoot)
                             // Close launcher after launching settings
@@ -1810,6 +2271,16 @@ PanelWindow {
                                 sharedData.launcherVisible = false
                             }
                         } else {
+=======
+                            // Launch fuse directly using Process
+                            Qt.createQmlObject("import Quickshell.Io; Process { command: ['sh', '-c', 'fuse &']; running: true }", appLauncherRoot)
+                            if (sharedData) {
+                                sharedData.launcherVisible = false
+                            }
+                            event.accepted = true
+                            return
+                        }
+>>>>>>> master
                             currentMode = mode.mode
                             selectedIndex = 0
                             modesList.currentIndex = -1
@@ -1819,12 +2290,16 @@ PanelWindow {
                                 currentPackageMode = -1
                                 installSourceMode = -1
                                 removeSourceMode = -1
+<<<<<<< HEAD
                             } else if (currentMode === 3) {
                                 currentNotesMode = -1
                                 notesMenuIndex = 0
                                 loadNotesList()
                             }
                         }
+=======
+                            }
+>>>>>>> master
                     }
                     event.accepted = true
                 } else if (currentMode === 1 && currentPackageMode === -1) {
@@ -1861,6 +2336,7 @@ PanelWindow {
                     // W trybie Remove search - przekieruj do TextInput
                     if (removeSearchInput) removeSearchInput.forceActiveFocus()
                     event.accepted = false
+<<<<<<< HEAD
                     // W trybie Bluetooth - połącz z wybranym urządzeniem
                     if (bluetoothSelectedIndex >= 0 && bluetoothSelectedIndex < bluetoothDevicesModel.count && !bluetoothConnecting) {
                         var device = bluetoothDevicesModel.get(bluetoothSelectedIndex)
@@ -1869,15 +2345,20 @@ PanelWindow {
                         }
                     }
                     event.accepted = true
+=======
+>>>>>>> master
                 } else if (currentMode === 0) {
                     // W trybie Launch App - przekieruj do TextInput
                     searchInput.forceActiveFocus()
                     event.accepted = false
                 }
+<<<<<<< HEAD
             } else if (currentMode === 0) {
                 // W trybie Launch App - przekieruj do TextInput
                 searchInput.forceActiveFocus()
                 event.accepted = false  // Pozwól propagować
+=======
+>>>>>>> master
             } else if (currentMode === 1 && currentPackageMode === -1) {
                 // W trybie Packages - nawigacja po liście opcji
                 if (event.key === Qt.Key_Up) {
@@ -1939,6 +2420,7 @@ PanelWindow {
                     // W trybie AUR remove search - przekieruj do TextInput
                     if (removeAurSearchInput) removeAurSearchInput.forceActiveFocus()
                     event.accepted = false
+<<<<<<< HEAD
                 } else if (currentMode === 3 && currentNotesMode === -1) {
                     // W menu notes - nawigacja po menu (przycisk nowa + lista notatek)
                     if (event.key === Qt.Key_Up) {
@@ -1990,11 +2472,21 @@ PanelWindow {
         }
         
         // Lista trybów (gdy currentMode === -1)
+=======
+            }
+        }
+        
+        // Lista trybów (gdy currentMode === -1) - NOWY DESIGN
+>>>>>>> master
         ListView {
             id: modesList
             anchors.fill: parent
             anchors.margins: 20
             visible: currentMode === -1
+<<<<<<< HEAD
+=======
+            focus: currentMode === -1 // Ensure focus for keyboard navigation
+>>>>>>> master
             opacity: currentMode === -1 ? 1.0 : 0.0
             currentIndex: selectedIndex
             spacing: 8
@@ -2015,13 +2507,18 @@ PanelWindow {
             model: ListModel {
                 ListElement { name: "Launcher"; description: "Launch applications"; mode: 0; icon: "󰈙" }
                 ListElement { name: "Packages"; description: "Manage packages"; mode: 1; icon: "󰏖" }
+<<<<<<< HEAD
                 ListElement { name: "Notes"; description: "Quick notes and reminders"; mode: 3; icon: "󰎞" }
                 ListElement { name: "Settings"; description: "Open settings application"; mode: 2; icon: "󰒓" }
+=======
+                ListElement { name: "Fuse"; description: "Open settings application"; mode: 2; icon: "󰒓" }
+>>>>>>> master
             }
             
             delegate: Rectangle {
                 id: modeItem
                 width: modesList.width
+<<<<<<< HEAD
                 height: 72
                 color: "transparent"
                 radius: 0
@@ -2039,11 +2536,66 @@ PanelWindow {
                     Behavior on width {
                         NumberAnimation {
                             duration: 300
+=======
+                height: 50
+                radius: 0
+                color: (selectedIndex === index || modeItemMouseArea.containsMouse) ?
+                    ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                    "transparent"
+                
+                opacity: (sharedData && sharedData.launcherVisible) ? 1 : 0
+                scale: (sharedData && sharedData.launcherVisible) ? 1 : 0.8
+                
+                transform: Translate {
+                    y: (sharedData && sharedData.launcherVisible) ? 0 : 40
+                }
+
+                Behavior on opacity {
+                    SequentialAnimation {
+                        PauseAnimation { duration: Math.min(index * 40, 400) }
+                        NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                    }
+                }
+                
+                Behavior on scale {
+                    SequentialAnimation {
+                        PauseAnimation { duration: Math.min(index * 40, 400) }
+                        NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                    }
+                }
+                
+                Behavior on transform {
+                    SequentialAnimation {
+                        PauseAnimation { duration: Math.min(index * 40, 400) }
+                        PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                    }
+                }
+
+                Behavior on color {
+                    ColorAnimation { 
+                        duration: 150
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                
+                // Left accent bar for selected items
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: selectedIndex === index ? 3 : 0
+                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                    
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: 200
+>>>>>>> master
                             easing.type: Easing.OutCubic
                         }
                     }
                 }
                 
+<<<<<<< HEAD
                 Behavior on color {
                         ColorAnimation { 
                             duration: 200
@@ -2089,6 +2641,55 @@ PanelWindow {
                             font.family: "sans-serif"
                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
                             opacity: selectedIndex === index ? 0.85 : (modeItemMouseArea.containsMouse ? 0.75 : 0.6)
+=======
+                // Content container
+                Item {
+                    anchors.fill: parent
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 16
+                    
+                    Row {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 12
+                        
+                        // Icon
+                        Text {
+                            text: model.icon || ""
+                            font.pixelSize: 20
+                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 24
+                            horizontalAlignment: Text.AlignLeft
+                        }
+                        
+                        // Text content
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+                            width: parent.width - 36  // Total width minus icon (24) and spacing (12)
+                            
+                            Text {
+                                text: model.name
+                                font.pixelSize: 15
+                                font.family: "sans-serif"
+                                font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                width: parent.width
+                                elide: Text.ElideRight
+                            }
+                            
+                            Text {
+                                text: model.description
+                                font.pixelSize: 12
+                                font.family: "sans-serif"
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                opacity: 0.7
+                                width: parent.width
+                                elide: Text.ElideRight
+                            }
+>>>>>>> master
                         }
                     }
                 }
@@ -2100,13 +2701,18 @@ PanelWindow {
                     
                     onEntered: {
                         if (modesList.currentIndex !== index) {
+<<<<<<< HEAD
                         selectedIndex = index
+=======
+                            selectedIndex = index
+>>>>>>> master
                             modesList.currentIndex = index
                         }
                     }
                     
                     onClicked: {
                         if (model.mode === 2) {
+<<<<<<< HEAD
                             // Launch settings application instead of entering settings mode
                             Qt.createQmlObject("import Quickshell.Io; Process { command: ['" + projectPath + "/open-settings.sh']; running: true }", appLauncherRoot)
                             // Close launcher after launching settings
@@ -2120,13 +2726,31 @@ PanelWindow {
                             if (model.mode === 1) {
                                 currentPackageMode = -1
                             }
+=======
+                            // Launch fuse directly using Process
+                            Qt.createQmlObject("import Quickshell.Io; Process { command: ['sh', '-c', 'fuse &']; running: true }", appLauncherRoot)
+                            if (sharedData) {
+                                sharedData.launcherVisible = false
+                            }
+                            return
+                        }
+                        currentMode = model.mode
+                        selectedIndex = 0
+                        modesList.currentIndex = -1
+                        if (model.mode === 1) {
+                            currentPackageMode = -1
+>>>>>>> master
                         }
                     }
                 }
             }
         }
         
+<<<<<<< HEAD
         // Zawartość trybów
+=======
+        // Zawartość trybów – te same marginesy co strona główna (20)
+>>>>>>> master
         Item {
             id: modeContent
             anchors.fill: parent
@@ -2142,28 +2766,58 @@ PanelWindow {
                 Column {
                     id: launchAppColumn
                     anchors.fill: parent
+<<<<<<< HEAD
                     spacing: 12
+=======
+                    spacing: 9
+>>>>>>> master
                             
                             // Pole wyszukiwania
                             Rectangle {
                                 id: searchBox
                                 width: parent.width
+<<<<<<< HEAD
                                 height: 48
                                 color: searchInput.activeFocus ? colorPrimary : colorSecondary
                                 radius: 0
                                 
+=======
+                                height: 36
+                                color: searchInput.activeFocus ? colorPrimary : colorSecondary
+                                radius: 0
+                                
+                                opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
+                                scale: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0.9
+                                transform: Translate {
+                                    y: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 0 : 20
+                                }
+
+                                Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                                Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
+                                Behavior on transform { PropertyAnimation { property: "y"; duration: 600; easing.type: Easing.OutBack } }
+
+>>>>>>> master
                                 Behavior on color {
                                     ColorAnimation { 
                                         duration: 180
                                         easing.type: Easing.OutQuart
+<<<<<<< HEAD
                                 }
+=======
+                                    }
+>>>>>>> master
                                 }
                                 
                                 TextInput {
                                     id: searchInput
                                     anchors.fill: parent
+<<<<<<< HEAD
                                     anchors.margins: 20
                                     font.pixelSize: 15
+=======
+                                    anchors.margins: 14
+                                    font.pixelSize: 16
+>>>>>>> master
                                     font.family: "sans-serif"
                                     font.weight: Font.Medium
                                     font.letterSpacing: 0.2
@@ -2213,6 +2867,19 @@ PanelWindow {
                                                 return
                                             }
                                             
+<<<<<<< HEAD
+=======
+                                            // Check if search text is "fuse" - launch fuse application
+                                            if (searchText && searchText.trim().toLowerCase() === "fuse") {
+                                                Qt.createQmlObject("import Quickshell.Io; Process { command: ['sh', '-c', 'fuse 2>/dev/null || $HOME/.local/bin/fuse 2>/dev/null || " + projectPath + "/../fuse/target/release/fuse 2>/dev/null']; running: true }", appLauncherRoot)
+                                                if (sharedData) {
+                                                    sharedData.launcherVisible = false
+                                                }
+                                                event.accepted = true
+                                                return
+                                            }
+                                            
+>>>>>>> master
                                             if (filteredApps.count > 0 && selectedIndex >= 0 && selectedIndex < filteredApps.count) {
                                                 var app = filteredApps.get(selectedIndex)
                                                 if (app && app.exec) {
@@ -2240,7 +2907,11 @@ PanelWindow {
                                     anchors.fill: searchInput
                                     anchors.margins: 0
                                     text: "Search applications..."
+<<<<<<< HEAD
                                     font.pixelSize: 15
+=======
+                                    font.pixelSize: 16
+>>>>>>> master
                                     font.family: "sans-serif"
                                     font.weight: Font.Medium
                                     color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
@@ -2256,7 +2927,11 @@ PanelWindow {
                                 width: parent.width
                                 height: parent.height - searchBox.height - parent.spacing
                                 clip: true
+<<<<<<< HEAD
                                 spacing: 4
+=======
+                                spacing: 8
+>>>>>>> master
                                 
                                 model: filteredApps
                                 currentIndex: selectedIndex
@@ -2267,6 +2942,7 @@ PanelWindow {
                                     }
                                 }
                                 
+<<<<<<< HEAD
                                 // Staggered entry for items
                                 add: Transition {
                                     ParallelAnimation {
@@ -2308,11 +2984,24 @@ PanelWindow {
                                         duration: 300
                                         easing.type: Easing.OutQuart
                                     }
+=======
+                                // Animacje przejść dla wyników wyszukiwania
+                                add: Transition { 
+                                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 250; easing.type: Easing.OutCubic }
+                                    NumberAnimation { property: "scale"; from: 0.95; to: 1; duration: 300; easing.type: Easing.OutBack }
+                                }
+                                addDisplaced: Transition { 
+                                    NumberAnimation { properties: "y"; duration: 300; easing.type: Easing.OutBack } 
+                                }
+                                removeDisplaced: Transition { 
+                                    NumberAnimation { properties: "y"; duration: 300; easing.type: Easing.OutBack } 
+>>>>>>> master
                                 }
                                 
                                 delegate: Rectangle {
                                     id: appItem
                                     width: appsList.width
+<<<<<<< HEAD
                                     height: 72
                                     color: (selectedIndex === index) ? (sharedData && sharedData.colorPrimary ? Qt.darker(sharedData.colorPrimary, 0.85) : "#2a2a2a") : "transparent"
                                     radius: 0
@@ -2322,10 +3011,27 @@ PanelWindow {
                                         ColorAnimation {
                                             duration: 250
                                             easing.type: Easing.OutQuart
+=======
+                                    height: 50
+                                    radius: 0
+                                    
+                                    opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
+                                    scale: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0.8
+                                    
+                                    transform: Translate {
+                                        y: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 0 : 40
+                                    }
+
+                                    Behavior on opacity {
+                                        SequentialAnimation {
+                                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                                            NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+>>>>>>> master
                                         }
                                     }
                                     
                                     Behavior on scale {
+<<<<<<< HEAD
                                         SpringAnimation {
                                             spring: 4.5
                                             damping: 0.45
@@ -2383,6 +3089,77 @@ PanelWindow {
                                         visible: appItem.appComment && appItem.appComment.length > 0
                                     }
                                 }
+=======
+                                        SequentialAnimation {
+                                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                                            NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                        }
+                                    }
+                                    
+                                    Behavior on transform {
+                                        SequentialAnimation {
+                                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                                            PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                                        }
+                                    }
+                                    color: (selectedIndex === index || appItemMouseArea.containsMouse) ?
+                                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                                        "transparent"
+                                    
+                                    Behavior on color {
+                                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                                    }
+                                    
+                                    Rectangle {
+                                        anchors.left: parent.left
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        width: selectedIndex === index ? 3 : 0
+                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        Behavior on width {
+                                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                        }
+                                    }
+                                    
+                                    property string appName: model.name || "Unknown"
+                                    property string appComment: model.comment || ""
+                                    property string appExec: model.exec || ""
+                                    property string appIcon: model.icon || ""
+                                    property bool appIsCalculator: model.isCalculator || false
+                                    
+                                    Column {
+                                        id: appTextColumn
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.leftMargin: 16
+                                        anchors.rightMargin: 16
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 2
+                                        width: parent.width - 32
+                                        
+                                        Text {
+                                            width: parent.width
+                                            text: appItem.appName
+                                            font.pixelSize: 15
+                                            font.family: "sans-serif"
+                                            font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                            elide: Text.ElideRight
+                                            maximumLineCount: 1
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        }
+                                        Text {
+                                            width: parent.width
+                                            text: appItem.appComment
+                                            font.pixelSize: 12
+                                            font.family: "sans-serif"
+                                            elide: Text.ElideRight
+                                            maximumLineCount: 1
+                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                            opacity: 0.7
+                                            visible: appItem.appComment && appItem.appComment.length > 0
+                                        }
+                                    }
+>>>>>>> master
                                 
                                 MouseArea {
                                     id: appItemMouseArea
@@ -2424,16 +3201,27 @@ PanelWindow {
                                 }
                             }
                         }
+<<<<<<< HEAD
                     }
                 }
             }
             
             // Tryb 1: Packages - prosta lista (tło usunięte - używa głównego tła)
+=======
+                }
+            }
+            
+            // Tryb 1: Packages – ten sam wygląd co strona główna (height 50, radius 4, lewy pasek)
+>>>>>>> master
             
             ListView {
                 id: packagesOptionsList
                 anchors.fill: parent
                 anchors.margins: 20
+<<<<<<< HEAD
+=======
+                spacing: 8
+>>>>>>> master
                 visible: currentMode === 1 && currentPackageMode === -1
                 clip: true
                 z: 1
@@ -2452,6 +3240,7 @@ PanelWindow {
                     ListElement { name: "Update"; description: "Update system packages (pacman -Syyu)"; action: "update"; icon: "󰏕" }
                 }
                 
+<<<<<<< HEAD
                 Component.onCompleted: {
                     console.log("Packages list created, model count:", packagesModel.count)
                 }
@@ -2478,11 +3267,63 @@ PanelWindow {
                                 duration: 300
                                 easing.type: Easing.OutCubic
                             }
+=======
+                delegate: Rectangle {
+                    id: packageOptionItem
+                    width: packagesOptionsList.width
+                    height: 50
+                    radius: 0
+                    color: (selectedIndex === index || packageOptionItemMouseArea.containsMouse) ?
+                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                        "transparent"
+                    
+                    opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0
+                    scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0.8
+                    
+                    transform: Translate {
+                        y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 0 : 40
+                    }
+
+                    Behavior on opacity {
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                        }
+                    }
+                    
+                    Behavior on scale {
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                        }
+                    }
+                    
+                    Behavior on transform {
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                        }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        width: selectedIndex === index ? 3 : 0
+                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                        Behavior on width {
+                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+>>>>>>> master
                         }
                     }
                     
                     Row {
                         anchors.left: parent.left
+<<<<<<< HEAD
                         anchors.leftMargin: 20
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 16
@@ -2491,10 +3332,25 @@ PanelWindow {
                             text: model.icon || ""
                             font.pixelSize: 22
                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+=======
+                        anchors.right: parent.right
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 12
+                        
+                        Text {
+                            text: model.icon || ""
+                            font.pixelSize: 20
+                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                            width: 24
+                            horizontalAlignment: Text.AlignLeft
+>>>>>>> master
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         
                         Column {
+<<<<<<< HEAD
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 4
                         
@@ -2512,6 +3368,29 @@ PanelWindow {
                             font.family: "sans-serif"
                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
                             opacity: selectedIndex === index ? 0.85 : (packageOptionItemMouseArea.containsMouse ? 0.75 : 0.6)
+=======
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+                            width: parent.width - 36
+                            
+                            Text {
+                                text: model.name || "Unknown"
+                                font.pixelSize: 15
+                                font.family: "sans-serif"
+                                font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                width: parent.width
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                text: model.description || ""
+                                font.pixelSize: 12
+                                font.family: "sans-serif"
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                opacity: 0.7
+                                width: parent.width
+                                elide: Text.ElideRight
+>>>>>>> master
                             }
                         }
                     }
@@ -2550,11 +3429,19 @@ PanelWindow {
                 }
             }
             
+<<<<<<< HEAD
             // Wybór źródła instalacji (Pacman/AUR) - gdy currentPackageMode === 0
+=======
+            // Wybór źródła instalacji (Pacman/AUR) – ten sam wygląd co strona główna
+>>>>>>> master
             ListView {
                 id: installSourceList
                 anchors.fill: parent
                 anchors.margins: 20
+<<<<<<< HEAD
+=======
+                spacing: 8
+>>>>>>> master
                 visible: currentMode === 1 && currentPackageMode === 0
                 clip: true
                 z: 1
@@ -2567,6 +3454,7 @@ PanelWindow {
                 delegate: Rectangle {
                     id: installSourceItem
                     width: installSourceList.width
+<<<<<<< HEAD
                     height: 72
                     color: "transparent"
                     radius: 0
@@ -2586,11 +3474,60 @@ PanelWindow {
                                 duration: 300
                                 easing.type: Easing.OutCubic
                             }
+=======
+                    height: 50
+                    radius: 0
+                    color: (selectedIndex === index || installSourceItemMouseArea.containsMouse) ?
+                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                        "transparent"
+                    
+                    opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 1 : 0
+                    scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 1 : 0.8
+                    
+                    transform: Translate {
+                        y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 0 : 40
+                    }
+
+                    Behavior on opacity {
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                        }
+                    }
+                    
+                    Behavior on scale {
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                        }
+                    }
+                    
+                    Behavior on transform {
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                        }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        width: selectedIndex === index ? 3 : 0
+                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                        Behavior on width {
+                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+>>>>>>> master
                         }
                     }
                     
                     Row {
                         anchors.left: parent.left
+<<<<<<< HEAD
                         anchors.leftMargin: 20
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 16
@@ -2599,27 +3536,60 @@ PanelWindow {
                             text: model.icon || ""
                             font.pixelSize: 22
                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+=======
+                        anchors.right: parent.right
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 12
+                        
+                        Text {
+                            text: model.icon || ""
+                            font.pixelSize: 20
+                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                            width: 24
+                            horizontalAlignment: Text.AlignLeft
+>>>>>>> master
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
+<<<<<<< HEAD
                             spacing: 4
+=======
+                            spacing: 2
+                            width: parent.width - 36
+>>>>>>> master
                             
                             Text {
                                 text: model.name || "Unknown"
                                 font.pixelSize: 15
                                 font.family: "sans-serif"
+<<<<<<< HEAD
                                 font.weight: selectedIndex === index ? Font.Bold : Font.Medium
                                 color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
                             }
                             
+=======
+                                font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                width: parent.width
+                                elide: Text.ElideRight
+                            }
+>>>>>>> master
                             Text {
                                 text: model.description || ""
                                 font.pixelSize: 12
                                 font.family: "sans-serif"
                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+<<<<<<< HEAD
                                 opacity: selectedIndex === index ? 0.85 : (installSourceItemMouseArea.containsMouse ? 0.75 : 0.6)
+=======
+                                opacity: 0.7
+                                width: parent.width
+                                elide: Text.ElideRight
+>>>>>>> master
                             }
                         }
                     }
@@ -2675,16 +3645,37 @@ PanelWindow {
                 Column {
                     id: pacmanSearchColumn
                     anchors.fill: parent
+<<<<<<< HEAD
                     spacing: 11
+=======
+                    spacing: 8
+>>>>>>> master
                     
                     // Pole wyszukiwania
                     Rectangle {
                         id: pacmanSearchBox
                         width: parent.width
+<<<<<<< HEAD
                         height: 48
                         color: pacmanSearchInput.activeFocus ? colorPrimary : colorSecondary
                         radius: 0
                         
+=======
+                        height: 30
+                        color: pacmanSearchInput.activeFocus ? colorPrimary : colorSecondary
+                        radius: 0
+                        
+                        opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 1 : 0
+                        scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 1 : 0.9
+                        transform: Translate {
+                            y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 0 : 20
+                        }
+
+                        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
+                        Behavior on transform { PropertyAnimation { property: "y"; duration: 600; easing.type: Easing.OutBack } }
+
+>>>>>>> master
                         Behavior on color {
                             ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                         }
@@ -2692,8 +3683,13 @@ PanelWindow {
                         TextInput {
                             id: pacmanSearchInput
                             anchors.fill: parent
+<<<<<<< HEAD
                             anchors.margins: 20
                             font.pixelSize: 14
+=======
+                            anchors.margins: 14
+                            font.pixelSize: 18
+>>>>>>> master
                             font.family: "sans-serif"
                             color: colorText
                             verticalAlignment: TextInput.AlignVCenter
@@ -2728,6 +3724,7 @@ PanelWindow {
                                 } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                     if (filteredPackages.count > 0 && selectedIndex >= 0 && selectedIndex < filteredPackages.count) {
                                         var pkg = filteredPackages.get(selectedIndex)
+<<<<<<< HEAD
                                         console.log("Installing package:", pkg, "name:", pkg ? pkg.name : "null")
                                         if (pkg && pkg.name) {
                                             installPacmanPackage(pkg.name)
@@ -2736,6 +3733,13 @@ PanelWindow {
                                         }
                                     } else {
                                         console.log("No package selected or list empty. Count:", filteredPackages.count, "Selected:", selectedIndex)
+=======
+                                        if (pkg && pkg.name) {
+                                            installPacmanPackage(pkg.name)
+                                        } else {
+                                        }
+                                    } else {
+>>>>>>> master
                                     }
                                     event.accepted = true
                                 } else if (event.key === Qt.Key_Escape) {
@@ -2754,7 +3758,11 @@ PanelWindow {
                             anchors.fill: pacmanSearchInput
                             anchors.margins: 0
                             text: "Search packages (pacman)..."
+<<<<<<< HEAD
                             font.pixelSize: 14
+=======
+                            font.pixelSize: 18
+>>>>>>> master
                             font.family: "sans-serif"
                             color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             verticalAlignment: Text.AlignVCenter
@@ -2763,18 +3771,27 @@ PanelWindow {
                         }
                     }
                     
+<<<<<<< HEAD
                     // Lista pakietów
+=======
+                    // Lista pakietów – ten sam wygląd co strona główna
+>>>>>>> master
                     ListView {
                         id: pacmanPackagesList
                         width: parent.width
                         height: parent.height - pacmanSearchBox.height - parent.spacing
                         clip: true
+<<<<<<< HEAD
+=======
+                        spacing: 8
+>>>>>>> master
                         
                         model: filteredPackages
                         
                         delegate: Rectangle {
                             id: packageItem
                             width: pacmanPackagesList.width
+<<<<<<< HEAD
                             height: 72
                             color: "transparent"
                             radius: 0
@@ -2802,6 +3819,55 @@ PanelWindow {
                             duration: 200
                             easing.type: Easing.OutCubic
                         }
+=======
+                            height: 50
+                            radius: 0
+                            color: (selectedIndex === index || packageItemMouseArea.containsMouse) ?
+                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                                "transparent"
+                            
+                            opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 1 : 0
+                            scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 1 : 0.8
+                            
+                            transform: Translate {
+                                y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 0 : 40
+                            }
+
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            
+                            Behavior on scale {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                }
+                            }
+                            
+                            Behavior on transform {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                                }
+                            }
+
+                            Behavior on color {
+                                ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                            
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: selectedIndex === index ? 3 : 0
+                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                Behavior on width {
+                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                }
+>>>>>>> master
                             }
                             
                             property string packageName: model.name || "Unknown"
@@ -2809,24 +3875,47 @@ PanelWindow {
                             
                             Column {
                                 anchors.left: parent.left
+<<<<<<< HEAD
                                 anchors.leftMargin: 20
                                 anchors.verticalCenter: parent.verticalCenter
                                 spacing: 4
                                 
+=======
+                                anchors.right: parent.right
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 2
+                                width: parent.width - 32
+>>>>>>> master
                                 Text {
                                     text: packageItem.packageName
                                     font.pixelSize: 15
                                     font.family: "sans-serif"
+<<<<<<< HEAD
                                     font.weight: selectedIndex === index ? Font.Bold : Font.Medium
                                     color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
                                 }
                                 
+=======
+                                    font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                    width: parent.width
+                                    elide: Text.ElideRight
+                                }
+>>>>>>> master
                                 Text {
                                     text: packageItem.packageDescription
                                     font.pixelSize: 12
                                     font.family: "sans-serif"
                                     color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+<<<<<<< HEAD
                                     opacity: selectedIndex === index ? 0.85 : (packageItemMouseArea.containsMouse ? 0.75 : 0.6)
+=======
+                                    opacity: 0.7
+                                    width: parent.width
+                                    elide: Text.ElideRight
+>>>>>>> master
                                     visible: packageItem.packageDescription && packageItem.packageDescription.length > 0
                                 }
                             }
@@ -2866,16 +3955,37 @@ PanelWindow {
                 Column {
                     id: aurSearchColumn
                     anchors.fill: parent
+<<<<<<< HEAD
                     spacing: 11
+=======
+                    spacing: 8
+>>>>>>> master
                     
                     // Pole wyszukiwania
                     Rectangle {
                         id: aurSearchBox
                         width: parent.width
+<<<<<<< HEAD
                         height: 48
                         color: aurSearchInput.activeFocus ? colorPrimary : colorSecondary
                         radius: 0
                         
+=======
+                        height: 30
+                        color: aurSearchInput.activeFocus ? colorPrimary : colorSecondary
+                        radius: 0
+                        
+                        opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 1 : 0
+                        scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 1 : 0.9
+                        transform: Translate {
+                            y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 0 : 20
+                        }
+
+                        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
+                        Behavior on transform { PropertyAnimation { property: "y"; duration: 600; easing.type: Easing.OutBack } }
+
+>>>>>>> master
                         Behavior on color {
                             ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                         }
@@ -2883,8 +3993,13 @@ PanelWindow {
                         TextInput {
                             id: aurSearchInput
                             anchors.fill: parent
+<<<<<<< HEAD
                             anchors.margins: 20
                             font.pixelSize: 14
+=======
+                            anchors.margins: 14
+                            font.pixelSize: 18
+>>>>>>> master
                             font.family: "sans-serif"
                             color: colorText
                             verticalAlignment: TextInput.AlignVCenter
@@ -2919,6 +4034,7 @@ PanelWindow {
                                 } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                     if (filteredPackages.count > 0 && selectedIndex >= 0 && selectedIndex < filteredPackages.count) {
                                         var pkg = filteredPackages.get(selectedIndex)
+<<<<<<< HEAD
                                         console.log("Installing AUR package:", pkg, "name:", pkg ? pkg.name : "null")
                                         if (pkg && pkg.name) {
                                             installAurPackage(pkg.name)
@@ -2927,6 +4043,13 @@ PanelWindow {
                                         }
                                     } else {
                                         console.log("No package selected or list empty. Count:", filteredPackages.count, "Selected:", selectedIndex)
+=======
+                                        if (pkg && pkg.name) {
+                                            installAurPackage(pkg.name)
+                                        } else {
+                                        }
+                                    } else {
+>>>>>>> master
                                     }
                                     event.accepted = true
                                 } else if (event.key === Qt.Key_Escape) {
@@ -2945,7 +4068,11 @@ PanelWindow {
                             anchors.fill: aurSearchInput
                             anchors.margins: 0
                             text: "Search packages (AUR)..."
+<<<<<<< HEAD
                             font.pixelSize: 14
+=======
+                            font.pixelSize: 18
+>>>>>>> master
                             font.family: "sans-serif"
                             color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             verticalAlignment: Text.AlignVCenter
@@ -2954,18 +4081,27 @@ PanelWindow {
                         }
                     }
                     
+<<<<<<< HEAD
                     // Lista pakietów AUR
+=======
+                    // Lista pakietów AUR – ten sam wygląd co strona główna
+>>>>>>> master
                     ListView {
                         id: aurPackagesList
                         width: parent.width
                         height: parent.height - aurSearchBox.height - parent.spacing
                         clip: true
+<<<<<<< HEAD
+=======
+                        spacing: 8
+>>>>>>> master
                         
                         model: filteredPackages
                         
                         delegate: Rectangle {
                             id: aurPackageItem
                             width: aurPackagesList.width
+<<<<<<< HEAD
                             height: 72
                             color: "transparent"
                             radius: 0
@@ -3000,11 +4136,61 @@ PanelWindow {
                             duration: 200
                             easing.type: Easing.OutCubic
                         }
+=======
+                            height: 50
+                            radius: 0
+                            color: (selectedIndex === index || aurPackageItemMouseArea.containsMouse) ?
+                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                                "transparent"
+                            
+                            opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 1 : 0
+                            scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 1 : 0.8
+                            
+                            transform: Translate {
+                                y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 0 : 40
+                            }
+
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            
+                            Behavior on scale {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                }
+                            }
+                            
+                            Behavior on transform {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                                }
+                            }
+
+                            Behavior on color {
+                                ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                            
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: selectedIndex === index ? 3 : 0
+                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                Behavior on width {
+                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                }
+>>>>>>> master
                             }
                             
                             property string packageName: model.name || "Unknown"
                             property string packageDescription: model.description || ""
                             
+<<<<<<< HEAD
                             Column {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 20
@@ -3028,6 +4214,36 @@ PanelWindow {
                                     visible: aurPackageItem.packageDescription && aurPackageItem.packageDescription.length > 0
                                 }
                             }
+=======
+                                Column {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.leftMargin: 16
+                                    anchors.rightMargin: 16
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 2
+                                    width: parent.width - 32
+                                    Text {
+                                        text: aurPackageItem.packageName
+                                        font.pixelSize: 15
+                                        font.family: "sans-serif"
+                                        font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        width: parent.width
+                                        elide: Text.ElideRight
+                                    }
+                                    Text {
+                                        text: aurPackageItem.packageDescription
+                                        font.pixelSize: 12
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        opacity: 0.7
+                                        width: parent.width
+                                        elide: Text.ElideRight
+                                        visible: aurPackageItem.packageDescription && aurPackageItem.packageDescription.length > 0
+                                    }
+                                }
+>>>>>>> master
                             
                             MouseArea {
                                 id: aurPackageItemMouseArea
@@ -3054,11 +4270,19 @@ PanelWindow {
                 }
             }
             
+<<<<<<< HEAD
             // Wybór źródła usuwania (Pacman/AUR) - gdy currentPackageMode === 3
+=======
+            // Wybór źródła usuwania (Pacman/AUR) – ten sam wygląd co strona główna
+>>>>>>> master
             ListView {
                 id: removeSourceList
                 anchors.fill: parent
                 anchors.margins: 20
+<<<<<<< HEAD
+=======
+                spacing: 8
+>>>>>>> master
                 visible: currentMode === 1 && currentPackageMode === 3
                 clip: true
                 z: 1
@@ -3071,6 +4295,7 @@ PanelWindow {
                 delegate: Rectangle {
                     id: removeSourceItem
                     width: removeSourceList.width
+<<<<<<< HEAD
                     height: 72
                     color: "transparent"
                     radius: 0
@@ -3097,18 +4322,66 @@ PanelWindow {
                         ColorAnimation { 
                             duration: 200
                             easing.type: Easing.OutCubic
+=======
+                    height: 50
+                    radius: 0
+                    color: (selectedIndex === index || removeSourceItemMouseArea.containsMouse) ?
+                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                        "transparent"
+                    
+                    opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 3) ? 1 : 0
+                    scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 3) ? 1 : 0.8
+                    
+                    transform: Translate {
+                        y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 3) ? 0 : 40
+                    }
+
+                    Behavior on opacity {
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+>>>>>>> master
                         }
                     }
                     
                     Behavior on scale {
+<<<<<<< HEAD
                         NumberAnimation {
                             duration: 200
                             easing.type: Easing.OutCubic
+=======
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                        }
+                    }
+                    
+                    Behavior on transform {
+                        SequentialAnimation {
+                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                        }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        width: selectedIndex === index ? 3 : 0
+                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                        Behavior on width {
+                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+>>>>>>> master
                         }
                     }
                     
                     Row {
                         anchors.left: parent.left
+<<<<<<< HEAD
                         anchors.leftMargin: 20
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 16
@@ -3124,20 +4397,53 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 4
                             
+=======
+                        anchors.right: parent.right
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 12
+                        Text {
+                            text: model.icon || ""
+                            font.pixelSize: 20
+                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                            width: 24
+                            horizontalAlignment: Text.AlignLeft
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2
+                            width: parent.width - 36
+>>>>>>> master
                             Text {
                                 text: model.name || "Unknown"
                                 font.pixelSize: 15
                                 font.family: "sans-serif"
+<<<<<<< HEAD
                                 font.weight: selectedIndex === index ? Font.Bold : Font.Medium
                                 color: selectedIndex === index ? colorText : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
                             }
                             
+=======
+                                font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                width: parent.width
+                                elide: Text.ElideRight
+                            }
+>>>>>>> master
                             Text {
                                 text: model.description || ""
                                 font.pixelSize: 12
                                 font.family: "sans-serif"
                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+<<<<<<< HEAD
                                 opacity: selectedIndex === index ? 0.85 : (removeSourceItemMouseArea.containsMouse ? 0.75 : 0.6)
+=======
+                                opacity: 0.7
+                                width: parent.width
+                                elide: Text.ElideRight
+>>>>>>> master
                             }
                         }
                     }
@@ -3176,9 +4482,14 @@ PanelWindow {
                 }
                 
                 highlight: Rectangle {
+<<<<<<< HEAD
                     color: colorPrimary
                     radius: 0
                     
+=======
+                    color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
+                    radius: 0
+>>>>>>> master
                     Behavior on color {
                         ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                     }
@@ -3195,16 +4506,37 @@ PanelWindow {
                 Column {
                     id: removeSearchColumn
                     anchors.fill: parent
+<<<<<<< HEAD
                     spacing: 11
+=======
+                    spacing: 8
+>>>>>>> master
                     
                     // Pole wyszukiwania
                     Rectangle {
                         id: removeSearchBox
                         width: parent.width
+<<<<<<< HEAD
                         height: 48
                         color: removeSearchInput.activeFocus ? colorPrimary : colorSecondary
                         radius: 0
                         
+=======
+                        height: 30
+                        color: removeSearchInput.activeFocus ? colorPrimary : colorSecondary
+                        radius: 0
+                        
+                        opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 4) ? 1 : 0
+                        scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 4) ? 1 : 0.9
+                        transform: Translate {
+                            y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 4) ? 0 : 20
+                        }
+
+                        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
+                        Behavior on transform { PropertyAnimation { property: "y"; duration: 600; easing.type: Easing.OutBack } }
+
+>>>>>>> master
                         Behavior on color {
                             ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                         }
@@ -3212,8 +4544,13 @@ PanelWindow {
                         TextInput {
                             id: removeSearchInput
                             anchors.fill: parent
+<<<<<<< HEAD
                             anchors.margins: 20
                             font.pixelSize: 14
+=======
+                            anchors.margins: 14
+                            font.pixelSize: 18
+>>>>>>> master
                             font.family: "sans-serif"
                             color: colorText
                             verticalAlignment: TextInput.AlignVCenter
@@ -3244,7 +4581,10 @@ PanelWindow {
                                 } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                     if (filteredInstalledPackages.count > 0 && selectedIndex >= 0 && selectedIndex < filteredInstalledPackages.count) {
                                         var pkg = filteredInstalledPackages.get(selectedIndex)
+<<<<<<< HEAD
                                         console.log("Removing package:", pkg, "name:", pkg ? pkg.name : "null")
+=======
+>>>>>>> master
                                         if (pkg && pkg.name) {
                                             if (currentPackageMode === 4) {
                                             removePacmanPackage(pkg.name)
@@ -3252,10 +4592,15 @@ PanelWindow {
                                                 removeAurPackage(pkg.name)
                                             }
                                         } else {
+<<<<<<< HEAD
                                             console.log("Package data invalid:", pkg)
                                         }
                                     } else {
                                         console.log("No package selected or list empty. Count:", filteredInstalledPackages.count, "Selected:", selectedIndex)
+=======
+                                        }
+                                    } else {
+>>>>>>> master
                                     }
                                     event.accepted = true
                                 } else if (event.key === Qt.Key_Escape) {
@@ -3274,7 +4619,11 @@ PanelWindow {
                             anchors.fill: removeSearchInput
                             anchors.margins: 0
                             text: "Search installed packages..."
+<<<<<<< HEAD
                             font.pixelSize: 14
+=======
+                            font.pixelSize: 18
+>>>>>>> master
                             font.family: "sans-serif"
                             color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             verticalAlignment: Text.AlignVCenter
@@ -3283,18 +4632,27 @@ PanelWindow {
                         }
                     }
                     
+<<<<<<< HEAD
                     // Lista zainstalowanych pakietów
+=======
+                    // Lista zainstalowanych pakietów – ten sam wygląd co strona główna
+>>>>>>> master
                     ListView {
                         id: removePackagesList
                         width: parent.width
                         height: parent.height - removeSearchBox.height - parent.spacing
                         clip: true
+<<<<<<< HEAD
+=======
+                        spacing: 8
+>>>>>>> master
                         
                         model: filteredInstalledPackages
                         
                         delegate: Rectangle {
                             id: installedPackageItem
                             width: removePackagesList.width
+<<<<<<< HEAD
                             height: 72
                             color: "transparent"
                             radius: 0
@@ -3322,11 +4680,61 @@ PanelWindow {
                             duration: 200
                             easing.type: Easing.OutCubic
                         }
+=======
+                            height: 50
+                            radius: 0
+                            color: (selectedIndex === index || installedPackageItemMouseArea.containsMouse) ?
+                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                                "transparent"
+                            
+                            opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && (currentPackageMode === 4 || currentPackageMode === 5)) ? 1 : 0
+                            scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && (currentPackageMode === 4 || currentPackageMode === 5)) ? 1 : 0.8
+                            
+                            transform: Translate {
+                                y: (sharedData && sharedData.launcherVisible && currentMode === 1 && (currentPackageMode === 4 || currentPackageMode === 5)) ? 0 : 40
+                            }
+
+                            Behavior on opacity {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            
+                            Behavior on scale {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                }
+                            }
+                            
+                            Behavior on transform {
+                                SequentialAnimation {
+                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                                }
+                            }
+
+                            Behavior on color {
+                                ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                            
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: selectedIndex === index ? 3 : 0
+                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                Behavior on width {
+                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                }
+>>>>>>> master
                             }
                             
                             property string packageName: model.name || "Unknown"
                             property string packageVersion: model.version || ""
                             
+<<<<<<< HEAD
                             Column {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 20
@@ -3348,6 +4756,46 @@ PanelWindow {
                                     color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
                                     opacity: selectedIndex === index ? 0.85 : (installedPackageItemMouseArea.containsMouse ? 0.75 : 0.6)
                                     visible: installedPackageItem.packageVersion && installedPackageItem.packageVersion.length > 0
+=======
+                            Row {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 12
+                                Text {
+                                    text: "󰏖"
+                                    font.pixelSize: 20
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                    width: 24
+                                    horizontalAlignment: Text.AlignLeft
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 2
+                                    width: parent.width - 36
+                                    Text {
+                                        text: installedPackageItem.packageName
+                                        font.pixelSize: 15
+                                        font.family: "sans-serif"
+                                        font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        width: parent.width
+                                        elide: Text.ElideRight
+                                    }
+                                    Text {
+                                        text: installedPackageItem.packageVersion
+                                        font.pixelSize: 12
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        opacity: 0.7
+                                        width: parent.width
+                                        elide: Text.ElideRight
+                                        visible: installedPackageItem.packageVersion && installedPackageItem.packageVersion.length > 0
+                                    }
+>>>>>>> master
                                 }
                             }
                             
@@ -3390,16 +4838,37 @@ PanelWindow {
                 Column {
                     id: removeAurSearchColumn
                     anchors.fill: parent
+<<<<<<< HEAD
                     spacing: 11
+=======
+                    spacing: 8
+>>>>>>> master
                     
                     // Pole wyszukiwania
                     Rectangle {
                         id: removeAurSearchBox
                         width: parent.width
+<<<<<<< HEAD
                         height: 48
                         color: removeAurSearchInput.activeFocus ? colorPrimary : colorSecondary
                         radius: 0
                         
+=======
+                        height: 30
+                        color: removeAurSearchInput.activeFocus ? colorPrimary : colorSecondary
+                        radius: 0
+                        
+                        opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 5) ? 1 : 0
+                        scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 5) ? 1 : 0.9
+                        transform: Translate {
+                            y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 5) ? 0 : 20
+                        }
+
+                        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
+                        Behavior on transform { PropertyAnimation { property: "y"; duration: 600; easing.type: Easing.OutBack } }
+
+>>>>>>> master
                         Behavior on color {
                             ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                         }
@@ -3407,8 +4876,13 @@ PanelWindow {
                         TextInput {
                             id: removeAurSearchInput
                             anchors.fill: parent
+<<<<<<< HEAD
                             anchors.margins: 20
                             font.pixelSize: 14
+=======
+                            anchors.margins: 14
+                            font.pixelSize: 18
+>>>>>>> master
                             font.family: "sans-serif"
                             color: colorText
                             verticalAlignment: TextInput.AlignVCenter
@@ -3439,6 +4913,7 @@ PanelWindow {
                                 } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                     if (filteredInstalledPackages.count > 0 && selectedIndex >= 0 && selectedIndex < filteredInstalledPackages.count) {
                                         var pkg = filteredInstalledPackages.get(selectedIndex)
+<<<<<<< HEAD
                                         console.log("Removing AUR package:", pkg, "name:", pkg ? pkg.name : "null")
                                         if (pkg && pkg.name) {
                                             removeAurPackage(pkg.name)
@@ -3447,6 +4922,13 @@ PanelWindow {
                                         }
                                     } else {
                                         console.log("No package selected or list empty. Count:", filteredInstalledPackages.count, "Selected:", selectedIndex)
+=======
+                                        if (pkg && pkg.name) {
+                                            removeAurPackage(pkg.name)
+                                        } else {
+                                        }
+                                    } else {
+>>>>>>> master
                                     }
                                     event.accepted = true
                                 } else if (event.key === Qt.Key_Escape) {
@@ -3465,7 +4947,11 @@ PanelWindow {
                             anchors.fill: removeAurSearchInput
                             anchors.margins: 0
                             text: "Search installed AUR packages..."
+<<<<<<< HEAD
                             font.pixelSize: 14
+=======
+                            font.pixelSize: 18
+>>>>>>> master
                             font.family: "sans-serif"
                             color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#666666"
                             verticalAlignment: Text.AlignVCenter
@@ -3474,18 +4960,27 @@ PanelWindow {
                         }
                     }
                     
+<<<<<<< HEAD
                     // Lista zainstalowanych pakietów AUR
+=======
+                    // Lista zainstalowanych pakietów AUR – ten sam wygląd co strona główna
+>>>>>>> master
                     ListView {
                         id: removeAurPackagesList
                         width: parent.width
                         height: parent.height - removeAurSearchBox.height - parent.spacing
                         clip: true
+<<<<<<< HEAD
+=======
+                        spacing: 8
+>>>>>>> master
                         
                         model: filteredInstalledPackages
                         
                         delegate: Rectangle {
                             id: installedAurPackageItem
                             width: removeAurPackagesList.width
+<<<<<<< HEAD
                             height: 72
                             color: "transparent"
                             radius: 0
@@ -3520,11 +5015,33 @@ PanelWindow {
                             duration: 180
                             easing.type: Easing.OutQuart
                         }
+=======
+                            height: 50
+                            radius: 0
+                            color: (selectedIndex === index || installedAurPackageItemMouseArea.containsMouse) ?
+                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
+                                "transparent"
+                            
+                            Behavior on color {
+                                ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                            
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: selectedIndex === index ? 3 : 0
+                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                Behavior on width {
+                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                }
+>>>>>>> master
                             }
                             
                             property string packageName: model.name || "Unknown"
                             property string packageVersion: model.version || ""
                             
+<<<<<<< HEAD
                             Column {
                                 anchors.left: parent.left
                                 anchors.leftMargin: 20
@@ -3545,6 +5062,46 @@ PanelWindow {
                                     font.family: "sans-serif"
                                     color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
                                     visible: installedAurPackageItem.packageVersion && installedAurPackageItem.packageVersion.length > 0
+=======
+                            Row {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 12
+                                Text {
+                                    text: "󰣇"
+                                    font.pixelSize: 20
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                    width: 24
+                                    horizontalAlignment: Text.AlignLeft
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 2
+                                    width: parent.width - 36
+                                    Text {
+                                        text: installedAurPackageItem.packageName
+                                        font.pixelSize: 15
+                                        font.family: "sans-serif"
+                                        font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        width: parent.width
+                                        elide: Text.ElideRight
+                                    }
+                                    Text {
+                                        text: installedAurPackageItem.packageVersion
+                                        font.pixelSize: 12
+                                        font.family: "sans-serif"
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        opacity: 0.7
+                                        width: parent.width
+                                        elide: Text.ElideRight
+                                        visible: installedAurPackageItem.packageVersion && installedAurPackageItem.packageVersion.length > 0
+                                    }
+>>>>>>> master
                                 }
                             }
                             
@@ -3572,6 +5129,7 @@ PanelWindow {
                     }
                 }
             }
+<<<<<<< HEAD
             
             // Tryb 3: Notes
             Item {
@@ -3882,3 +5440,8 @@ PanelWindow {
             }
         }
     }
+=======
+        }
+    }
+}
+>>>>>>> master

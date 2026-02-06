@@ -16,8 +16,13 @@ PanelWindow {
     anchors.right: (sharedData && sharedData.sidebarPosition === "top") ? true : false
     anchors.top: true
     anchors.bottom: true
+<<<<<<< HEAD
     implicitWidth: 320
     implicitHeight: 500
+=======
+    implicitWidth: 288
+    implicitHeight: 533
+>>>>>>> master
     
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qsclipboard"
@@ -26,6 +31,7 @@ PanelWindow {
 
     property var sharedData: null
     
+<<<<<<< HEAD
     visible: true
     color: "transparent"
     
@@ -41,6 +47,27 @@ PanelWindow {
     margins {
         top: topMargin
         bottom: 8
+=======
+    // Fix: Unmap window when not visible to avoid blocking clicks
+    visible: (sharedData && sharedData.clipboardVisible) || opacityBinding > 0.01
+    
+    // Use an internal property to track animation state if needed, or rely on bind
+    property real opacityBinding: 0
+    Behavior on opacityBinding { NumberAnimation { duration: 300 } }
+    Binding on opacityBinding { value: (sharedData && sharedData.clipboardVisible) ? 1.0 : 0.0 }
+
+    color: "transparent"
+    
+    // Marginesy dopasowane do sidebar 37px (80%)
+    property int slideOffsetLeft: (sharedData && sharedData.clipboardVisible) ? 41 : -implicitWidth
+    property int slideOffsetRight: (sharedData && sharedData.clipboardVisible) ? 21 : -implicitWidth
+    
+    property int topMargin: (sharedData && sharedData.sidebarPosition === "top" && sharedData.sidebarVisible) ? 43 : 7
+    
+    margins {
+        top: topMargin
+        bottom: 7
+>>>>>>> master
         left: (sharedData && sharedData.sidebarPosition === "left") ? slideOffsetLeft : 0
         right: (sharedData && sharedData.sidebarPosition === "top") ? slideOffsetRight : 0
     }
@@ -103,30 +130,60 @@ PanelWindow {
             }
         }
         
+<<<<<<< HEAD
+=======
+        // Material Design clipboard background with elevation
+>>>>>>> master
         Rectangle {
             id: clipboardBackground
             anchors.fill: parent
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0a0a0a"
             radius: 0
             
+<<<<<<< HEAD
             Column {
                 anchors.fill: parent
                 anchors.margins: 16
                 spacing: 12
+=======
+            // Material Design elevation shadow
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -3
+                color: "transparent"
+                border.color: Qt.rgba(0, 0, 0, 0.25)  // Material shadow
+                border.width: 2
+                z: -1
+            }
+            
+            Column {
+                anchors.fill: parent
+                anchors.margins: 13
+                spacing: 7
+>>>>>>> master
                 
                 // Header
                 Row {
                     width: parent.width
+<<<<<<< HEAD
                     spacing: 12
                     
                     Text {
                         text: "󰨸 Clipboard"
                         font.pixelSize: 18
+=======
+                    spacing: 9
+                    
+                    Text {
+                        text: "󰨸 Clipboard"
+                        font.pixelSize: 15
+>>>>>>> master
                         font.family: "sans-serif"
                         font.weight: Font.Bold
                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                     }
                     
+<<<<<<< HEAD
                     Item { width: parent.width - 200; height: 1 }
                     
                     Rectangle {
@@ -138,6 +195,40 @@ PanelWindow {
                             ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
                         
                         property real buttonScale: clearButtonMouseArea.pressed ? 0.9 : (clearButtonMouseArea.containsMouse ? 1.1 : 1.0)
+=======
+                    Item { width: parent.width - 160; height: 1 }
+                    
+                    // Material Design button with elevation
+                    Rectangle {
+                        id: clearButtonRect
+                        width: 25
+                        height: 25
+                        radius: 0
+                        // Material Design button color
+                        color: clearButtonMouseArea.containsMouse ? 
+                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
+                            ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a")
+                        
+                        property real buttonScale: clearButtonMouseArea.pressed ? 0.95 : (clearButtonMouseArea.containsMouse ? 1.05 : 1.0)
+                        property real buttonElevation: clearButtonMouseArea.pressed ? 1 : (clearButtonMouseArea.containsMouse ? 3 : 2)
+                        
+                        // Material Design elevation shadow
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: -clearButtonRect.buttonElevation
+                            color: "transparent"
+                            border.color: Qt.rgba(0, 0, 0, 0.15 + clearButtonRect.buttonElevation * 0.05)
+                            border.width: clearButtonRect.buttonElevation
+                            z: -1
+                            
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 200
+                                    easing.type: Easing.OutQuart
+                                }
+                            }
+                        }
+>>>>>>> master
                         
                         Behavior on color {
                             ColorAnimation {
@@ -157,7 +248,11 @@ PanelWindow {
                         
                         Text {
                             text: "󰆐"
+<<<<<<< HEAD
                             font.pixelSize: 16
+=======
+                            font.pixelSize: 13
+>>>>>>> master
                             anchors.centerIn: parent
                             color: clearButtonMouseArea.containsMouse ? 
                                 ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
@@ -186,21 +281,57 @@ PanelWindow {
                 // History list
                 ScrollView {
                     width: parent.width
+<<<<<<< HEAD
                     height: parent.height - 60
+=======
+                    height: parent.height - 42
+>>>>>>> master
                     
                     ListView {
                         id: clipboardListView
                         model: clipboardHistoryModel
+<<<<<<< HEAD
                         spacing: 8
                         
                         delegate: Rectangle {
                             width: clipboardListView.width
                             height: Math.max(40, contentText.implicitHeight + 16)
                             radius: 0
+=======
+                        spacing: 6
+                        
+                        delegate: Rectangle {
+                            width: clipboardListView.width
+                            height: Math.max(32, contentText.implicitHeight + 13)
+                            radius: 0
+                            // Material Design card color
+>>>>>>> master
                             color: itemMouseArea.containsMouse ? 
                                 ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a")
                             
+<<<<<<< HEAD
+=======
+                            property real cardElevation: itemMouseArea.containsMouse ? 2 : 1
+                            
+                            // Material Design elevation shadow
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: -cardElevation
+                                color: "transparent"
+                                border.color: Qt.rgba(0, 0, 0, 0.15 + cardElevation * 0.05)
+                                border.width: cardElevation
+                                z: -1
+                                
+                                Behavior on border.color {
+                                    ColorAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutQuart
+                                    }
+                                }
+                            }
+                            
+>>>>>>> master
                             Behavior on color {
                                 ColorAnimation {
                                     duration: 200
@@ -219,7 +350,11 @@ PanelWindow {
                                     var txt = model.text || ""
                                     return txt.length > 100 ? txt.substring(0, 100) + "..." : txt
                                 }
+<<<<<<< HEAD
                                 font.pixelSize: 13
+=======
+                                font.pixelSize: 10
+>>>>>>> master
                                 font.family: "sans-serif"
                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                 wrapMode: Text.Wrap
@@ -259,11 +394,15 @@ PanelWindow {
     property string lastClipboardContent: ""
     
     function checkClipboard() {
+<<<<<<< HEAD
         // Use wl-paste to read clipboard content (Wayland)
         // Write clipboard content to temp file
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'wl-paste > /tmp/quickshell_clipboard_content 2>/dev/null || echo \"\" > /tmp/quickshell_clipboard_content']; running: true }", clipboardManagerRoot)
         // Wait a moment and read the result
         Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: clipboardManagerRoot.readClipboardContent() }", clipboardManagerRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'wl-paste > /tmp/quickshell_clipboard_content 2>/dev/null || echo "" > /tmp/quickshell_clipboard_content'], readClipboardContent)
+>>>>>>> master
     }
     
     function readClipboardContent() {
@@ -308,17 +447,26 @@ PanelWindow {
     }
     
     function copyToClipboard(text) {
+<<<<<<< HEAD
         // Write text to temp file first, then copy from file to clipboard
         // This avoids shell escaping issues
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo -n \"' + text.replace(/\\\"/g, '\\\\\"').replace(/\$/g, '\\\\$').replace(/`/g, '\\\\`') + '\" > /tmp/quickshell_clipboard_copy']; running: true }", clipboardManagerRoot)
         // Wait a moment and copy to clipboard
         Qt.createQmlObject("import QtQuick; Timer { interval: 50; running: true; repeat: false; onTriggered: clipboardManagerRoot.copyFromFile() }", clipboardManagerRoot)
+=======
+        var esc = text.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$").replace(/`/g, "\\`")
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo -n "' + esc + '" > /tmp/quickshell_clipboard_copy'], copyFromFile)
+>>>>>>> master
         lastClipboardContent = text
     }
     
     function copyFromFile() {
+<<<<<<< HEAD
         // Copy from file to clipboard using wl-copy (Wayland)
         Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'cat /tmp/quickshell_clipboard_copy | wl-copy']; running: true }", clipboardManagerRoot)
+=======
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'cat /tmp/quickshell_clipboard_copy | wl-copy'])
+>>>>>>> master
     }
     
     Component.onCompleted: {
