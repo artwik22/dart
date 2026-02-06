@@ -18,10 +18,6 @@ Rectangle {
     // Helper function to start auto-dismiss timer
     function startAutoDismissTimer() {
         if (timerStarted) {
-<<<<<<< HEAD
-            console.log("Timer already started, skipping")
-=======
->>>>>>> master
             return
         }
         
@@ -29,20 +25,12 @@ Rectangle {
         var notif = notification || storedNotification
         
         if (!notif) {
-<<<<<<< HEAD
-            console.log("No notification available, cannot start timer. notification:", notification, "storedNotification:", storedNotification)
-=======
->>>>>>> master
             return
         }
         
         // Check expireTimeout - handle undefined, null, 0, -1, and positive values
         var expireTimeout = notif.expireTimeout
         
-<<<<<<< HEAD
-        console.log("startAutoDismissTimer: expireTimeout =", expireTimeout, "type:", typeof expireTimeout)
-=======
->>>>>>> master
         
         // Always use default 5 seconds for auto-dismiss, regardless of expireTimeout
         // Many notifications have expireTimeout = -1, but we want them to auto-dismiss anyway
@@ -52,18 +40,9 @@ Rectangle {
         if (expireTimeout && expireTimeout > 0 && expireTimeout !== -1) {
             // Use the notification's timeout if it's valid and positive
             timeout = expireTimeout
-<<<<<<< HEAD
-            console.log("Using notification's expireTimeout:", timeout)
-        } else {
-            console.log("Using default timeout: 5000ms (expireTimeout was:", expireTimeout, ")")
-        }
-        
-        console.log("Starting auto-dismiss timer with interval:", timeout, "ms")
-=======
         } else {
         }
         
->>>>>>> master
         
         // Stop timer if already running
         if (autoDismissTimer.running) {
@@ -73,13 +52,7 @@ Rectangle {
         // Set interval first
         autoDismissTimer.interval = timeout
         
-<<<<<<< HEAD
-        console.log("About to call autoDismissTimer.start() - interval:", timeout)
         autoDismissTimer.start()
-        console.log("autoDismissTimer.start() called - running:", autoDismissTimer.running)
-=======
-        autoDismissTimer.start()
->>>>>>> master
         
         // Start progress bar animation - wait for progressBar to be ready
         var startProgressAnimation = function() {
@@ -92,13 +65,7 @@ Rectangle {
                 progressBarAnimation.duration = timeout
                 // Start animation
                 progressBarAnimation.start()
-<<<<<<< HEAD
-                console.log("Progress bar animation started - from:", progressBar.width, "to: 0, duration:", timeout, "ms")
             } else {
-                console.log("Progress bar not ready, retrying...")
-=======
-            } else {
->>>>>>> master
                 // Retry after a short delay
                 var retryTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 200; running: true; repeat: false }', notificationItem)
                 retryTimer.triggered.connect(startProgressAnimation)
@@ -110,18 +77,10 @@ Rectangle {
         
         timerStarted = true
         
-<<<<<<< HEAD
-        console.log("Auto-dismiss timer started - running:", autoDismissTimer.running, "interval:", autoDismissTimer.interval)
-=======
->>>>>>> master
         
         // Verify after a moment
         var verifyTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 200; running: true; repeat: false }', notificationItem)
         verifyTimer.triggered.connect(function() {
-<<<<<<< HEAD
-            console.log("Timer verification after 200ms - running:", autoDismissTimer.running, "interval:", autoDismissTimer.interval, "timerStarted:", timerStarted)
-=======
->>>>>>> master
         })
     }
     
@@ -132,30 +91,16 @@ Rectangle {
         running: false
         repeat: false
         onTriggered: {
-<<<<<<< HEAD
-            console.log("=== Auto-dismiss timer TRIGGERED ===")
-            console.log("Timer interval was:", interval, "ms")
-            console.log("Calling startExitAnimation()")
             startExitAnimation()
         }
         onRunningChanged: {
-            console.log("autoDismissTimer.running changed to:", running)
-=======
-            startExitAnimation()
-        }
-        onRunningChanged: {
->>>>>>> master
         }
     }
     
     // Progress bar width property - will be animated from full to zero
     property real progressBarWidth: 0
     
-<<<<<<< HEAD
-    width: 380
-=======
     width: 304
->>>>>>> master
     height: notificationContent.height + 32
     radius: 0
     color: getBackgroundColor()
@@ -235,11 +180,7 @@ Rectangle {
                     Text {
                         id: appNameText
                         text: "Notification"  // Default, will be updated in onNotificationChanged
-<<<<<<< HEAD
-                        font.pixelSize: 12
-=======
                         font.pixelSize: 9
->>>>>>> master
                         font.family: "sans-serif"
                         font.weight: Font.Bold
                         color: sharedData && sharedData.colorAccent ? Qt.lighter(sharedData.colorAccent, 1.2) : "#9aa0a6"
@@ -252,11 +193,7 @@ Rectangle {
                     Text {
                         id: summaryText
                         text: ""  // Will be updated in onNotificationChanged
-<<<<<<< HEAD
-                        font.pixelSize: 15
-=======
                         font.pixelSize: 13
->>>>>>> master
                         font.family: "sans-serif"
                         font.weight: Font.DemiBold
                         color: "#ffffff"
@@ -269,13 +206,8 @@ Rectangle {
                 // Close button with enhanced styling
                 Item {
                     id: closeButton
-<<<<<<< HEAD
-                    width: 32
-                    height: 32
-=======
                     width: 25
                     height: 25
->>>>>>> master
                     anchors.verticalCenter: iconRect.visible ? iconRect.verticalCenter : textColumn.verticalCenter
                     
                     Rectangle {
@@ -321,11 +253,7 @@ Rectangle {
                     
                     Text {
                         text: "󰅖"
-<<<<<<< HEAD
-                        font.pixelSize: 16
-=======
                         font.pixelSize: 13
->>>>>>> master
                         anchors.centerIn: parent
                         color: closeButtonMouseArea.containsMouse ? 
                             "#ffffff" : 
@@ -350,34 +278,18 @@ Rectangle {
                         acceptedButtons: Qt.LeftButton
                         enabled: true
                         onClicked: function(mouse) {
-<<<<<<< HEAD
-                            console.log("=== CLOSE BUTTON CLICKED ===")
-=======
->>>>>>> master
                             mouse.accepted = true
                             
                             // Try to dismiss notification - use storedNotification as fallback
                             var notif = notificationItem.notification || notificationItem.storedNotification
                             if (notif) {
-<<<<<<< HEAD
-                                console.log("Calling notification.dismiss()")
                                 try {
                                     notif.dismiss()
                                 } catch(e) {
-                                    console.log("Error dismissing:", e)
-=======
-                                try {
-                                    notif.dismiss()
-                                } catch(e) {
->>>>>>> master
                                     // Fallback: start exit animation
                                     notificationItem.startExitAnimation()
                                 }
                             } else {
-<<<<<<< HEAD
-                                console.log("notification is null, starting exit animation")
-=======
->>>>>>> master
                                 // If notification is null, start exit animation
                                 notificationItem.startExitAnimation()
                             }
@@ -390,11 +302,7 @@ Rectangle {
             Text {
                 id: bodyText
                 text: ""  // Will be updated in onNotificationChanged
-<<<<<<< HEAD
-                font.pixelSize: 13
-=======
                 font.pixelSize: 10
->>>>>>> master
                 font.family: "sans-serif"
                 font.weight: Font.Normal
                 color: "#b0b0b0"
@@ -432,11 +340,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-<<<<<<< HEAD
-        height: 3  // Increased height for better visibility
-=======
         height: 2
->>>>>>> master
         color: "transparent"  // Background is transparent, only the fill is visible
         visible: true  // Always visible when notification exists
         z: 100  // Ensure it's above other elements
@@ -482,10 +386,6 @@ Rectangle {
             var clickX = mouse.x
             var buttonAreaStart = width - 50
             if (clickX < buttonAreaStart) {
-<<<<<<< HEAD
-                console.log("Notification clicked, dismissing")
-=======
->>>>>>> master
                 if (notification) {
                     notification.dismiss()
                 } else {
@@ -496,11 +396,7 @@ Rectangle {
     }
     
     // Animation states
-<<<<<<< HEAD
-    property real slideOffset: 450  // Start further off-screen
-=======
     property real slideOffset: 304  // Start exactly at the width of the item
->>>>>>> master
     property real fadeOpacity: 0.0  // Start invisible
     property real itemScale: 0.95   // Slight scale start
     
@@ -517,10 +413,6 @@ Rectangle {
     
     // Component.onCompleted - update texts if notification is already set
     Component.onCompleted: {
-<<<<<<< HEAD
-        console.log("=== NotificationItem Component.onCompleted ===")
-=======
->>>>>>> master
         
         if (notification) {
             storedNotification = notification
@@ -578,11 +470,7 @@ Rectangle {
         NumberAnimation {
             target: notificationItem
             property: "slideOffset"
-<<<<<<< HEAD
-            from: 450
-=======
             from: 304
->>>>>>> master
             to: 0
             duration: 600
             easing.type: Easing.OutExpo
@@ -619,11 +507,7 @@ Rectangle {
             NumberAnimation {
                 target: notificationItem
                 property: "slideOffset"
-<<<<<<< HEAD
-                to: 450
-=======
                 to: 304
->>>>>>> master
                 duration: 500
                 easing.type: Easing.InExpo
             }
@@ -655,10 +539,6 @@ Rectangle {
         enabled: notification !== null
         
         function onClosed(reason) {
-<<<<<<< HEAD
-            console.log("Notification closed signal received, reason:", reason)
-=======
->>>>>>> master
             startExitAnimation()
         }
     }

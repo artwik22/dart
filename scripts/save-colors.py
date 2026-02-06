@@ -3,11 +3,7 @@ import json
 import sys
 import os
 
-<<<<<<< HEAD
-# Load existing colors.json if it exists to preserve lastWallpaper
-=======
 # Load existing colors.json if it exists to preserve additional settings
->>>>>>> master
 existing_data = {}
 if len(sys.argv) > 6 and os.path.exists(sys.argv[6]):
     try:
@@ -31,15 +27,12 @@ if "colorPreset" in existing_data:
     colors["colorPreset"] = existing_data["colorPreset"]
 if "sidebarPosition" in existing_data:
     colors["sidebarPosition"] = existing_data["sidebarPosition"]
-<<<<<<< HEAD
-=======
 if "sidebarVisible" in existing_data:
     colors["sidebarVisible"] = existing_data["sidebarVisible"]
 if "sidepanelContent" in existing_data:
     colors["sidepanelContent"] = existing_data["sidepanelContent"]
 if "githubUsername" in existing_data:
     colors["githubUsername"] = existing_data["githubUsername"]
->>>>>>> master
 
 # Override with provided values if they exist
 # Argument 7: lastWallpaper
@@ -59,8 +52,6 @@ if "notificationsEnabled" in existing_data:
     colors["notificationsEnabled"] = existing_data["notificationsEnabled"]
 if "notificationSoundsEnabled" in existing_data:
     colors["notificationSoundsEnabled"] = existing_data["notificationSoundsEnabled"]
-<<<<<<< HEAD
-=======
 if "rounding" in existing_data:
     colors["rounding"] = existing_data["rounding"]
 if "showHiddenFiles" in existing_data:
@@ -89,7 +80,6 @@ if "autofloatHeight" in existing_data:
     colors["autofloatHeight"] = existing_data["autofloatHeight"]
 if "scriptsUseLockscreen" in existing_data:
     colors["scriptsUseLockscreen"] = existing_data["scriptsUseLockscreen"]
->>>>>>> master
 
 # Override with provided values if they exist
 # Argument 10: notificationsEnabled
@@ -100,11 +90,6 @@ if len(sys.argv) > 10 and sys.argv[10]:
 if len(sys.argv) > 11 and sys.argv[11]:
     colors["notificationSoundsEnabled"] = sys.argv[11] == "true"
 
-<<<<<<< HEAD
-with open(sys.argv[6], 'w') as f:
-    json.dump(colors, f, indent=2)
-
-=======
 # Argument 12: sidebarVisible
 if len(sys.argv) > 12 and sys.argv[12]:
     colors["sidebarVisible"] = sys.argv[12] == "true"
@@ -201,4 +186,3 @@ apply_script = os.path.join(os.path.expanduser("~"), ".config/alloy/scripts/appl
 if os.path.exists(apply_script):
     os.system(f'"{apply_script}" &')
 
->>>>>>> master

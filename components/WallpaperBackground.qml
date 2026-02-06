@@ -7,13 +7,7 @@ PanelWindow {
     
     required property var screen
     property string currentWallpaper: ""
-<<<<<<< HEAD
-    
-    screen: wallpaperWindow.screen
-    
-=======
 
->>>>>>> master
     anchors {
         left: true
         top: true
@@ -21,19 +15,11 @@ PanelWindow {
         bottom: true
     }
     
-<<<<<<< HEAD
-    implicitWidth: screen ? screen.width : 1920
-    implicitHeight: screen ? screen.height : 1080
-    
-    WlrLayershell.layer: WlrLayer.Background
-    WlrLayershell.namespace: "qswallpaper"
-=======
     implicitWidth: screen ? screen.width : 2160
     implicitHeight: screen ? screen.height : 1440
     
     WlrLayershell.layer: WlrLayer.Background
     WlrLayershell.namespace: "qswallpaper-" + (screen && screen.name ? screen.name : "0")
->>>>>>> master
     exclusiveZone: -1  // Pełny ekran
     
     visible: true
@@ -47,10 +33,6 @@ PanelWindow {
     }
     
     onCurrentWallpaperChanged: {
-<<<<<<< HEAD
-        console.log("WallpaperBackground: currentWallpaper changed to:", currentWallpaper)
-=======
->>>>>>> master
     }
     
     // Image element do wyświetlenia tapety
@@ -60,21 +42,11 @@ PanelWindow {
         source: currentWallpaper ? (currentWallpaper.startsWith("/") ? "file://" + currentWallpaper : currentWallpaper) : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
-<<<<<<< HEAD
-        cache: false  // Disable cache to always show latest version
-        
-        onStatusChanged: {
-            if (status === Image.Error) {
-                console.log("WallpaperBackground: Error loading wallpaper:", source)
-            } else if (status === Image.Ready) {
-                console.log("WallpaperBackground: Successfully loaded wallpaper:", source)
-=======
         cache: true
         
         onStatusChanged: {
             if (status === Image.Error) {
             } else if (status === Image.Ready) {
->>>>>>> master
             }
         }
         

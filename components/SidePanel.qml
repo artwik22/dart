@@ -9,32 +9,6 @@ PanelWindow {
     
     required property var screen
     required property string panelPosition  // "left" or "top" - determines which panel this is
-<<<<<<< HEAD
-    property string projectPath: ""  // Will be set from environment or auto-detected
-    
-    screen: sidePanel.screen
-    
-    // Anchors based on panel position
-    anchors.left: panelPosition === "left" ? true : false
-    anchors.right: panelPosition === "top" ? true : false
-    anchors.top: true
-    anchors.bottom: panelPosition === "left" ? true : false
-    
-    // Dimensions based on panel position
-    implicitWidth: panelPosition === "left" ? 36 : (panelPosition === "top" ? (screen ? screen.width : 1920) : 0)
-    implicitHeight: panelPosition === "top" ? 36 : (panelPosition === "left" ? (screen ? screen.height : 1080) : 0)
-    color: "transparent"
-    // Visible only when this panel's position matches the current sidebar position
-    visible: (sharedData && sharedData.sidebarVisible !== undefined ? sharedData.sidebarVisible : true) && 
-             (sharedData && sharedData.sidebarPosition === panelPosition)
-    
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "qssidepanel"
-    exclusiveZone: (sharedData && sharedData.sidebarVisible !== undefined && sharedData.sidebarVisible && sharedData.sidebarPosition === panelPosition) ? 
-        ((panelPosition === "top") ? implicitHeight : implicitWidth) : 0
-    
-    property var sharedData: null
-=======
     property var primaryScreen: null  // Tylko ten ekran uruchamia cava/zegar – unika zacinków przy 2+ monitorach
     property string projectPath: ""  // Set from root (shell) or via loadProjectPath
     onProjectPathChanged: { if (projectPath && projectPath.length > 0 && isPrimaryPanel && !cavaRunning && !(sharedData && sharedData.lowPerformanceMode)) startCava() }
@@ -68,19 +42,13 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qssidepanel-" + (panelPosition || "left") + "-" + (screen && screen.name ? screen.name : "0")
->>>>>>> master
     
     // Margins based on panel position
     margins {
         left: 0
         top: 0
-<<<<<<< HEAD
-        bottom: panelPosition === "left" ? 0 : 0
-        right: panelPosition === "top" ? 0 : 0
-=======
         bottom: 0
         right: 0
->>>>>>> master
 
         // Smooth animation when switching panel positions
         Behavior on bottom {
@@ -98,26 +66,6 @@ PanelWindow {
     }
     
     // Background Rectangle - separate from buttons to avoid blocking clicks
-<<<<<<< HEAD
-    Rectangle {
-        id: sidePanelRect
-        anchors.fill: parent
-        color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0d0d0d"
-        radius: 0
-        enabled: false  // Don't capture mouse events - allows clicks to pass through
-        z: -1  // Put background behind everything to ensure buttons are clickable
-        
-        // Smooth fade animation when panel appears/disappears
-        opacity: sidePanel.visible ? 1.0 : 0.0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 300
-                easing.type: Easing.OutCubic
-            }
-        }
-    }
-    
-=======
     // Material Design background with elevation shadow - NOWY DESIGN
     Rectangle {
         id: sidePanelRect
@@ -155,7 +103,6 @@ PanelWindow {
         }
     }
 
->>>>>>> master
     // Container for all sidebar content (clock, workspace switcher, visualizer)
     Item {
         id: sidePanelContent
@@ -169,19 +116,6 @@ PanelWindow {
         Column {
             id: sidePanelClockColumn
             anchors.top: parent.top
-<<<<<<< HEAD
-            anchors.topMargin: 14
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 4
-            visible: panelPosition === "left"
-
-            // Smooth fade when switching panel positions
-            opacity: visible ? 1.0 : 0.0
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 300
-                    easing.type: Easing.OutCubic
-=======
             anchors.topMargin: 6
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 4
@@ -220,22 +154,15 @@ PanelWindow {
                         PauseAnimation { duration: 50 }
                         NumberAnimation { duration: 700; easing.type: Easing.OutBack }
                     }
->>>>>>> master
                 }
             }
             
             Text {
                 id: sidePanelHoursDisplay
                 text: "00"
-<<<<<<< HEAD
-                font.pixelSize: 20
-                font.family: "sans-serif"
-                font.weight: Font.Bold
-=======
                 font.pixelSize: 26
                 font.family: "sans-serif"
                 font.weight: Font.Black
->>>>>>> master
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 horizontalAlignment: Text.AlignHCenter
                 
@@ -250,15 +177,9 @@ PanelWindow {
             Text {
                 id: sidePanelMinutesDisplay
                 text: "00"
-<<<<<<< HEAD
-                font.pixelSize: 20
-                font.family: "sans-serif"
-                font.weight: Font.Bold
-=======
                 font.pixelSize: 26
                 font.family: "sans-serif"
                 font.weight: Font.Black
->>>>>>> master
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 horizontalAlignment: Text.AlignHCenter
                 
@@ -275,19 +196,6 @@ PanelWindow {
         Row {
             id: sidePanelClockRow
             anchors.left: parent.left
-<<<<<<< HEAD
-            anchors.leftMargin: 14
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 4
-            visible: panelPosition === "top"
-
-            // Smooth fade when switching panel positions
-            opacity: visible ? 1.0 : 0.0
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 300
-                    easing.type: Easing.OutCubic
-=======
             anchors.leftMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
@@ -326,22 +234,15 @@ PanelWindow {
                         PauseAnimation { duration: 50 }
                         NumberAnimation { duration: 700; easing.type: Easing.OutBack }
                     }
->>>>>>> master
                 }
             }
             
             Text {
                 id: sidePanelHoursDisplayTop
                 text: "00"
-<<<<<<< HEAD
-                font.pixelSize: 20
-                font.family: "sans-serif"
-                font.weight: Font.Bold
-=======
                 font.pixelSize: 24
                 font.family: "sans-serif"
                 font.weight: Font.Black
->>>>>>> master
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 verticalAlignment: Text.AlignVCenter
                 
@@ -355,15 +256,9 @@ PanelWindow {
             
             Text {
                 text: ":"
-<<<<<<< HEAD
-                font.pixelSize: 20
-                font.family: "sans-serif"
-                font.weight: Font.Bold
-=======
                 font.pixelSize: 24
                 font.family: "sans-serif"
                 font.weight: Font.Black
->>>>>>> master
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 verticalAlignment: Text.AlignVCenter
             }
@@ -371,15 +266,9 @@ PanelWindow {
             Text {
                 id: sidePanelMinutesDisplayTop
                 text: "00"
-<<<<<<< HEAD
-                font.pixelSize: 20
-                font.family: "sans-serif"
-                font.weight: Font.Bold
-=======
                 font.pixelSize: 24
                 font.family: "sans-serif"
                 font.weight: Font.Black
->>>>>>> master
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 verticalAlignment: Text.AlignVCenter
                 
@@ -396,11 +285,7 @@ PanelWindow {
             id: sidePanelClockTimer
             interval: 1000
             repeat: true
-<<<<<<< HEAD
-            running: true
-=======
             running: isPrimaryPanel
->>>>>>> master
             onTriggered: {
                 var now = new Date()
                 var h = now.getHours()
@@ -428,18 +313,6 @@ PanelWindow {
         // Workspace switcher - pionowy dla pozycji left
         Item {
             id: sidePanelWorkspaceColumnContainer
-<<<<<<< HEAD
-            width: 8
-            height: parent.height
-            visible: panelPosition === "left"
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            z: 50  // Lower than buttons (z: 10000) to not block clicks
-            
-            Column {
-                id: sidePanelWorkspaceColumn
-                spacing: 9
-=======
             width: parent.width
             height: parent.height
             visible: !isHorizontal
@@ -477,7 +350,6 @@ PanelWindow {
             Column {
                 id: sidePanelWorkspaceColumn
                 spacing: 12
->>>>>>> master
                 width: parent.width
                 x: (parent.width - width) / 2
                 y: (parent.height - height) / 2
@@ -485,15 +357,9 @@ PanelWindow {
                 Repeater {
                     model: 4  // Workspaces 1-4
                 
-<<<<<<< HEAD
-                Item {
-                    id: workspaceItem
-                    width: 8  // Większa szerokość tylko dla MouseArea
-=======
                     Item {
                     id: workspaceItem
                     width: parent.width
->>>>>>> master
                     height: workspaceLine.height
                     anchors.horizontalCenter: parent.horizontalCenter
                     
@@ -514,33 +380,6 @@ PanelWindow {
                     
                     Component.onCompleted: wasActive = isActive
                     
-<<<<<<< HEAD
-                    // Pionowa linia z lepszymi wskaźnikami
-                    Rectangle {
-                        id: workspaceLine
-                        anchors.centerIn: parent
-                        width: workspaceItem.isActive ? 5 : (workspaceItem.hasWindows ? 3.5 : 3)
-                        height: workspaceItem.isActive ? 45 : (workspaceItem.hasWindows ? 36 : 30)
-                        color: workspaceItem.isActive ? 
-                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                            workspaceItem.hasWindows ? 
-                            ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a") : 
-                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#2a2a2a")
-                        radius: 0
-                        opacity: workspaceItem.isActive ? 1.0 : (workspaceItem.hasWindows ? 0.8 : 0.5)
-                        
-                        Behavior on width {
-                            NumberAnimation { 
-                                duration: 400
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                        
-                        Behavior on height {
-                            NumberAnimation { 
-                                duration: 400
-                                easing.type: Easing.OutCubic
-=======
                     // Bar Indicator - Abstract Style
                     Rectangle {
                         id: workspaceLine
@@ -561,19 +400,11 @@ PanelWindow {
                             NumberAnimation { 
                                 duration: 300
                                 easing.type: Easing.OutBack
->>>>>>> master
                             }
                         }
                         
                         Behavior on color {
-<<<<<<< HEAD
-                            ColorAnimation { 
-                                duration: 400
-                                easing.type: Easing.OutCubic
-                            }
-=======
                             ColorAnimation { duration: 200 }
->>>>>>> master
                         }
                         
                         Behavior on opacity {
@@ -623,13 +454,8 @@ PanelWindow {
                     
                     MouseArea {
                         id: workspaceMouseArea
-<<<<<<< HEAD
-                        anchors.fill: workspaceLine  // Tylko w obszarze workspace line, nie całego item
-                        anchors.margins: -2  // Mały margines tylko dla łatwiejszego klikania
-=======
                         anchors.fill: workspaceLine
                         anchors.margins: -5
->>>>>>> master
                         hoverEnabled: true
                         propagateComposedEvents: true  // Pozwól na propagację zdarzeń poza workspace
                         z: 1  // Very low z to ensure buttons (z: 10000) are on top
@@ -637,24 +463,15 @@ PanelWindow {
                         
                         onEntered: {
                             if (!workspaceItem.isActive) {
-<<<<<<< HEAD
-                                workspaceLine.scale = 1.2
-                                workspaceLine.opacity = Math.min(workspaceLine.opacity + 0.2, 1.0)
-=======
                                 workspaceLine.scale = 1.15
                                 workspaceLine.opacity = Math.min(workspaceLine.opacity + 0.15, 1.0)
->>>>>>> master
                             }
                         }
                         
                         onExited: {
                             if (!workspaceItem.isActive) {
                                 workspaceLine.scale = 1.0
-<<<<<<< HEAD
-                                workspaceLine.opacity = workspaceItem.hasWindows ? 0.8 : 0.5
-=======
                                 workspaceLine.opacity = workspaceItem.hasWindows ? 0.9 : 0.7
->>>>>>> master
                             }
                         }
                         
@@ -691,30 +508,19 @@ PanelWindow {
         Item {
             id: sidePanelWorkspaceRowContainer
             width: parent.width
-<<<<<<< HEAD
-            height: 8
-            visible: panelPosition === "top"
-=======
             height: parent.height
             visible: isHorizontal
->>>>>>> master
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             z: 50  // Lower than buttons (z: 10000) to not block clicks
             
             Row {
                 id: sidePanelWorkspaceRow
-<<<<<<< HEAD
-                spacing: 9
-=======
                 spacing: 12
->>>>>>> master
                 height: parent.height
                 x: (parent.width - width) / 2
                 y: (parent.height - height) / 2
                 
-<<<<<<< HEAD
-=======
                 Behavior on opacity {
                     SequentialAnimation {
                         PauseAnimation { duration: 100 }
@@ -741,17 +547,12 @@ PanelWindow {
                     }
                 }
                 
->>>>>>> master
                 Repeater {
                     model: 4  // Workspaces 1-4
                 
                     Item {
                         id: workspaceItemTop
-<<<<<<< HEAD
-                        height: 8  // Większa wysokość tylko dla MouseArea
-=======
                         height: parent.height
->>>>>>> master
                         width: workspaceLineTop.width
                         anchors.verticalCenter: parent.verticalCenter
                     
@@ -772,33 +573,6 @@ PanelWindow {
                     
                     Component.onCompleted: wasActive = isActive
                     
-<<<<<<< HEAD
-                    // Pozioma linia z lepszymi wskaźnikami
-                    Rectangle {
-                        id: workspaceLineTop
-                        anchors.centerIn: parent
-                        height: workspaceItemTop.isActive ? 5 : (workspaceItemTop.hasWindows ? 3.5 : 3)
-                        width: workspaceItemTop.isActive ? 45 : (workspaceItemTop.hasWindows ? 36 : 30)
-                        color: workspaceItemTop.isActive ? 
-                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                            workspaceItemTop.hasWindows ? 
-                            ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a") : 
-                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#2a2a2a")
-                        radius: 0
-                        opacity: workspaceItemTop.isActive ? 1.0 : (workspaceItemTop.hasWindows ? 0.8 : 0.5)
-                        
-                        Behavior on width {
-                            NumberAnimation { 
-                                duration: 400
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                        
-                        Behavior on height {
-                            NumberAnimation { 
-                                duration: 400
-                                easing.type: Easing.OutCubic
-=======
                     // Bar Indicator Horizontal - Abstract Style
                     Rectangle {
                         id: workspaceLineTop
@@ -819,23 +593,13 @@ PanelWindow {
                             NumberAnimation { 
                                 duration: 300
                                 easing.type: Easing.OutBack
->>>>>>> master
                             }
                         }
                         
                         Behavior on color {
-<<<<<<< HEAD
-                            ColorAnimation { 
-                                duration: 400
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                        
-=======
                             ColorAnimation { duration: 200 }
                         }
 
->>>>>>> master
                         Behavior on opacity {
                             NumberAnimation { 
                                 duration: 400
@@ -883,13 +647,8 @@ PanelWindow {
                     
                     MouseArea {
                         id: workspaceMouseAreaTop
-<<<<<<< HEAD
-                        anchors.fill: workspaceLineTop  // Tylko w obszarze workspace line, nie całego item
-                        anchors.margins: -2  // Mały margines tylko dla łatwiejszego klikania
-=======
                         anchors.fill: workspaceLineTop
                         anchors.margins: -5
->>>>>>> master
                         hoverEnabled: true
                         propagateComposedEvents: true  // Pozwól na propagację zdarzeń poza workspace
                         z: 1  // Very low z to ensure buttons (z: 10000) are on top
@@ -897,24 +656,15 @@ PanelWindow {
                         
                         onEntered: {
                             if (!workspaceItemTop.isActive) {
-<<<<<<< HEAD
-                                workspaceLineTop.scale = 1.2
-                                workspaceLineTop.opacity = Math.min(workspaceLineTop.opacity + 0.2, 1.0)
-=======
                                 workspaceLineTop.scale = 1.15
                                 workspaceLineTop.opacity = Math.min(workspaceLineTop.opacity + 0.15, 1.0)
->>>>>>> master
                             }
                         }
                         
                         onExited: {
                             if (!workspaceItemTop.isActive) {
                                 workspaceLineTop.scale = 1.0
-<<<<<<< HEAD
-                                workspaceLineTop.opacity = workspaceItemTop.hasWindows ? 0.8 : 0.5
-=======
                                 workspaceLineTop.opacity = workspaceItemTop.hasWindows ? 0.9 : 0.7
->>>>>>> master
                             }
                         }
                         
@@ -946,21 +696,6 @@ PanelWindow {
                 }
             }
         }
-<<<<<<< HEAD
-        
-        // Music Visualizer - PIONOWY dla pozycji left
-        Item {
-            id: musicVisualizerColumnContainer
-            width: 24
-            height: parent.height - 85  // Height minus space for buttons
-            visible: panelPosition === "left"
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 85  // Above buttons (clipboard at 45px + 32px height + 8px spacing)
-            z: 0  // Lower z-order to ensure buttons are clickable
-            
-            Column {
-=======
 
         
         // Music Visualizer - PIONOWY dla pozycji left (mniejszy)
@@ -975,20 +710,11 @@ PanelWindow {
             z: 0  // Lower z-order to ensure buttons are clickable
             
                 Column {
->>>>>>> master
                 id: musicVisualizerColumn
                 spacing: 2
                 width: parent.width
                 anchors.bottom: parent.bottom
 
-<<<<<<< HEAD
-                // Smooth fade when switching panel positions
-                opacity: parent.visible ? 1.0 : 0.0
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 300
-                        easing.type: Easing.OutCubic
-=======
                 opacity: parent.visible && panelActive ? 1.0 : 0.0
                 scale: panelActive ? 1.0 : 0.85
 
@@ -1013,37 +739,23 @@ PanelWindow {
                             PauseAnimation { duration: 150 }
                             NumberAnimation { duration: 700; easing.type: Easing.OutBack }
                         }
->>>>>>> master
                     }
                 }
                 
                 Repeater {
                     id: visualizerBarsRepeater
-<<<<<<< HEAD
-                    model: 36  // 36 pasków pionowo - 3x dłuższy visualizer
-                
-                    Rectangle {
-                        id: visualizerBar
-                        height: 3  // Grubość paska
-                        width: Math.max(3, visualizerBarValue)  // Szerokość zależy od audio
-=======
                     model: 24  // 24 paski pionowo
                 
                     Rectangle {
                         id: visualizerBar
                         height: 3
                         width: Math.max(3, visualizerBarValue)
->>>>>>> master
                         x: (parent.width - width) / 2  // Wyśrodkuj bez anchors
                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                         radius: 0
                         visible: true
                         
-<<<<<<< HEAD
-                        property real visualizerBarValue: 5  // Start z widoczną szerokością
-=======
                         property real visualizerBarValue: 3
->>>>>>> master
                         
                         Behavior on width {
                             NumberAnimation {
@@ -1062,17 +774,6 @@ PanelWindow {
             }
         }
         
-<<<<<<< HEAD
-        // Music Visualizer - POZIOMY dla pozycji top
-        Item {
-            id: musicVisualizerRowContainer
-            width: parent.width
-            height: 24
-            visible: panelPosition === "top"
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: 100  // Space for buttons on right (moved above buttons)
-=======
         // Music Visualizer - POZIOMY dla pozycji top (mniejszy)
         Item {
             id: musicVisualizerRowContainer
@@ -1082,7 +783,6 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
             anchors.rightMargin: 60
->>>>>>> master
             z: 1
 
             Row {
@@ -1092,14 +792,6 @@ PanelWindow {
                 width: parent.width
                 x: parent.width - width
 
-<<<<<<< HEAD
-                // Smooth fade when switching panel positions
-                opacity: parent.visible ? 1.0 : 0.0
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 300
-                        easing.type: Easing.OutCubic
-=======
                 opacity: parent.visible && panelActive ? 1.0 : 0.0
                 scale: panelActive ? 1.0 : 0.85
 
@@ -1124,37 +816,23 @@ PanelWindow {
                             PauseAnimation { duration: 150 }
                             NumberAnimation { duration: 700; easing.type: Easing.OutBack }
                         }
->>>>>>> master
                     }
                 }
                 
                 Repeater {
                     id: visualizerBarsRepeaterTop
-<<<<<<< HEAD
-                    model: 36  // 36 pasków poziomo
-                    
-                    Rectangle {
-                        id: visualizerBarTop
-                        width: 3  // Grubość paska
-                        height: Math.max(3, visualizerBarValueTop)  // Wysokość zależy od audio
-=======
                     model: 24  // 24 paski poziomo
                     
                     Rectangle {
                         id: visualizerBarTop
                         width: 3
                         height: Math.max(3, visualizerBarValueTop)
->>>>>>> master
                         y: (parent.height - height) / 2  // Wyśrodkuj bez anchors
                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                         radius: 0
                         visible: true
                         
-<<<<<<< HEAD
-                        property real visualizerBarValueTop: 5  // Start z widoczną wysokością
-=======
                         property real visualizerBarValueTop: 3
->>>>>>> master
                         
                         Behavior on height {
                             NumberAnimation {
@@ -1181,233 +859,6 @@ PanelWindow {
         width: 32
         height: 32
 
-<<<<<<< HEAD
-        anchors.horizontalCenter: panelPosition === "left" ? parent.horizontalCenter : undefined
-        anchors.right: panelPosition === "top" ? parent.right : undefined
-        anchors.rightMargin: panelPosition === "top" ? 48 : 0
-        anchors.bottom: panelPosition === "left" ? parent.bottom : undefined
-        anchors.bottomMargin: panelPosition === "left" ? 10 : 0
-        z: 100000  // Very high z to ensure it's on top of everything (increased from 10000)
-        visible: true
-        enabled: true
-        
-        // Debug: Make sure button is visible and clickable
-        Component.onCompleted: {
-            console.log("Screenshot button container created at z:", z, "visible:", visible, "enabled:", enabled)
-        }
-
-        // Smooth repositioning when panel position changes
-        Behavior on anchors.rightMargin {
-            NumberAnimation {
-                duration: 400
-                easing.type: Easing.OutCubic
-            }
-        }
-        Behavior on anchors.bottomMargin {
-            NumberAnimation {
-                duration: 400
-                easing.type: Easing.OutCubic
-            }
-        }
-        
-        Rectangle {
-            id: screenshotButton
-            width: 24
-            height: 24
-            anchors.centerIn: parent
-            radius: 0
-            color: screenshotButtonMouseArea.containsMouse ?
-                "#ff4444" :
-                ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#444444")
-            
-            property real buttonScale: screenshotButtonMouseArea.pressed ? 0.9 : (screenshotButtonMouseArea.containsMouse ? 1.1 : 1.0)
-            
-            Behavior on color {
-                ColorAnimation {
-                    duration: 200
-                    easing.type: Easing.OutQuart
-                }
-            }
-            
-            Behavior on buttonScale {
-                NumberAnimation {
-                    duration: 150
-                    easing.type: Easing.OutQuart
-                }
-            }
-            
-            scale: buttonScale
-            
-            Text {
-                text: "󰹑"  // Camera/screenshot icon (Nerd Fonts)
-                font.pixelSize: 14
-                anchors.centerIn: parent
-                color: screenshotButtonMouseArea.containsMouse ? 
-                    ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                    ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
-                
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 200
-                        easing.type: Easing.OutQuart
-                    }
-                }
-            }
-        }
-        
-        MouseArea {
-            id: screenshotButtonMouseArea
-            anchors.fill: parent
-            anchors.margins: -10  // Much larger hit area
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            enabled: true
-            propagateComposedEvents: false
-            acceptedButtons: Qt.LeftButton
-            z: 10001
-            
-            onClicked: {
-                console.log("=== SCREENSHOT BUTTON CLICKED ===")
-                console.log("Panel position:", panelPosition)
-                console.log("Container size:", screenshotButtonContainer.width, "x", screenshotButtonContainer.height)
-                console.log("Container position:", screenshotButtonContainer.x, ",", screenshotButtonContainer.y)
-                if (screenshotFunction) {
-                    screenshotFunction()
-                } else {
-                    console.log("screenshotFunction is null!")
-                }
-            }
-
-            onPressed: {
-                console.log("Screenshot button pressed")
-            }
-
-            onEntered: {
-                console.log("Mouse entered screenshot button")
-            }
-        }
-    }
-    
-    // Clipboard Manager Button - OUTSIDE sidePanelRect to ensure it's clickable
-    Item {
-        id: clipboardButtonContainer
-        width: 32
-        height: 32
-        anchors.horizontalCenter: panelPosition === "left" ? parent.horizontalCenter : undefined
-        anchors.right: panelPosition === "top" ? parent.right : undefined
-        anchors.rightMargin: panelPosition === "top" ? 8 : 0
-        anchors.bottom: panelPosition === "left" ? parent.bottom : undefined
-        anchors.bottomMargin: panelPosition === "left" ? 45 : 0
-        z: 100000  // Very high z to ensure it's on top of everything (increased from 10000)
-        visible: true
-        enabled: true
-        
-        // Debug: Make sure button is visible and clickable
-        Component.onCompleted: {
-            console.log("Clipboard button container created at z:", z, "visible:", visible, "enabled:", enabled)
-        }
-
-        // Smooth repositioning when panel position changes
-        Behavior on anchors.rightMargin {
-            NumberAnimation {
-                duration: 400
-                easing.type: Easing.OutCubic
-            }
-        }
-        Behavior on anchors.bottomMargin {
-            NumberAnimation {
-                duration: 400
-                easing.type: Easing.OutCubic
-            }
-        }
-        
-        Rectangle {
-            id: clipboardButton
-            width: 24
-            height: 24
-            anchors.centerIn: parent
-            radius: 0
-            color: clipboardButtonMouseArea.containsMouse ? 
-                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
-            
-            property real buttonScale: clipboardButtonMouseArea.pressed ? 0.9 : (clipboardButtonMouseArea.containsMouse ? 1.1 : 1.0)
-            
-            Behavior on color {
-                ColorAnimation {
-                    duration: 200
-                    easing.type: Easing.OutQuart
-                }
-            }
-            
-            Behavior on buttonScale {
-                NumberAnimation {
-                    duration: 150
-                    easing.type: Easing.OutQuart
-                }
-            }
-            
-            scale: buttonScale
-            
-            Text {
-                text: "󰨸"
-                font.pixelSize: 14
-                anchors.centerIn: parent
-                color: clipboardButtonMouseArea.containsMouse ? 
-                    ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                    ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
-                
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 200
-                        easing.type: Easing.OutQuart
-                    }
-                }
-            }
-        }
-        
-        MouseArea {
-            id: clipboardButtonMouseArea
-            anchors.fill: parent
-            anchors.margins: -10  // Much larger hit area
-            cursorShape: Qt.PointingHandCursor
-            hoverEnabled: true
-            enabled: true
-            propagateComposedEvents: false
-            acceptedButtons: Qt.LeftButton
-            z: 10001
-            
-            onPressed: {
-                console.log("Clipboard button pressed - MouseArea received press event")
-            }
-            
-            onClicked: {
-                console.log("=== CLIPBOARD BUTTON CLICKED ===")
-                console.log("Panel position:", panelPosition)
-                console.log("Container size:", clipboardButtonContainer.width, "x", clipboardButtonContainer.height)
-                console.log("Container position:", clipboardButtonContainer.x, ",", clipboardButtonContainer.y)
-                if (clipboardFunction) {
-                    clipboardFunction()
-                } else {
-                    console.log("clipboardFunction is null!")
-                }
-            }
-            
-            onEntered: {
-                console.log("Clipboard button hover entered - MouseArea received enter event")
-            }
-            
-            onExited: {
-                console.log("Clipboard button hover exited")
-            }
-        }
-    }
-    
-    // Opcjonalne funkcje callback
-    property var settingsFunction
-    property var launcherFunction
-    property var clipboardFunction
-=======
         anchors.horizontalCenter: !isHorizontal ? parent.horizontalCenter : undefined
         anchors.right: isHorizontal ? parent.right : undefined
         anchors.rightMargin: isHorizontal ? 12 : 0
@@ -1523,7 +974,6 @@ PanelWindow {
     
     // Opcjonalne funkcje callback
     property var launcherFunction
->>>>>>> master
     property var screenshotFunction
     
     // --- Music Visualizer ---
@@ -1531,16 +981,6 @@ PanelWindow {
     property bool cavaRunning: false
     
     function startCava() {
-<<<<<<< HEAD
-        // Sprawdź czy cava jest zainstalowane
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','which cava > /dev/null 2>&1 && echo 1 > /tmp/quickshell_cava_available || echo 0 > /tmp/quickshell_cava_available']; running: true }", sidePanel)
-        
-        // Poczekaj i sprawdź dostępność
-        Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: sidePanel.checkCavaAvailable() }", sidePanel)
-    }
-    
-    function checkCavaAvailable() {
-=======
         if (!isPrimaryPanel)
             return
         if (sharedData && sharedData.lowPerformanceMode)
@@ -1553,38 +993,16 @@ PanelWindow {
     function checkCavaAvailable() {
         if (!isPrimaryPanel)
             return
->>>>>>> master
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file:///tmp/quickshell_cava_available")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 var available = xhr.responseText.trim() === "1"
-<<<<<<< HEAD
-                console.log("Cava available:", available, "cavaRunning:", cavaRunning)
-=======
->>>>>>> master
                 if (available && !cavaRunning) {
                     // Użyj skryptu start-cava.sh do uruchomienia cava z poprawną konfiguracją
                     // Use projectPath if available, otherwise try to detect
                     var scriptPath = (projectPath && projectPath.length > 0) ? (projectPath + "/scripts/start-cava.sh") : ""
                     if (!scriptPath || scriptPath === "/scripts/start-cava.sh") {
-<<<<<<< HEAD
-                        // Try to get from environment or use relative path
-                        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_cava_path 2>/dev/null || echo \"\" > /tmp/quickshell_cava_path']; running: true }", sidePanel)
-                        Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: sidePanel.readCavaPath() }", sidePanel)
-                        return
-                    }
-                    if (!scriptPath || scriptPath.length === 0 || scriptPath === "/scripts/start-cava.sh") {
-                        console.log("Invalid script path for cava:", scriptPath)
-                        return
-                    }
-                    var absScriptPath = scriptPath
-                    Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["bash", "' + absScriptPath + '"]; running: true }', sidePanel)
-                    
-                    cavaRunning = true
-                    console.log("Cava started with script...")
-                    Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: sidePanel.readCavaData() }", sidePanel)
-=======
                         if (sharedData && sharedData.runCommand) {
                             sharedData.runCommand(['sh', '-c', 'echo "$QUICKSHELL_PROJECT_PATH" > /tmp/quickshell_cava_path 2>/dev/null || true'], readCavaPath)
                         }
@@ -1598,7 +1016,6 @@ PanelWindow {
                         cavaRunning = true
                         sharedData.runCommand(["bash", absScriptPath], readCavaData)
                     }
->>>>>>> master
                 }
             }
         }
@@ -1614,10 +1031,6 @@ PanelWindow {
                 if (xhr.status !== 200 && xhr.status !== 0) {
                     // File not accessible, try to restart cava
                     if (cavaRunning) {
-<<<<<<< HEAD
-                        console.log("Cava file not accessible, status:", xhr.status)
-=======
->>>>>>> master
                         cavaRunning = false
                         startCava()
                     }
@@ -1637,22 +1050,13 @@ PanelWindow {
                         var colorPrimary = (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"
                         var colorSecondary = (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#2a2a2a"
                         
-<<<<<<< HEAD
-                        for (var i = 0; i < 36; i++) {
-=======
                         for (var i = 0; i < 24; i++) {
->>>>>>> master
                             var val = 0
                             if (i < values.length && values[i]) {
                                 val = parseInt(values[i]) || 0
                             }
-<<<<<<< HEAD
-                            var normalizedWidth = Math.max(3, (val / 100) * 24)
-                            var normalizedHeight = Math.max(3, (val / 100) * 24)
-=======
                             var normalizedWidth = Math.max(3, (val / 100) * 20)
                             var normalizedHeight = Math.max(3, (val / 100) * 20)
->>>>>>> master
                             var intensity = val / 100
                             
                             // Update vertical visualizer (for left position)
@@ -1697,18 +1101,6 @@ PanelWindow {
         xhr.send()
     }
     
-<<<<<<< HEAD
-    // Timer do odczytu danych z cava
-    Timer {
-        id: cavaDataTimer
-        interval: 16  // ~60 FPS
-        repeat: true
-        running: cavaRunning
-        onTriggered: readCavaData()
-    }
-    
-    // Timer do sprawdzania czy cava działa (fallback)
-=======
     // Timer do odczytu danych z cava (50ms=20 FPS domyślnie; 100ms w low-perf; wyłączony w low-perf)
     Timer {
         id: cavaDataTimer
@@ -1719,16 +1111,11 @@ PanelWindow {
     }
     
     // Timer do sprawdzania czy cava działa (fallback) – tylko w panelu głównym
->>>>>>> master
     Timer {
         id: cavaCheckTimer
         interval: 5000  // Co 5 sekund
         repeat: true
-<<<<<<< HEAD
-        running: true
-=======
         running: isPrimaryPanel
->>>>>>> master
         onTriggered: {
             if (cavaRunning) {
                 // Sprawdź czy plik istnieje i ma dane
@@ -1737,10 +1124,6 @@ PanelWindow {
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === XMLHttpRequest.DONE) {
                         if (xhr.status !== 200 && xhr.status !== 0) {
-<<<<<<< HEAD
-                            console.log("Cava file not accessible, restarting...")
-=======
->>>>>>> master
                             cavaRunning = false
                             startCava()
                         }
@@ -1761,15 +1144,9 @@ PanelWindow {
         running: false
         repeat: false
         onTriggered: {
-<<<<<<< HEAD
-            // Ustaw minimalne wartości dla pasków, żeby były widoczne od razu
-            for (var i = 0; i < 36; i++) {
-                var value = 5 + (i % 3) * 3  // Różne wartości dla testu
-=======
             // Ustaw minimalne wartości dla pasków (24 bary)
             for (var i = 0; i < 24; i++) {
                 var value = 3 + (i % 2) * 2
->>>>>>> master
                 if (visualizerBarsRepeater.itemAt(i)) {
                     visualizerBarsRepeater.itemAt(i).visualizerBarValue = value
                 }
@@ -1782,15 +1159,9 @@ PanelWindow {
     
     // Load project path from environment
     function loadProjectPath() {
-<<<<<<< HEAD
-        // Try to read path from environment variable
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_sidepanel_path 2>/dev/null || echo \"\" > /tmp/quickshell_sidepanel_path']; running: true }", sidePanel)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: sidePanel.readProjectPath() }", sidePanel)
-=======
         if (sharedData && sharedData.runCommand) {
             sharedData.runCommand(['sh', '-c', 'echo "$QUICKSHELL_PROJECT_PATH" > /tmp/quickshell_sidepanel_path 2>/dev/null || true'], readProjectPath)
         }
->>>>>>> master
     }
     
     function readProjectPath() {
@@ -1801,19 +1172,11 @@ PanelWindow {
                 var path = xhr.responseText.trim()
                 if (path && path.length > 0) {
                     projectPath = path
-<<<<<<< HEAD
-                    console.log("SidePanel project path loaded:", projectPath)
-=======
->>>>>>> master
                     // Start cava after path is loaded
                     startCava()
                 } else {
                     // Fallback to default
                     projectPath = "/tmp/sharpshell"
-<<<<<<< HEAD
-                    console.log("SidePanel using fallback project path:", projectPath)
-=======
->>>>>>> master
                     startCava()
                 }
             }
@@ -1829,35 +1192,15 @@ PanelWindow {
                 var path = xhr.responseText.trim()
                 if (path && path.length > 0) {
                     projectPath = path
-<<<<<<< HEAD
-                    console.log("SidePanel project path loaded from cava path:", projectPath)
-=======
->>>>>>> master
                     // Retry starting cava
                     startCava()
                 } else {
                     // Fallback
                     projectPath = "/tmp/sharpshell"
-<<<<<<< HEAD
-                    console.log("SidePanel using fallback project path (from readCavaPath):", projectPath)
-=======
->>>>>>> master
                     startCava()
                 }
             }
         }
         xhr.send()
     }
-<<<<<<< HEAD
-    
-    Component.onCompleted: {
-        // Uruchom inicjalizację visualizera
-        visualizerInitTimer.start()
-        // Load project path first, then start cava
-        loadProjectPath()
-    }
 }
-
-=======
-}
->>>>>>> master

@@ -1,11 +1,4 @@
 #!/bin/bash
-<<<<<<< HEAD
-# Skrypt uruchamiający quickshell z wymaganą zmienną środowiskową
-export QML_XHR_ALLOW_FILE_READ=1
-export QUICKSHELL_PROJECT_PATH="$(cd "$(dirname "$0")" && pwd)"
-quickshell --path "$QUICKSHELL_PROJECT_PATH"
-
-=======
 # =============================================================================
 # Dart – uruchomienie quickshell (Alloy/SharpShell)
 # Ścieżka projektu musi być ustawiona przed startem.
@@ -37,4 +30,3 @@ fi
 [ -x "${HOME}/.config/alloy/scripts/apply-settings.sh" ] && "${HOME}/.config/alloy/scripts/apply-settings.sh"
 
 exec quickshell --path "$QUICKSHELL_PROJECT_PATH"
->>>>>>> master

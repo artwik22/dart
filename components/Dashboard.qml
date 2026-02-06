@@ -1,10 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-<<<<<<< HEAD
-=======
 import QtQml
->>>>>>> master
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -13,15 +10,6 @@ import "."
 PanelWindow {
     id: dashboardRoot
 
-<<<<<<< HEAD
-    anchors { top: true }
-    implicitWidth: 840  // 1200 * 0.7
-    implicitHeight: 420  // 600 * 0.7
-    
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "qsdashboard"
-    WlrLayershell.keyboardFocus: (sharedData && sharedData.menuVisible) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-=======
     signal perfUpdated()
     
     // Resource History Arrays
@@ -98,37 +86,10 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qsdashboard"
     WlrLayershell.keyboardFocus: (showProgress > 0.5) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
->>>>>>> master
     exclusiveZone: 0
 
     property int currentTab: 0
     property var sharedData: null
-<<<<<<< HEAD
-    
-    // Visibility control - always visible, controlled by slideOffset
-    visible: true
-    color: "transparent"
-    
-    property int sidebarTopOffset: (sharedData && sharedData.menuVisible && sharedData.sidebarVisible && sharedData.sidebarPosition === "top") ? 36 : 0
-    
-    // Slide down animation from top - negative value moves up (off screen)
-    property int slideOffset: (sharedData && sharedData.menuVisible) ? 0 : -implicitHeight
-    
-    margins {
-        top: sidebarTopOffset + slideOffset
-        left: 0
-        right: 0
-    }
-    
-    Behavior on slideOffset {
-        NumberAnimation {
-            duration: 500
-            easing.type: Easing.OutExpo
-        }
-    }
-    
-    // No animation on sidebarTopOffset - should update immediately when position changes
-=======
 
     // --- Animacja wejścia/wyjścia (bez glitchy) ---
     // showProgress 0..1, start zawsze 0; Binding ustawia cel, Behavior animuje
@@ -147,31 +108,13 @@ PanelWindow {
         right: panelPos === "right" ? -implicitWidth * (1.0 - showProgress) : 0
         left: panelPos === "left" ? -implicitWidth * (1.0 - showProgress) : 0
     }
->>>>>>> master
 
     Item {
         id: dashboardContainer
         anchors.fill: parent
-<<<<<<< HEAD
-        
-        property bool isShowing: dashboardRoot.visible
-        
-        opacity: (sharedData && sharedData.menuVisible) ? 1.0 : 0.0
-        
-        Behavior on opacity {
-            NumberAnimation { 
-                duration: 350
-                easing.type: Easing.OutQuart
-            }
-        }
-        
-        enabled: isShowing && opacity > 0.1
-        focus: (sharedData && sharedData.menuVisible)
-=======
         opacity: showProgress
         enabled: showProgress > 0.02
         focus: showProgress > 0.02
->>>>>>> master
         
         Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Escape) {
@@ -182,20 +125,12 @@ PanelWindow {
             }
         }
         
-<<<<<<< HEAD
-        // Main dashboard background
-=======
         // Swiss Design dashboard background - Strict, flat, bordered
->>>>>>> master
         Rectangle {
             id: dashboardBackground
             anchors.fill: parent
             radius: 0
-<<<<<<< HEAD
-            color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0a0a0a"
-=======
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff"
->>>>>>> master
         }
 
         Column {
@@ -207,11 +142,7 @@ PanelWindow {
             Rectangle {
                 id: navBar
                 width: parent.width
-<<<<<<< HEAD
-                height: 45
-=======
                 height: 50
->>>>>>> master
                 color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
                 
                 RowLayout {
@@ -224,11 +155,7 @@ PanelWindow {
                         id: navRepeater
                         model: [
                             { icon: "󰕮", label: "Dashboard" },
-<<<<<<< HEAD
-                            { icon: "󰎆", label: "Media" },
-=======
                             { icon: "󰨸", label: "Clipboard" },
->>>>>>> master
                             { icon: "󰂚", label: "Notifications" }
                         ]
                         
@@ -244,21 +171,6 @@ PanelWindow {
                             // Background color on hover/active
                             Rectangle {
                                 anchors.fill: parent
-<<<<<<< HEAD
-                                color: tabRect.isActive ? 
-                                    ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") :
-                                    (tabRect.isHovered ? 
-                                        ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
-                                        "transparent")
-                                radius: 0
-                                
-                                Behavior on color {
-                                    ColorAnimation { 
-                                        duration: 200
-                                        easing.type: Easing.OutQuart
-                                    }
-                                }
-=======
                                 anchors.margins: 0
                                 color: tabRect.isActive ? 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
@@ -266,7 +178,6 @@ PanelWindow {
                                         ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
                                         "transparent")
                                 radius: 0
->>>>>>> master
                             }
                             
                             Row {
@@ -275,21 +186,11 @@ PanelWindow {
                                 
                                 Text {
                                     text: modelData.icon
-<<<<<<< HEAD
-                                    font.pixelSize: 18
-                                    color: tabRect.isActive ? 
-                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                        (tabRect.isHovered ? 
-                                            ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                            ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"))
-                                    opacity: tabRect.isActive ? 1.0 : (tabRect.isHovered ? 1.0 : 0.6)
-=======
                                     font.pixelSize: 15
                                     color: tabRect.isActive ? 
                                         ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : // Accent text on active
                                         ((sharedData && sharedData.colorText) ? sharedData.colorText : "#000000")
                                     opacity: 1.0
->>>>>>> master
                                     anchors.verticalCenter: parent.verticalCenter
                                     
                                     Behavior on color {
@@ -309,17 +210,6 @@ PanelWindow {
                                 
                                 Text {
                                     text: modelData.label
-<<<<<<< HEAD
-                                    font.pixelSize: 14
-                                    font.family: "sans-serif"
-                                    font.weight: tabRect.isActive ? Font.Bold : Font.Normal
-                                    color: tabRect.isActive ? 
-                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                        (tabRect.isHovered ? 
-                                            ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                            ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"))
-                                    opacity: tabRect.isActive ? 1.0 : (tabRect.isHovered ? 1.0 : 0.6)
-=======
                                     font.pixelSize: 12
                                     font.family: "sans-serif"
                                     font.weight: tabRect.isActive ? Font.Bold : Font.Normal
@@ -327,7 +217,6 @@ PanelWindow {
                                         ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : // Accent text on active
                                         ((sharedData && sharedData.colorText) ? sharedData.colorText : "#000000")
                                     opacity: 1.0
->>>>>>> master
                                     anchors.verticalCenter: parent.verticalCenter
                                     
                                     Behavior on color {
@@ -346,33 +235,7 @@ PanelWindow {
                                 }
                             }
                             
-<<<<<<< HEAD
-                            // Active indicator line at bottom
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: parent.width * 0.6
-                                height: 3
-                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                opacity: tabRect.isActive ? 1.0 : 0.0
-                                
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 250
-                                        easing.type: Easing.OutQuart
-                                    }
-                                }
-                                
-                                Behavior on width {
-                                    NumberAnimation {
-                                        duration: 250
-                                        easing.type: Easing.OutQuart
-                                    }
-                                }
-                            }
-=======
 
->>>>>>> master
                             
                             MouseArea {
                                 id: tabMouseArea
@@ -424,161 +287,6 @@ PanelWindow {
                         }
                     }
                     
-<<<<<<< HEAD
-                    GridLayout {
-                        anchors.fill: parent
-                        anchors.margins: 12
-                        columns: 4
-                        rows: 2
-                        columnSpacing: 12
-                        rowSpacing: 12
-                        
-                        // Network Stats Card (Top Left)
-                        Rectangle {
-                            Layout.column: 0
-                            Layout.row: 0
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumWidth: 140
-                            Layout.minimumHeight: 105
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                            
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 8
-                                
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 8
-                                    Text {
-                                        text: "󰤨"
-                                        font.pixelSize: 24
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                    
-                                    Text {
-                                        text: "Network"
-                                        font.pixelSize: 16
-                                        font.weight: Font.Bold
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-                                
-                                Column {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 6
-                                    
-                                    Row {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        spacing: 8
-                                        Text {
-                                            text: "↓"
-                                            font.pixelSize: 14
-                                            font.family: "sans-serif"
-                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        }
-                                        
-                                        Text {
-                                            text: networkDownloadSpeed
-                                            font.pixelSize: 13
-                                            font.family: "sans-serif"
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        }
-                                    }
-                                    
-                                    Row {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        spacing: 8
-                                        Text {
-                                            text: "↑"
-                                            font.pixelSize: 14
-                                            font.family: "sans-serif"
-                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        }
-                                        
-                                        Text {
-                                            text: networkUploadSpeed
-                                            font.pixelSize: 13
-                                            font.family: "sans-serif"
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Quick Actions Card (Top Middle)
-                        Rectangle {
-                            Layout.column: 1
-                            Layout.row: 0
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumWidth: 140
-                            Layout.minimumHeight: 105
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                            
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: 10
-                                spacing: 6
-                                
-                                Row {
-                                    spacing: 6
-                                    Text {
-                                        text: "󰍜"
-                                        font.pixelSize: 18
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                    
-                                    Text {
-                                        text: "Quick Actions"
-                                        font.pixelSize: 13
-                                        font.weight: Font.Bold
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-                                
-                                Grid {
-                                    columns: 2
-                                    spacing: 4
-                                    width: parent.width
-                                    
-                                    // Toggle Sidebar button
-                                    Rectangle {
-                                        width: (parent.width - 4) / 2
-                                        height: 26
-                                        radius: 0
-                                        clip: true
-                                        color: toggleSidebarQuickMouseArea.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? Qt.darker(sharedData.colorAccent, 1.2) : "#3a7fcc") :
-                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Row {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-                                            width: Math.min(parent.width - 8, implicitWidth)
-                                            
-                                            Text {
-                                                text: "󰍜"
-                                                font.pixelSize: 12
-=======
                     ColumnLayout {
                         id: dashboardTabColumn
                         anchors.fill: parent
@@ -797,32 +505,22 @@ PanelWindow {
                                             Text {
                                                 text: "󰍜"
                                                 font.pixelSize: 11
->>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             
                                             Text {
-<<<<<<< HEAD
-                                                text: "Toggle Sidebar"
-                                                font.pixelSize: 10
-=======
                                                 text: "SIDEBAR"
                                                 font.pixelSize: 9
                                                 font.weight: Font.Bold
                                                 font.capitalization: Font.AllUppercase
->>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 elide: Text.ElideRight
                                                 maximumLineCount: 1
-<<<<<<< HEAD
-                                                width: Math.max(0, parent.width - 20)
-=======
                                                 width: Math.max(0, parent.width - 18)
->>>>>>> master
                                             }
                                         }
                                         
@@ -839,38 +537,6 @@ PanelWindow {
                                         }
                                     }
                                     
-<<<<<<< HEAD
-                                    // Do Not Disturb button
-                                    Rectangle {
-                                        width: (parent.width - 4) / 2
-                                        height: 26
-                                        radius: 0
-                                        clip: true
-                                        color: dndQuickMouseArea.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? Qt.darker(sharedData.colorAccent, 1.2) : "#3a7fcc") :
-                                            ((sharedData && sharedData.notificationsEnabled === false) ? 
-                                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
-                                                ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"))
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Row {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-                                            width: Math.min(parent.width - 8, implicitWidth)
-                                            
-                                            Text {
-                                                text: "󰂛"
-                                                font.pixelSize: 12
-                                                font.family: "sans-serif"
-                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                                opacity: (sharedData && sharedData.notificationsEnabled === false) ? 1.0 : 0.6
-=======
                                     // Quick Action Button Style (Swiss Block)
                                     Rectangle {
                                         width: (quickActionsGrid.width - 4) / 2
@@ -895,21 +561,10 @@ PanelWindow {
                                                 color: ((dndQuickMouseArea.containsMouse) || (sharedData && sharedData.notificationsEnabled === false)) ? 
                                                        ((sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff") : // White text on green
                                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") // White text on dark
->>>>>>> master
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             
                                             Text {
-<<<<<<< HEAD
-                                                text: "Do Not Disturb"
-                                                font.pixelSize: 10
-                                                font.family: "sans-serif"
-                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                elide: Text.ElideRight
-                                                maximumLineCount: 1
-                                                width: Math.max(0, parent.width - 20)
-=======
                                                 text: "NO DISTURB"
                                                 font.pixelSize: 9
                                                 font.weight: Font.Bold
@@ -922,7 +577,6 @@ PanelWindow {
                                                 elide: Text.ElideRight
                                                 maximumLineCount: 1
                                                 width: Math.max(0, parent.width - 18)
->>>>>>> master
                                             }
                                         }
                                         
@@ -939,33 +593,6 @@ PanelWindow {
                                         }
                                     }
                                     
-<<<<<<< HEAD
-                                    // Lock button
-                                    Rectangle {
-                                        width: (parent.width - 4) / 2
-                                        height: 26
-                                        radius: 0
-                                        clip: true
-                                        color: lockQuickMouseArea.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? Qt.darker(sharedData.colorAccent, 1.2) : "#3a7fcc") :
-                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Row {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-                                            width: Math.min(parent.width - 8, implicitWidth)
-                                            
-                                            Text {
-                                                text: "󰌾"
-                                                font.pixelSize: 12
-=======
                                     // Lock Button (Swiss Block)
                                     Rectangle {
                                         width: (quickActionsGrid.width - 4) / 2
@@ -984,32 +611,22 @@ PanelWindow {
                                             Text {
                                                 text: "󰌾"
                                                 font.pixelSize: 11
->>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             
                                             Text {
-<<<<<<< HEAD
-                                                text: "Lock"
-                                                font.pixelSize: 10
-=======
                                                 text: "LOCK"
                                                 font.pixelSize: 9
                                                 font.weight: Font.Bold
                                                 font.capitalization: Font.AllUppercase
->>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 elide: Text.ElideRight
                                                 maximumLineCount: 1
-<<<<<<< HEAD
-                                                width: Math.max(0, parent.width - 20)
-=======
                                                 width: Math.max(0, parent.width - 18)
->>>>>>> master
                                             }
                                         }
                                         
@@ -1019,49 +636,15 @@ PanelWindow {
                                             cursorShape: Qt.PointingHandCursor
                                             hoverEnabled: true
                                             onClicked: {
-<<<<<<< HEAD
-                                                // Try loginctl lock-session first, fallback to swaylock
-                                                Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'loginctl lock-session $(loginctl list-sessions | grep $(whoami) | awk \"{print \\$1}\" | head -1) 2>/dev/null || swaylock 2>/dev/null || loginctl lock-session 2>/dev/null']; running: true }", dashboardRoot)
-                                                // Close dashboard after locking
-                                                if (sharedData) {
-=======
                                                 // Własny lock screen – overlay z polem hasła (bez swaylock/loginctl)
                                                 if (sharedData) {
                                                     sharedData.lockScreenVisible = true
->>>>>>> master
                                                     sharedData.menuVisible = false
                                                 }
                                             }
                                         }
                                     }
                                     
-<<<<<<< HEAD
-                                    // Poweroff button
-                                    Rectangle {
-                                        width: (parent.width - 4) / 2
-                                        height: 26
-                                        radius: 0
-                                        clip: true
-                                        color: poweroffQuickMouseArea.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? Qt.darker(sharedData.colorAccent, 1.2) : "#3a7fcc") :
-                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-                                        
-                                        Row {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-                                            width: Math.min(parent.width - 8, implicitWidth)
-                                            
-                                            Text {
-                                                text: "󰐥"
-                                                font.pixelSize: 12
-=======
                                     // Poweroff Button (Swiss Block)
                                     Rectangle {
                                         width: (quickActionsGrid.width - 4) / 2
@@ -1080,32 +663,22 @@ PanelWindow {
                                             Text {
                                                 text: "󰐥"
                                                 font.pixelSize: 11
->>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             
                                             Text {
-<<<<<<< HEAD
-                                                text: "Poweroff"
-                                                font.pixelSize: 10
-=======
                                                 text: "POWEROFF"
                                                 font.pixelSize: 9
                                                 font.weight: Font.Bold
                                                 font.capitalization: Font.AllUppercase
->>>>>>> master
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 elide: Text.ElideRight
                                                 maximumLineCount: 1
-<<<<<<< HEAD
-                                                width: Math.max(0, parent.width - 20)
-=======
                                                 width: Math.max(0, parent.width - 18)
->>>>>>> master
                                             }
                                         }
                                         
@@ -1115,19 +688,12 @@ PanelWindow {
                                             cursorShape: Qt.PointingHandCursor
                                             hoverEnabled: true
                                             onClicked: {
-<<<<<<< HEAD
-                                                Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'poweroff']; running: true }", dashboardRoot)
-=======
                                                 if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'poweroff'])
->>>>>>> master
                                                 // Close dashboard after poweroff
                                                 if (sharedData) {
                                                     sharedData.menuVisible = false
                                                 }
-<<<<<<< HEAD
-=======
                                                 }
->>>>>>> master
                                             }
                                         }
                                     }
@@ -1135,63 +701,6 @@ PanelWindow {
                             }
                         }
                         
-<<<<<<< HEAD
-                        // Date/Calendar Card (Left/Center, spans 2 rows)
-                        Rectangle {
-                            Layout.column: 0
-                            Layout.row: 1
-                            Layout.columnSpan: 2
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: 210
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                            
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 20
-                                spacing: 20
-                                
-                                // Clock Display (left of calendar)
-                                Column {
-                                    Layout.preferredWidth: 100
-                                    Layout.alignment: Qt.AlignVCenter
-                                    spacing: -12
-                                    
-                                    Text {
-                                        id: calendarHoursDisplay
-                                        text: "00"
-                                        font.pixelSize: 76
-                                        font.family: "sans-serif"
-                                        font.weight: Font.Bold
-                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-                                    
-                                    Text {
-                                        id: calendarMinutesDisplay
-                                        text: "00"
-                                        font.pixelSize: 76
-                                        font.family: "sans-serif"
-                                        font.weight: Font.Bold
-                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-                                }
-                                
-                                
-                                // Calendar Grid
-                                Column {
-                                    Layout.fillWidth: true
-                                    Layout.alignment: Qt.AlignVCenter
-                                    spacing: 8
-                                    
-                                    // Day headers
-                                    Row {
-                                        spacing: 8
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        
-=======
                         // Date/Calendar or GitHub Activity Card – Swiss Style
                         Rectangle {
                             Layout.fillWidth: true
@@ -1252,56 +761,19 @@ PanelWindow {
                                         spacing: 5
                                         anchors.horizontalCenter: parent.horizontalCenter
 
->>>>>>> master
                                         Repeater {
                                             model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
                                             Text {
                                                 text: modelData
-<<<<<<< HEAD
-                                                font.pixelSize: 11
-                                                font.family: "sans-serif"
-                                                color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                                width: 24
-=======
                                                 font.pixelSize: 9
                                                 font.weight: Font.Bold
                                                 font.family: "sans-serif"
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
                                                 width: 22
->>>>>>> master
                                                 horizontalAlignment: Text.AlignHCenter
                                             }
                                         }
                                     }
-<<<<<<< HEAD
-                                    
-                                    // Calendar grid
-                                    Grid {
-                                        columns: 7
-                                        spacing: 6
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        
-                                        Repeater {
-                                            model: calendarDays
-                                            
-                                            Rectangle {
-                                                width: 24
-                                                height: 24
-                                                radius: 0
-                                                color: modelData.isToday ? 
-                                                    ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                                                    "transparent"
-                                                
-                                                Text {
-                                                    text: modelData.day
-                                                    font.pixelSize: 12
-                                                    font.family: "sans-serif"
-                                                    color: modelData.isToday ? 
-                                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                                        (modelData.isCurrentMonth ? 
-                                                            ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                                            ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#888888"))
-=======
 
                                     // Calendar grid
                                     Grid {
@@ -1329,7 +801,6 @@ PanelWindow {
                                                                (modelData.isCurrentMonth ?
                                                                     ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") :
                                                                     ((sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.5) : "#888888"))
->>>>>>> master
                                                     anchors.centerIn: parent
                                                 }
                                             }
@@ -1338,96 +809,6 @@ PanelWindow {
                                 }
                             }
                         }
-<<<<<<< HEAD
-                        
-                        // Resource Usage Card (Right of Calendar, spans 2 rows)
-                        Rectangle {
-                            Layout.column: 2
-                            Layout.row: 0
-                            Layout.rowSpan: 2
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumWidth: 120
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                            
-                            Row {
-                                anchors.fill: parent
-                                anchors.margins: 15
-                                spacing: 12
-                                
-                                Repeater {
-                                    model: [
-                                        { label: "CPU", value: cpuUsageValue, icon: "󰻠" },
-                                        { label: "RAM", value: ramUsageValue, icon: "󰍛" },
-                                        { label: "GPU", value: gpuUsageValue, icon: "󰾲" }
-                                    ]
-                                    
-                                    Column {
-                                        width: (parent.width - 24) / 3
-                                        height: parent.height
-                                        spacing: 8
-                                        
-                                        Text {
-                                            text: modelData.icon
-                                            font.pixelSize: 20
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                        }
-                                        
-                                        Text {
-                                            text: modelData.label
-                                            font.pixelSize: 13
-                                            font.family: "sans-serif"
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                        }
-                                        
-                                        Text {
-                                            text: modelData.value + "%"
-                                            font.pixelSize: 16
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                        }
-                                        
-                                        Item {
-                                            width: parent.width
-                                            height: parent.height - 80
-                                            
-                                            Rectangle {
-                                                anchors.bottom: parent.bottom
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                width: parent.width
-                                                height: parent.height
-                                                radius: 0
-                                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-                                                
-                                                Rectangle {
-                                                    anchors.bottom: parent.bottom
-                                                    anchors.horizontalCenter: parent.horizontalCenter
-                                                    width: parent.width
-                                                    height: parent.height * (modelData.value / 100)
-                                                    radius: 0
-                                                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                                    
-                                                    Behavior on height {
-                                                        NumberAnimation {
-                                                            duration: 600
-                                                            easing.type: Easing.OutCubic
-                                                        }
-                                                    }
-                                                    
-                                                    Behavior on color {
-                                                        ColorAnimation {
-                                                            duration: 400
-                                                            easing.type: Easing.InOutQuad
-                                                        }
-                                                    }
-                                                }
-                                            }
-=======
 
                         Component {
                             id: githubActivityDashboardComponent
@@ -1583,41 +964,12 @@ PanelWindow {
                                         target: dashboardRoot
                                         function onPerfUpdated() {
                                             res1Chart.requestPaint()
->>>>>>> master
                                         }
                                     }
                                 }
                             }
                         }
                         
-<<<<<<< HEAD
-                        // Media Player Card (Right)
-                        Rectangle {
-                            Layout.column: 3
-                            Layout.row: 0
-                            Layout.rowSpan: 2
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumWidth: 175
-                            radius: 0
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                            
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: 16
-                                spacing: 16
-                                
-                                // Album Art
-                                Rectangle {
-                                    width: 180
-                                    height: 180
-                                    radius: 0
-                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    
-                                    Image {
-                                        id: mediaAlbumArt
-=======
                         // Resource 2 Card - Swiss Style
                         Rectangle {
                             Layout.fillWidth: true
@@ -1822,7 +1174,6 @@ PanelWindow {
                                     
                                     Image {
                                         id: mediaAlbumArtCard
->>>>>>> master
                                         anchors.fill: parent
                                         anchors.margins: 1
                                         fillMode: Image.PreserveAspectCrop
@@ -1841,114 +1192,13 @@ PanelWindow {
                                     
                                     Text {
                                         text: "󰎆"
-<<<<<<< HEAD
-                                        font.pixelSize: 60
-=======
                                         font.pixelSize: 40
->>>>>>> master
                                         anchors.centerIn: parent
                                         visible: !mpArt
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                     }
                                 }
                                 
-<<<<<<< HEAD
-                                // Track Info
-                                Column {
-                                    width: parent.width
-                                    spacing: 6
-                                    
-                                    Text {
-                                        id: mediaTitle
-                                        text: mpTitle ? mpTitle : "Nothing playing"
-                                        font.pixelSize: 18
-                                        font.family: "sans-serif"
-                                        font.weight: Font.Bold
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        elide: Text.ElideRight
-                                        width: parent.width
-                                        horizontalAlignment: Text.AlignHCenter
-                                    }
-                                    
-                                    Text {
-                                        id: mediaArtist
-                                        text: mpArtist ? mpArtist : "—"
-                                        font.pixelSize: 16
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        elide: Text.ElideRight
-                                        width: parent.width
-                                        horizontalAlignment: Text.AlignHCenter
-                                    }
-                                    
-                                    Text {
-                                        id: mediaAlbum
-                                        text: mpAlbum ? mpAlbum : "—"
-                                        font.pixelSize: 15
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                        elide: Text.ElideRight
-                                        width: parent.width
-                                        horizontalAlignment: Text.AlignHCenter
-                                    }
-                                }
-                                
-                                // Controls
-                                Row {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    spacing: 12
-                                    
-                                    Rectangle {
-                                        id: prevButton
-                                        width: 40
-                                        height: 40
-                                        radius: 0
-                                        color: prevArea.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#161616")
-                                        
-                                        property real buttonScale: prevArea.pressed ? 0.9 : (prevArea.containsMouse ? 1.1 : 1.0)
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 200
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        Behavior on buttonScale {
-                                            NumberAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        scale: buttonScale
-                                        
-                                        Text {
-                                            text: "󰒮"
-                                            font.pixelSize: 22
-                                            anchors.centerIn: parent
-                                            color: prevArea.containsMouse ? 
-                                                ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
-                                            
-                                            Behavior on color {
-                                                ColorAnimation {
-                                                    duration: 200
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-                                        }
-                                        
-                                        MouseArea {
-                                            id: prevArea
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            hoverEnabled: true
-                                            onClicked: {
-                                                playerPrev()
-=======
                                 // Track info + kontrolki – po prawej, przesunięte w dół
                                 Column {
                                     Layout.fillWidth: true
@@ -2000,126 +1250,10 @@ PanelWindow {
                                                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                                 
                                                 Behavior on width { NumberAnimation { duration: 200 } }
->>>>>>> master
                                             }
                                         }
                                     }
                                     
-<<<<<<< HEAD
-                                    Rectangle {
-                                        id: playButton
-                                        width: 50
-                                        height: 40
-                                        radius: 0
-                                        color: playArea.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                                            ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                        
-                                        property real buttonScale: playArea.pressed ? 0.9 : (playArea.containsMouse ? 1.1 : 1.0)
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 200
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        Behavior on buttonScale {
-                                            NumberAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        scale: buttonScale
-                                        
-                                        Text {
-                                            text: mpPlaying ? "󰏤" : "󰐊"
-                                            font.pixelSize: 24
-                                            anchors.centerIn: parent
-                                            color: playArea.containsMouse ? 
-                                                ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                                ((sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0a0a0a")
-                                            
-                                            Behavior on color {
-                                                ColorAnimation {
-                                                    duration: 200
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-                                            
-                                            rotation: playArea.pressed ? 5 : 0
-                                            
-                                            Behavior on rotation {
-                                                NumberAnimation {
-                                                    duration: 150
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-                                        }
-                                        
-                                        MouseArea {
-                                            id: playArea
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            hoverEnabled: true
-                                            onClicked: {
-                                                playerPlayPause()
-                                            }
-                                        }
-                                    }
-                                    
-                                    Rectangle {
-                                        id: nextButton
-                                        width: 40
-                                        height: 40
-                                        radius: 0
-                                        color: nextArea.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#161616")
-                                        
-                                        property real buttonScale: nextArea.pressed ? 0.9 : (nextArea.containsMouse ? 1.1 : 1.0)
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 200
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        Behavior on buttonScale {
-                                            NumberAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        scale: buttonScale
-                                        
-                                        Text {
-                                            text: "󰒭"
-                                            font.pixelSize: 22
-                                            anchors.centerIn: parent
-                                            color: nextArea.containsMouse ? 
-                                                ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
-                                            
-                                            Behavior on color {
-                                                ColorAnimation {
-                                                    duration: 200
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-                                        }
-                                        
-                                        MouseArea {
-                                            id: nextArea
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            hoverEnabled: true
-                                            onClicked: {
-                                                playerNext()
-=======
 
 
                                     // Kontrolki prev | play | next – Swiss Block Style
@@ -2208,7 +1342,6 @@ PanelWindow {
                                                 cursorShape: Qt.PointingHandCursor
                                                 hoverEnabled: true
                                                 onClicked: playerNext()
->>>>>>> master
                                             }
                                         }
                                     }
@@ -2218,17 +1351,11 @@ PanelWindow {
                     }
                 }
 
-<<<<<<< HEAD
-                // ============ TAB 1: MEDIA ============
-                Item {
-                    id: mediaTab
-=======
 
 
                 // ============ TAB 2: CLIPBOARD ============
                 Item {
                     id: clipboardTab
->>>>>>> master
                     anchors.fill: parent
                     visible: currentTab === 1
                     opacity: currentTab === 1 ? 1.0 : 0.0
@@ -2256,80 +1383,6 @@ PanelWindow {
                         }
                     }
                     
-<<<<<<< HEAD
-                    Item {
-                        anchors.fill: parent
-                        
-                        // Music Visualizer - wyciemnione cava (poziome) - w tle
-                        Row {
-                            id: mediaVisualizerRow
-                            spacing: 1
-                            anchors.fill: parent
-                            anchors.margins: 20
-                            opacity: 0.4  // Wyciemnione
-                            z: 0  // W tle
-                            
-                            Repeater {
-                                id: mediaVisualizerBarsRepeater
-                                model: 72  // 72 paski poziomo - więcej pasków = cieńsze
-                                
-                                Rectangle {
-                                    id: mediaVisualizerBar
-                                    width: Math.max(0.5, (parent.width - (71 * parent.spacing)) / 72)  // Bardzo cienkie paski
-                                    height: Math.max(2, mediaVisualizerBarValue)
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                    radius: 0
-                                    visible: true
-                                    
-                                    property real mediaVisualizerBarValue: 5
-                                    
-                                    Behavior on height {
-                                        NumberAnimation {
-                                            duration: 80
-                                            easing.type: Easing.OutQuad
-                                        }
-                                    }
-                                    
-                                    Behavior on color {
-                                        ColorAnimation {
-                                            duration: 100
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Media Player - wyśrodkowany na wierzchu, przesunięty w prawo
-                        RowLayout {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.horizontalCenterOffset: parent.width * 0.15  // Przesunięcie w prawo
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: Math.min(600, parent.width - 40)
-                            height: 180
-                            spacing: 20
-                            z: 1  // Na wierzchu
-                            
-                            // Album Art - po lewej
-                            Rectangle {
-                                Layout.preferredWidth: 180
-                                Layout.preferredHeight: 180
-                                radius: 0
-                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-                                
-                                Image {
-                                    anchors.fill: parent
-                                    anchors.margins: 1
-                                    fillMode: Image.PreserveAspectCrop
-                                    source: mpArt ? mpArt : ""
-                                    asynchronous: true
-                                    cache: false
-                                    opacity: source ? 1.0 : 0.0
-                                    
-                                    Behavior on opacity {
-                                        NumberAnimation {
-                                            duration: 400
-=======
                     Column {
                         anchors.fill: parent
                         anchors.margins: 16
@@ -2387,232 +1440,11 @@ PanelWindow {
                                     Behavior on color {
                                         ColorAnimation {
                                             duration: 200
->>>>>>> master
                                             easing.type: Easing.OutQuart
                                         }
                                     }
                                 }
                                 
-<<<<<<< HEAD
-                                Text {
-                                    text: "󰎆"
-                                    font.pixelSize: 60
-                                    anchors.centerIn: parent
-                                    visible: !mpArt
-                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                }
-                            }
-                            
-                            // Track Info i Controls - po prawej
-                            Column {
-                                Layout.fillWidth: true
-                                Layout.alignment: Qt.AlignVCenter
-                                spacing: 12
-                                
-                                // Track Info
-                                Column {
-                                    width: parent.width
-                                    spacing: 6
-                                    
-                                    Text {
-                                        text: mpTitle ? mpTitle : "Nothing playing"
-                                        font.pixelSize: 18
-                                        font.family: "sans-serif"
-                                        font.weight: Font.Bold
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        elide: Text.ElideRight
-                                        width: parent.width
-                                    }
-                                    
-                                    Text {
-                                        text: mpArtist ? mpArtist : "—"
-                                        font.pixelSize: 16
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        elide: Text.ElideRight
-                                        width: parent.width
-                                    }
-                                    
-                                    Text {
-                                        text: mpAlbum ? mpAlbum : "—"
-                                        font.pixelSize: 15
-                                        font.family: "sans-serif"
-                                        color: (sharedData && sharedData.colorText) ? Qt.lighter(sharedData.colorText, 1.3) : "#aaaaaa"
-                                        elide: Text.ElideRight
-                                        width: parent.width
-                                    }
-                                }
-                                
-                                // Controls
-                                Row {
-                                    spacing: 12
-                                    
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 0
-                                        color: prevAreaMedia.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#161616")
-                                        
-                                        property real buttonScale: prevAreaMedia.pressed ? 0.9 : (prevAreaMedia.containsMouse ? 1.1 : 1.0)
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 200
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        Behavior on buttonScale {
-                                            NumberAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        scale: buttonScale
-                                        
-                                        Text {
-                                            text: "󰒮"
-                                            font.pixelSize: 22
-                                            anchors.centerIn: parent
-                                            color: prevAreaMedia.containsMouse ? 
-                                                ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
-                                            
-                                            Behavior on color {
-                                                ColorAnimation {
-                                                    duration: 200
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-                                        }
-                                        
-                                        MouseArea {
-                                            id: prevAreaMedia
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            hoverEnabled: true
-                                            onClicked: {
-                                                playerPrev()
-                                            }
-                                        }
-                                    }
-                                    
-                                    Rectangle {
-                                        width: 50
-                                        height: 40
-                                        radius: 0
-                                        color: playAreaMedia.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                                            ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                        
-                                        property real buttonScale: playAreaMedia.pressed ? 0.9 : (playAreaMedia.containsMouse ? 1.1 : 1.0)
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 200
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        Behavior on buttonScale {
-                                            NumberAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        scale: buttonScale
-                                        
-                                        Text {
-                                            text: mpPlaying ? "󰏤" : "󰐊"
-                                            font.pixelSize: 24
-                                            anchors.centerIn: parent
-                                            color: playAreaMedia.containsMouse ? 
-                                                ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                                ((sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0a0a0a")
-                                            
-                                            Behavior on color {
-                                                ColorAnimation {
-                                                    duration: 200
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-                                            
-                                            rotation: playAreaMedia.pressed ? 5 : 0
-                                            
-                                            Behavior on rotation {
-                                                NumberAnimation {
-                                                    duration: 150
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-                                        }
-                                        
-                                        MouseArea {
-                                            id: playAreaMedia
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            hoverEnabled: true
-                                            onClicked: {
-                                                playerPlayPause()
-                                            }
-                                        }
-                                    }
-                                    
-                                    Rectangle {
-                                        width: 40
-                                        height: 40
-                                        radius: 0
-                                        color: nextAreaMedia.containsMouse ? 
-                                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
-                                            ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#161616")
-                                        
-                                        property real buttonScale: nextAreaMedia.pressed ? 0.9 : (nextAreaMedia.containsMouse ? 1.1 : 1.0)
-                                        
-                                        Behavior on color {
-                                            ColorAnimation {
-                                                duration: 200
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        Behavior on buttonScale {
-                                            NumberAnimation {
-                                                duration: 150
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-                                        
-                                        scale: buttonScale
-                                        
-                                        Text {
-                                            text: "󰒭"
-                                            font.pixelSize: 22
-                                            anchors.centerIn: parent
-                                            color: nextAreaMedia.containsMouse ? 
-                                                ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : 
-                                                ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
-                                            
-                                            Behavior on color {
-                                                ColorAnimation {
-                                                    duration: 200
-                                                    easing.type: Easing.OutQuart
-                                                }
-                                            }
-                                        }
-                                        
-                                        MouseArea {
-                                            id: nextAreaMedia
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            hoverEnabled: true
-                                            onClicked: {
-                                                playerNext()
-                                            }
-=======
                                 MouseArea {
                                     id: clearClipboardButtonMouseArea
                                     anchors.fill: parent
@@ -2695,7 +1527,6 @@ PanelWindow {
                                         hoverEnabled: true
                                         onClicked: {
                                             dashboardRoot.copyToClipboard(model.text)
->>>>>>> master
                                         }
                                     }
                                 }
@@ -2704,11 +1535,7 @@ PanelWindow {
                     }
                 }
 
-<<<<<<< HEAD
-                // ============ TAB 2: NOTIFICATIONS ============
-=======
                 // ============ TAB 3: NOTIFICATIONS ============
->>>>>>> master
                 Item {
                     id: notificationsTab
                     anchors.fill: parent
@@ -2742,11 +1569,7 @@ PanelWindow {
                     Column {
                         anchors.fill: parent
                         anchors.margins: 24
-<<<<<<< HEAD
-                        spacing: 16
-=======
                         spacing: 13
->>>>>>> master
                         
                         // Header with title and clear button
                         RowLayout {
@@ -2754,11 +1577,7 @@ PanelWindow {
                             
                             Text {
                                 text: "󰂚 Notification Center"
-<<<<<<< HEAD
-                                font.pixelSize: 24
-=======
                                 font.pixelSize: 19
->>>>>>> master
                                 font.family: "sans-serif"
                                 font.weight: Font.Bold
                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
@@ -2767,13 +1586,8 @@ PanelWindow {
                             
                             // Clear all button
                             Rectangle {
-<<<<<<< HEAD
-                                Layout.preferredWidth: 100
-                                Layout.preferredHeight: 32
-=======
                                 Layout.preferredWidth: 80
                                 Layout.preferredHeight: 25
->>>>>>> master
                                 radius: 0
                                 color: clearAllMouseArea.containsMouse ? 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
@@ -2786,11 +1600,7 @@ PanelWindow {
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰎟 Clear All"
-<<<<<<< HEAD
-                                    font.pixelSize: 12
-=======
                                     font.pixelSize: 9
->>>>>>> master
                                     font.family: "sans-serif"
                                     color: "#ffffff"
                                 }
@@ -2810,11 +1620,7 @@ PanelWindow {
                         // Notification count
                         Text {
                             text: ((sharedData && sharedData.notificationHistory) ? sharedData.notificationHistory.length : 0) + " notifications"
-<<<<<<< HEAD
-                            font.pixelSize: 12
-=======
                             font.pixelSize: 9
->>>>>>> master
                             font.family: "sans-serif"
                             color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                         }
@@ -2823,18 +1629,6 @@ PanelWindow {
                         ListView {
                             id: notificationHistoryList
                             width: parent.width
-<<<<<<< HEAD
-                            height: parent.height - 100
-                            clip: true
-                            spacing: 8
-                            model: (sharedData && sharedData.notificationHistory) ? sharedData.notificationHistory : []
-                            
-                            // Empty state
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󰂛 No notifications"
-                                font.pixelSize: 16
-=======
                             height: parent.height - 80
                             clip: true
                             spacing: 5
@@ -2848,7 +1642,6 @@ PanelWindow {
                                 y: (parent.height - height) / 2
                                 text: "󰂛 No notifications"
                                 font.pixelSize: 9
->>>>>>> master
                                 font.family: "sans-serif"
                                 color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                                 visible: !sharedData || !sharedData.notificationHistory || sharedData.notificationHistory.length === 0
@@ -2856,20 +1649,13 @@ PanelWindow {
                             
                             delegate: Rectangle {
                                 width: notificationHistoryList.width
-<<<<<<< HEAD
-                                height: notifContent.height + 24
-                                radius: 0
-=======
                                 height: notifContent.height + 19
                                 radius: 0
                                 // Material Design card color
->>>>>>> master
                                 color: notifItemMouseArea.containsMouse ? 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
                                     ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a")
                                 
-<<<<<<< HEAD
-=======
                                 property real cardElevation: notifItemMouseArea.containsMouse ? 2 : 1
                                 
                                 // Material Design elevation shadow
@@ -2889,7 +1675,6 @@ PanelWindow {
                                     }
                                 }
                                 
->>>>>>> master
                                 Behavior on color {
                                     ColorAnimation { duration: 150 }
                                 }
@@ -2907,11 +1692,7 @@ PanelWindow {
                                     anchors.top: parent.top
                                     anchors.margins: 12
                                     anchors.rightMargin: 8
-<<<<<<< HEAD
-                                    spacing: 4
-=======
                                     spacing: 5
->>>>>>> master
                                     
                                     // App name and time
                                     RowLayout {
@@ -2919,11 +1700,7 @@ PanelWindow {
                                         
                                         Text {
                                             text: modelData.appName || "Unknown"
-<<<<<<< HEAD
-                                            font.pixelSize: 11
-=======
                                             font.pixelSize: 9
->>>>>>> master
                                             font.family: "sans-serif"
                                             font.weight: Font.Medium
                                             color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
@@ -2933,11 +1710,7 @@ PanelWindow {
                                         
                                         Text {
                                             text: modelData.time || ""
-<<<<<<< HEAD
-                                            font.pixelSize: 10
-=======
                                             font.pixelSize: 8
->>>>>>> master
                                             font.family: "sans-serif"
                                             color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                                         }
@@ -2946,11 +1719,7 @@ PanelWindow {
                                     // Title
                                     Text {
                                         text: modelData.title || ""
-<<<<<<< HEAD
-                                        font.pixelSize: 13
-=======
                                         font.pixelSize: 10
->>>>>>> master
                                         font.family: "sans-serif"
                                         font.weight: Font.Bold
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
@@ -2961,11 +1730,7 @@ PanelWindow {
                                     // Body
                                     Text {
                                         text: modelData.body || ""
-<<<<<<< HEAD
-                                        font.pixelSize: 12
-=======
                                         font.pixelSize: 9
->>>>>>> master
                                         font.family: "sans-serif"
                                         color: (sharedData && sharedData.colorSubtext) ? sharedData.colorSubtext : "#888888"
                                         width: parent.width
@@ -2981,22 +1746,13 @@ PanelWindow {
                                     anchors.right: parent.right
                                     anchors.top: parent.top
                                     anchors.margins: 8
-<<<<<<< HEAD
-                                    spacing: 4
-=======
                                     spacing: 5
->>>>>>> master
                                     visible: notifItemMouseArea.containsMouse
                                     
                                     // Copy button
                                     Rectangle {
-<<<<<<< HEAD
-                                        width: 28
-                                        height: 28
-=======
                                         width: 32
                                         height: 32
->>>>>>> master
                                         radius: 0
                                         color: copyBtnMouseArea.containsMouse ? 
                                             ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
@@ -3005,11 +1761,7 @@ PanelWindow {
                                         Text {
                                             anchors.centerIn: parent
                                             text: "󰆏"
-<<<<<<< HEAD
-                                            font.pixelSize: 14
-=======
                                             font.pixelSize: 8
->>>>>>> master
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                         }
                                         
@@ -3027,24 +1779,15 @@ PanelWindow {
                                     
                                     // Delete button
                                     Rectangle {
-<<<<<<< HEAD
-                                        width: 28
-                                        height: 28
-=======
                                         width: 32
                                         height: 32
->>>>>>> master
                                         radius: 0
                                         color: deleteBtnMouseArea.containsMouse ? "#ff4444" : "transparent"
                                         
                                         Text {
                                             anchors.centerIn: parent
                                             text: "󰆴"
-<<<<<<< HEAD
-                                            font.pixelSize: 14
-=======
                                             font.pixelSize: 8
->>>>>>> master
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                         }
                                         
@@ -3072,14 +1815,6 @@ PanelWindow {
     }
 
     // ============ PROPERTIES ============
-<<<<<<< HEAD
-    property int ramUsageValue: 0
-    property int ramTotalGB: 16  // Will be calculated
-    property int cpuUsageValue: 0
-    property int gpuUsageValue: 0
-    property int cpuTempValue: 0
-    property int gpuTempValue: 0
-=======
     Behavior on cpuUsageValue { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
     Behavior on ramUsageValue { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
     Behavior on gpuUsageValue { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
@@ -3089,7 +1824,6 @@ PanelWindow {
     property real gpuUsageEMA: 0
     property real smoothingFactor: 0.15  // Lower = smoother
     property int maxHistoryLength: 100  // Number of data points to show
->>>>>>> master
     property string mpTitle: ""
     property string mpArtist: ""
     property string mpAlbum: ""
@@ -3101,22 +1835,11 @@ PanelWindow {
     // Calendar days model
     property var calendarDays: []
     
-<<<<<<< HEAD
-    // Network properties
-    property string networkDownloadSpeed: "0 KB/s"
-    property string networkUploadSpeed: "0 KB/s"
-    property int networkDownloadBytes: 0
-    property int networkUploadBytes: 0
-    property int networkDownloadBytesPrev: 0
-    property int networkUploadBytesPrev: 0
-    
-=======
     // Uptime (display string, set by updateUptime())
     property string uptimeDisplayText: "󰥔: --"
     
     // Battery
     property int batteryPercent: -1
->>>>>>> master
     
     // Performance tab models
     property var diskUsageModel: []
@@ -3126,8 +1849,6 @@ PanelWindow {
     property var cavaValues: []
     property bool cavaRunning: false
     property string projectPath: ""
-<<<<<<< HEAD
-=======
     onProjectPathChanged: { if (projectPath && projectPath.length > 0 && !cavaRunning) startCava() }
 
     // Clipboard properties
@@ -3146,19 +1867,13 @@ PanelWindow {
         repeat: true
         onTriggered: dashboardRoot.checkClipboard()
     }
->>>>>>> master
     
     // ============ FUNCTIONS ============
     function updateWeather() {
         // Simple weather update - can be extended with API integration
         // For now, uses a simple approach that can be customized
         // Example: curl -s "wttr.in?format=%t+%C" or use a weather service
-<<<<<<< HEAD
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','curl -s \"wttr.in?format=%t+%C\" 2>/dev/null | head -1 > /tmp/quickshell_weather || echo \"15°C Clear\" > /tmp/quickshell_weather']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readWeather() }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','curl -s "wttr.in?format=%t+%C" 2>/dev/null | head -1 > /tmp/quickshell_weather || echo "15°C Clear" > /tmp/quickshell_weather'], readWeather)
->>>>>>> master
     }
     
     function readWeather() {
@@ -3178,12 +1893,7 @@ PanelWindow {
     }
     
     function updateDistro() {
-<<<<<<< HEAD
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(grep \"^PRETTY_NAME=\" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \\\"\\\" || grep \"^NAME=\" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \\\"\\\" || echo \"Linux\") > /tmp/quickshell_distro']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: dashboardRoot.readDistro() }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(grep "^PRETTY_NAME=" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \'"\'"\' || grep "^NAME=" /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d \'"\'"\' || echo "Linux") > /tmp/quickshell_distro'], readDistro)
->>>>>>> master
     }
     
     function readDistro() {
@@ -3202,52 +1912,6 @@ PanelWindow {
         xhr.send()
     }
     
-<<<<<<< HEAD
-    function readNetworkStats() {
-        var xhr = new XMLHttpRequest()
-        xhr.open("GET", "file:///proc/net/dev")
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                var lines = xhr.responseText.split("\n")
-                var totalRx = 0
-                var totalTx = 0
-                
-                // Parse /proc/net/dev - sum all interfaces except lo
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i].trim()
-                    if (line && line.indexOf(":") > 0 && !line.startsWith("lo:")) {
-                        // Format: interface: rx_bytes rx_packets ... tx_bytes tx_packets ...
-                        var parts = line.split(/\s+/)
-                        if (parts.length >= 10) {
-                            // parts[0] is "interface:", parts[1] is rx_bytes, parts[9] is tx_bytes
-                            var rxBytes = Number(parts[1]) || 0
-                            var txBytes = Number(parts[9]) || 0
-                            totalRx += rxBytes
-                            totalTx += txBytes
-                        }
-                    }
-                }
-                
-                // Check if we have previous values to calculate speed
-                if (networkDownloadBytesPrev > 0 || networkUploadBytesPrev > 0) {
-                    // Calculate speed: difference / 2 seconds (timer interval)
-                    var rxDiff = Math.max(0, totalRx - networkDownloadBytesPrev)
-                    var txDiff = Math.max(0, totalTx - networkUploadBytesPrev)
-                    networkDownloadSpeed = formatSpeed(rxDiff / 2) // Per second
-                    networkUploadSpeed = formatSpeed(txDiff / 2) // Per second
-                } else {
-                    // First measurement, just store values (will show 0 until next measurement)
-                    networkDownloadSpeed = "0 KB/s"
-                    networkUploadSpeed = "0 KB/s"
-                }
-                
-                // Update previous values for next calculation
-                networkDownloadBytesPrev = networkDownloadBytes
-                networkUploadBytesPrev = networkUploadBytes
-                // Update current values
-                networkDownloadBytes = totalRx
-                networkUploadBytes = totalTx
-=======
     function updateBattery() {
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1 > /tmp/quickshell_battery || echo -1 > /tmp/quickshell_battery'], readBattery)
     }
@@ -3260,25 +1924,11 @@ PanelWindow {
                 var s = xhr.responseText.trim()
                 var p = parseInt(s, 10)
                 batteryPercent = (!isNaN(p) && p >= 0 && p <= 100) ? p : -1
->>>>>>> master
             }
         }
         xhr.send()
     }
     
-<<<<<<< HEAD
-    function formatSpeed(bytes) {
-        if (bytes < 1024) return bytes + " B/s"
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB/s"
-        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB/s"
-        return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB/s"
-    }
-    
-    
-    function updateWindowManager() {
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(echo $XDG_CURRENT_DESKTOP 2>/dev/null | cut -d: -f1 || echo $DESKTOP_SESSION 2>/dev/null || ps -e | grep -E \"(hyprland|sway|i3|kwin|mutter|xfwm4|openbox|dwm)\" | head -1 | awk \"{print \\$4}\" | tr -d \\\"\\\" || echo \"Unknown\") > /tmp/quickshell_wm']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: dashboardRoot.readWindowManager() }", dashboardRoot)
-=======
     function updateNetwork() {
         if (sharedData && sharedData.runCommand) {
             var script = "(A=$(tail -n +3 /proc/net/dev 2>/dev/null | awk '{r+=$2;t+=$10} END {print r+0,t+0}'); sleep 1; B=$(tail -n +3 /proc/net/dev 2>/dev/null | awk '{r+=$2;t+=$10} END {print r+0,t+0}'); echo \"$A $B\") > /tmp/quickshell_net_speed"
@@ -3309,7 +1959,6 @@ PanelWindow {
     
     function updateWindowManager() {
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(echo $XDG_CURRENT_DESKTOP 2>/dev/null | cut -d: -f1 || echo $DESKTOP_SESSION 2>/dev/null || ps -e | grep -E "(hyprland|sway|i3|kwin|mutter|xfwm4|openbox|dwm)" | head -1 | awk "{print \$4}" | tr -d \'"\'"\' || echo "Unknown") > /tmp/quickshell_wm'], readWindowManager)
->>>>>>> master
     }
     
     function readWindowManager() {
@@ -3367,16 +2016,8 @@ PanelWindow {
     }
     
     function updateDate() {
-<<<<<<< HEAD
-        var now = new Date()
-        dayNumber.text = now.getDate().toString()
-        monthNumber.text = (now.getMonth() + 1 < 10 ? "0" : "") + (now.getMonth() + 1).toString()
-        
-        // dayName was removed, so we don't update it
-=======
         // Calendar grid is updated by updateCalendar().
         // dayNumber/monthNumber elements were removed; no separate date display to update.
->>>>>>> master
     }
     
     function updateUptime() {
@@ -3399,11 +2040,7 @@ PanelWindow {
                     if (!uptimeStr) {
                         uptimeStr = "0m"
                     }
-<<<<<<< HEAD
-                    uptimeText.text = "󰥔: " + uptimeStr
-=======
                     uptimeDisplayText = "󰥔: " + uptimeStr
->>>>>>> master
                 }
             }
         }
@@ -3424,16 +2061,11 @@ PanelWindow {
     }
 
     function updatePlayerMetadata() {
-<<<<<<< HEAD
-        Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["sh", "-c", "playerctl metadata --format \'{{artist}}\\n{{title}}\\n{{album}}\\n{{mpris:artUrl}}\\n{{mpris:length}}\\n{{status}}\' > /tmp/quickshell_player_info 2>/tmp/quickshell_player_err || echo > /tmp/quickshell_player_info"]; running: true }', dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: dashboardRoot.readPlayerMetadata() }", dashboardRoot)
-=======
         // Delegate path resolution to shell to avoid QML ReferenceErrors
         if (sharedData && sharedData.runCommand) {
              var cmd = 'TARGET="${QUICKSHELL_PROJECT_PATH:-$HOME/.config/alloy/dart}/scripts/get-player-metadata.sh"; bash "$TARGET"'
              sharedData.runCommand(["sh", "-c", cmd], readPlayerMetadata)
         }
->>>>>>> master
     }
     
     function readPlayerMetadata() {
@@ -3452,11 +2084,7 @@ PanelWindow {
                     mpLength = 0
                     return
                 }
-<<<<<<< HEAD
-                var lines = txt.split("\n")
-=======
                 var lines = txt.split("|###|")
->>>>>>> master
                 mpArtist = lines[0] ? lines[0].trim() : ""
                 mpTitle = lines[1] ? lines[1].trim() : ""
                 mpAlbum = lines[2] ? lines[2].trim() : ""
@@ -3479,12 +2107,7 @@ PanelWindow {
     }
 
     function updatePlayerPosition() {
-<<<<<<< HEAD
-        Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["sh", "-c", "playerctl position > /tmp/quickshell_player_pos 2>/dev/null || echo 0 > /tmp/quickshell_player_pos"]; running: true }', dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 150; running: true; repeat: false; onTriggered: dashboardRoot.readPlayerPosition() }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(["sh", "-c", "playerctl position > /tmp/quickshell_player_pos 2>/dev/null || echo 0 > /tmp/quickshell_player_pos"], readPlayerPosition)
->>>>>>> master
     }
     
     function readPlayerPosition() {
@@ -3506,49 +2129,6 @@ PanelWindow {
     }
 
     function playerPlayPause() {
-<<<<<<< HEAD
-        Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["playerctl", "play-pause"]; running: true }', dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 250; running: true; repeat: false; onTriggered: dashboardRoot.updatePlayerMetadata() }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 400; running: true; repeat: false; onTriggered: dashboardRoot.updatePlayerPosition() }", dashboardRoot)
-    }
-
-    function playerNext() {
-        Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["playerctl", "next"]; running: true }', dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: dashboardRoot.updatePlayerMetadata() }", dashboardRoot)
-    }
-
-    function playerPrev() {
-        Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["playerctl", "previous"]; running: true }', dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: dashboardRoot.updatePlayerMetadata() }", dashboardRoot)
-    }
-
-    // ============ TIMERS ============
-    Timer {
-        id: calendarClockTimer
-        interval: 1000
-        repeat: true
-        running: true
-        onTriggered: {
-            var now = new Date()
-            var h = now.getHours()
-            var m = now.getMinutes()
-            var hStr = h < 10 ? "0" + h : h.toString()
-            var mStr = m < 10 ? "0" + m : m.toString()
-            calendarHoursDisplay.text = hStr
-            calendarMinutesDisplay.text = mStr
-        }
-        Component.onCompleted: {
-            var now = new Date()
-            var h = now.getHours()
-            var m = now.getMinutes()
-            var hStr = h < 10 ? "0" + h : h.toString()
-            var mStr = m < 10 ? "0" + m : m.toString()
-            calendarHoursDisplay.text = hStr
-            calendarMinutesDisplay.text = mStr
-        }
-    }
-    
-=======
         if (sharedData && sharedData.runCommand) {
             sharedData.runCommand(["playerctl", "play-pause"], function(){ updatePlayerMetadata(); updatePlayerPosition() })
         }
@@ -3565,77 +2145,37 @@ PanelWindow {
 
 
     // ============ TIMERS ============
->>>>>>> master
     Timer {
         id: dateTimer
         interval: 1000
         repeat: true
-<<<<<<< HEAD
-        running: true
-        onTriggered: updateDate()
-        Component.onCompleted: updateDate()
-=======
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateDate()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateDate()
->>>>>>> master
     }
     
     Timer {
         id: calendarTimer
         interval: 60000
         repeat: true
-<<<<<<< HEAD
-        running: true
-        onTriggered: updateCalendar()
-        Component.onCompleted: updateCalendar()
-=======
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateCalendar()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateCalendar()
->>>>>>> master
     }
     
     Timer {
         id: uptimeTimer
         interval: 60000
         repeat: true
-<<<<<<< HEAD
-        running: true
-        onTriggered: updateUptime()
-        Component.onCompleted: updateUptime()
-=======
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateUptime()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateUptime()
->>>>>>> master
     }
     
     Timer {
         id: playerMetadataTimer
         interval: 3000
         repeat: true
-<<<<<<< HEAD
-        running: true
-        onTriggered: updatePlayerMetadata()
-        Component.onCompleted: updatePlayerMetadata()
-    }
-
-    Timer {
-        id: playerPositionTimer
-        interval: 500
-        repeat: true
-        running: true
-        onTriggered: updatePlayerPosition()
-        Component.onCompleted: updatePlayerPosition()
-    }
-
-    Timer {
-        id: ramTimer
-        interval: 2000
-        repeat: true
-        running: true
-=======
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updatePlayerMetadata()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updatePlayerMetadata()
@@ -3656,7 +2196,6 @@ PanelWindow {
         interval: 500
         repeat: true
         running: (sharedData && sharedData.menuVisible)
->>>>>>> master
         function readRam() {
             var xhr = new XMLHttpRequest()
             xhr.open("GET", "file:///proc/meminfo")
@@ -3672,14 +2211,10 @@ PanelWindow {
                     if (memTotal > 0) {
                         ramUsageValue = 100 - Math.round((memAvailable / memTotal) * 100)
                         ramTotalGB = Math.round(memTotal / 1024 / 1024)  // Convert from KB to GB
-<<<<<<< HEAD
-                    }
-=======
                         
                         ramHistory = pushHistory(ramHistory, ramUsageValue)
                     }
                     dashboardRoot.perfUpdated()
->>>>>>> master
                 }
             }
             xhr.send()
@@ -3690,15 +2225,9 @@ PanelWindow {
 
     Timer {
         id: cpuTimer
-<<<<<<< HEAD
-        interval: 2000
-        repeat: true
-        running: true
-=======
         interval: 500
         repeat: true
         running: (sharedData && sharedData.menuVisible)
->>>>>>> master
 
         property int lastIdle: 0
         property int lastTotal: 0
@@ -3719,17 +2248,11 @@ PanelWindow {
                             var total = user + nice + system + idle
                             if (cpuTimer.lastTotal > 0) {
                                 cpuUsageValue = Math.round((total - cpuTimer.lastTotal - (idle - cpuTimer.lastIdle)) / (total - cpuTimer.lastTotal) * 100)
-<<<<<<< HEAD
-                            }
-                            cpuTimer.lastTotal = total
-                            cpuTimer.lastIdle = idle
-=======
                                 cpuHistory = pushHistory(cpuHistory, cpuUsageValue)
                             }
                             cpuTimer.lastTotal = total
                             cpuTimer.lastIdle = idle
                             dashboardRoot.perfUpdated()
->>>>>>> master
                             break
                         }
                     }
@@ -3743,26 +2266,15 @@ PanelWindow {
 
     Timer {
         id: gpuTimer
-<<<<<<< HEAD
-        interval: 2000
-        repeat: true
-        running: true
-=======
         interval: 500
         repeat: true
         running: (sharedData && sharedData.menuVisible)
->>>>>>> master
         onTriggered: readGpu()
     }
     
     function readGpu() {
         // Read GPU usage using nvidia-smi (primary) or radeontop (fallback)
-<<<<<<< HEAD
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d \" \" > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \"{print int(\\$2)}\" > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 800; running: true; repeat: false; onTriggered: dashboardRoot.readGpuData() }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d " " > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk "{print int($2)}" > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage'], readGpuData)
->>>>>>> master
     }
     
     function readGpuData() {
@@ -3783,11 +2295,6 @@ PanelWindow {
                     } else {
                         gpuUsageValue = 0
                     }
-<<<<<<< HEAD
-                } else {
-                    gpuUsageValue = 0
-                }
-=======
                     
                     // Update History
                     gpuHistory = pushHistory(gpuHistory, gpuUsageValue)
@@ -3796,21 +2303,12 @@ PanelWindow {
                     gpuUsageValue = 0
                 }
                 dashboardRoot.perfUpdated()
->>>>>>> master
             }
         }
         xhr.send()
     }
 
     Timer {
-<<<<<<< HEAD
-        id: networkTimer
-        interval: 2000 // Update every 2 seconds
-        repeat: true
-        running: true
-        onTriggered: readNetworkStats()
-        Component.onCompleted: readNetworkStats()
-=======
         id: batteryTimer
         interval: 10000
         repeat: true
@@ -3834,18 +2332,12 @@ PanelWindow {
         running: (sharedData && sharedData.menuVisible) && (sharedData && sharedData.dashboardTileLeft === "network")
         onTriggered: updateNetwork()
         Component.onCompleted: if ((sharedData && sharedData.menuVisible) && (sharedData && sharedData.dashboardTileLeft === "network")) updateNetwork()
->>>>>>> master
     }
     
     
     // ============ PERFORMANCE TAB FUNCTIONS ============
     function updateDiskUsage() {
-<<<<<<< HEAD
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','df -h | grep -E \"^/dev\" | awk \"{print \\$6 \\\"|\\\" \\$2 \\\"|\\\" \\$3 \\\"|\\\" \\$5}\" | head -5 > /tmp/quickshell_disk_usage 2>/dev/null || echo > /tmp/quickshell_disk_usage']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readDiskUsage() }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','df -h | grep -E "^/dev" | awk "{print $6 \"|\" $2 \"|\" $3 \"|\" $5}" | head -5 > /tmp/quickshell_disk_usage 2>/dev/null || echo > /tmp/quickshell_disk_usage'], readDiskUsage)
->>>>>>> master
     }
     
     function readDiskUsage() {
@@ -3877,12 +2369,7 @@ PanelWindow {
     }
     
     function updateTopProcesses() {
-<<<<<<< HEAD
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','ps aux --sort=-%cpu 2>/dev/null | tail -n +2 | head -8 | awk \"{print \\$11 \\\"|\\\" \\$3 \\\"|\\\" \\$4}\" > /tmp/quickshell_top_processes 2>/dev/null || echo > /tmp/quickshell_top_processes']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 600; running: true; repeat: false; onTriggered: dashboardRoot.readTopProcesses() }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','ps aux --sort=-%cpu 2>/dev/null | tail -n +2 | head -8 | awk "{print $11 \"|\" $3 \"|\" $4}" > /tmp/quickshell_top_processes 2>/dev/null || echo > /tmp/quickshell_top_processes'], readTopProcesses)
->>>>>>> master
     }
     
     function readTopProcesses() {
@@ -3919,12 +2406,7 @@ PanelWindow {
     }
     
     function updateCpuTemp() {
-<<<<<<< HEAD
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(sensors 2>/dev/null | grep -i \"cpu\" | grep -oE \"[0-9]+\\.[0-9]+\" | head -1 | cut -d. -f1 > /tmp/quickshell_cpu_temp) || (cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -1 | awk \"{print int(\\$1/1000)}\" > /tmp/quickshell_cpu_temp) || echo 0 > /tmp/quickshell_cpu_temp']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readCpuTemp() }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(sensors 2>/dev/null | grep -i "cpu" | grep -oE "[0-9]+\\.[0-9]+" | head -1 | cut -d. -f1 > /tmp/quickshell_cpu_temp) || (cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -1 | awk "{print int($1/1000)}" > /tmp/quickshell_cpu_temp) || echo 0 > /tmp/quickshell_cpu_temp'], readCpuTemp)
->>>>>>> master
     }
     
     function readCpuTemp() {
@@ -3940,12 +2422,7 @@ PanelWindow {
     }
     
     function updateGpuTemp() {
-<<<<<<< HEAD
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 > /tmp/quickshell_gpu_temp) || (sensors 2>/dev/null | grep -i \"gpu\\|radeon\\|amdgpu\" | grep -oE \"[0-9]+\\.[0-9]+\" | head -1 | cut -d. -f1 > /tmp/quickshell_gpu_temp) || echo 0 > /tmp/quickshell_gpu_temp']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readGpuTemp() }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 > /tmp/quickshell_gpu_temp) || (sensors 2>/dev/null | grep -i "gpu\\|radeon\\|amdgpu" | grep -oE "[0-9]+\\.[0-9]+" | head -1 | cut -d. -f1 > /tmp/quickshell_gpu_temp) || echo 0 > /tmp/quickshell_gpu_temp'], readGpuTemp)
->>>>>>> master
     }
     
     function readGpuTemp() {
@@ -3960,83 +2437,47 @@ PanelWindow {
         xhr.send()
     }
     
-<<<<<<< HEAD
-    // Performance timers
-=======
     // Performance timers – only when dashboard is open
->>>>>>> master
     Timer {
         id: diskUsageTimer
         interval: 5000
         repeat: true
-<<<<<<< HEAD
-        running: true
-        onTriggered: updateDiskUsage()
-        Component.onCompleted: updateDiskUsage()
-=======
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateDiskUsage()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateDiskUsage()
->>>>>>> master
     }
     
     Timer {
         id: topProcessesTimer
         interval: 3000
         repeat: true
-<<<<<<< HEAD
-        running: true
-        onTriggered: updateTopProcesses()
-        Component.onCompleted: updateTopProcesses()
-=======
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateTopProcesses()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateTopProcesses()
->>>>>>> master
     }
     
     Timer {
         id: cpuTempTimer
         interval: 5000
         repeat: true
-<<<<<<< HEAD
-        running: true
-        onTriggered: updateCpuTemp()
-        Component.onCompleted: updateCpuTemp()
-=======
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateCpuTemp()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateCpuTemp()
->>>>>>> master
     }
     
     Timer {
         id: gpuTempTimer
         interval: 5000
         repeat: true
-<<<<<<< HEAD
-        running: true
-        onTriggered: updateGpuTemp()
-        Component.onCompleted: updateGpuTemp()
-=======
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateGpuTemp()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateGpuTemp()
->>>>>>> master
     }
     
     // ============ CAVA VISUALIZER FUNCTIONS ============
     function startCava() {
-<<<<<<< HEAD
-        // Sprawdź czy cava jest zainstalowane
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh','-c','which cava > /dev/null 2>&1 && echo 1 > /tmp/quickshell_cava_available || echo 0 > /tmp/quickshell_cava_available']; running: true }", dashboardRoot)
-        
-        // Poczekaj i sprawdź dostępność
-        Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: dashboardRoot.checkCavaAvailable() }", dashboardRoot)
-=======
         if (sharedData && sharedData.lowPerformanceMode) return
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','which cava > /dev/null 2>&1 && echo 1 > /tmp/quickshell_cava_available || echo 0 > /tmp/quickshell_cava_available'], checkCavaAvailable)
->>>>>>> master
     }
     
     function checkCavaAvailable() {
@@ -4049,23 +2490,6 @@ PanelWindow {
                     // Użyj skryptu start-cava.sh do uruchomienia cava
                     var scriptPath = projectPath ? (projectPath + "/scripts/start-cava.sh") : ""
                     if (!scriptPath || scriptPath === "/scripts/start-cava.sh") {
-<<<<<<< HEAD
-                        // Try to get from environment
-                        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_cava_path 2>/dev/null || echo \"\" > /tmp/quickshell_cava_path']; running: true }", dashboardRoot)
-                        Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: dashboardRoot.readCavaPath() }", dashboardRoot)
-                        return
-                    }
-                    if (!scriptPath || scriptPath.length === 0 || scriptPath === "/scripts/start-cava.sh") {
-                        console.log("Invalid script path for cava:", scriptPath)
-                        return
-                    }
-                    var absScriptPath = scriptPath
-                    Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["bash", "' + absScriptPath + '"]; running: true }', dashboardRoot)
-                    
-                    cavaRunning = true
-                    console.log("Cava started with script...")
-                    Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readCavaData() }", dashboardRoot)
-=======
                         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo "$QUICKSHELL_PROJECT_PATH" > /tmp/quickshell_cava_path 2>/dev/null || true'], readCavaPath)
                         return
                     }
@@ -4077,7 +2501,6 @@ PanelWindow {
                         cavaRunning = true
                         sharedData.runCommand(["bash", absScriptPath], readCavaData)
                     }
->>>>>>> master
                 }
             }
         }
@@ -4094,16 +2517,10 @@ PanelWindow {
                     projectPath = path
                     var scriptPath = projectPath + "/scripts/start-cava.sh"
                     var absScriptPath = scriptPath
-<<<<<<< HEAD
-                    Qt.createQmlObject('import Quickshell.Io; import QtQuick; Process { command: ["bash", "' + absScriptPath + '"]; running: true }', dashboardRoot)
-                    cavaRunning = true
-                    Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: dashboardRoot.readCavaData() }", dashboardRoot)
-=======
                     if (sharedData && sharedData.runCommand) {
                         cavaRunning = true
                         sharedData.runCommand(["bash", absScriptPath], readCavaData)
                     }
->>>>>>> master
                 }
             }
         }
@@ -4118,10 +2535,6 @@ PanelWindow {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status !== 200 && xhr.status !== 0) {
                     if (cavaRunning) {
-<<<<<<< HEAD
-                        console.log("Cava file not accessible, status:", xhr.status)
-=======
->>>>>>> master
                         cavaRunning = false
                         startCava()
                     }
@@ -4138,36 +2551,11 @@ PanelWindow {
                         var colorPrimary = (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"
                         var colorSecondary = (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#2a2a2a"
                         
-<<<<<<< HEAD
-                        for (var i = 0; i < 72; i++) {
-                            var val = 0
-                            // Mapuj 36 wartości z cava na 72 paski (każda wartość odpowiada 2 paskom)
-                            var sourceIndex = Math.floor(i / 2)
-                            if (sourceIndex < values.length && values[sourceIndex]) {
-                                val = parseInt(values[sourceIndex]) || 0
-                            }
-                            var normalizedHeight = Math.max(2, (val / 100) * 200)  // Wyższe paski - maksymalnie 200px
-                            if (mediaVisualizerBarsRepeater.itemAt(i)) {
-                                mediaVisualizerBarsRepeater.itemAt(i).mediaVisualizerBarValue = normalizedHeight
-                                var intensity = val / 100
-                                if (intensity > 0.7) {
-                                    mediaVisualizerBarsRepeater.itemAt(i).color = colorAccent
-                                } else if (intensity > 0.4) {
-                                    mediaVisualizerBarsRepeater.itemAt(i).color = colorText
-                                } else if (intensity > 0.1) {
-                                    mediaVisualizerBarsRepeater.itemAt(i).color = colorPrimary
-                                } else {
-                                    mediaVisualizerBarsRepeater.itemAt(i).color = colorSecondary
-                                }
-                            }
-                        }
-=======
                         // Store cava values for potential future use (e.g. SidePanel visualizer)
                         cavaValues = values
                         
                         // Note: Media visualizer was removed when Media tab was replaced with Clipboard tab
                         // If visualizer is needed in the future, it should be added to SidePanel or another component
->>>>>>> master
                     }
                 } else {
                     // No data, silently continue - cavaCheckTimer will handle restart if needed
@@ -4178,17 +2566,10 @@ PanelWindow {
         xhr.send()
     }
     
-<<<<<<< HEAD
-    // Timer do odczytu danych z cava
-    Timer {
-        id: cavaDataTimer
-        interval: 16  // ~60 FPS
-=======
     // Timer do odczytu danych z cava (33ms≈30 FPS; 50ms gdy low-perf)
     Timer {
         id: cavaDataTimer
         interval: (sharedData && sharedData.lowPerformanceMode) ? 50 : 33
->>>>>>> master
         repeat: true
         running: cavaRunning
         onTriggered: readCavaData()
@@ -4207,10 +2588,6 @@ PanelWindow {
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === XMLHttpRequest.DONE) {
                         if (xhr.status !== 200 && xhr.status !== 0) {
-<<<<<<< HEAD
-                            console.log("Cava file not accessible, restarting...")
-=======
->>>>>>> master
                             cavaRunning = false
                             startCava()
                         }
@@ -4223,15 +2600,11 @@ PanelWindow {
         }
     }
 
-<<<<<<< HEAD
-    Component.onCompleted: {
-=======
 
 
     
     Component.onCompleted: {
         
->>>>>>> master
         // Initialize weatherCity from sharedData if available
         if (sharedData && sharedData.weatherCity !== undefined) {
             weatherCity = sharedData.weatherCity
@@ -4241,30 +2614,19 @@ PanelWindow {
         updateUptime()
         updateDistro()
         updateWindowManager()
-<<<<<<< HEAD
-        // Initialize project path
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo \"$QUICKSHELL_PROJECT_PATH\" > /tmp/quickshell_cava_path 2>/dev/null || pwd > /tmp/quickshell_cava_path']; running: true }", dashboardRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: dashboardRoot.readCavaPath() }", dashboardRoot)
-        startCava()
-=======
         if (projectPath && projectPath.length > 0) {
             startCava()
         } else if (sharedData && sharedData.runCommand) {
             sharedData.runCommand(['sh', '-c', 'echo "$QUICKSHELL_PROJECT_PATH" > /tmp/quickshell_cava_path 2>/dev/null || pwd > /tmp/quickshell_cava_path'], readCavaPath)
         }
         checkClipboard()
->>>>>>> master
     }
     
     Connections {
         target: sharedData
         function onMenuVisibleChanged() {
             if (sharedData && sharedData.menuVisible) {
-<<<<<<< HEAD
-                Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: { if (dashboardRoot.dashboardContainer) dashboardRoot.dashboardContainer.forceActiveFocus() } }", dashboardRoot)
-=======
                 if (dashboardRoot.dashboardContainer) dashboardRoot.dashboardContainer.forceActiveFocus()
->>>>>>> master
             } else {
                 dashboardContainer.focus = false
             }
@@ -4273,26 +2635,6 @@ PanelWindow {
     
     // ============ POWER MENU FUNCTIONS ============
     function suspendSystem() {
-<<<<<<< HEAD
-        console.log("Suspending system...")
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'suspend']; running: true }", dashboardRoot)
-    }
-    
-    function rebootSystem() {
-        console.log("Rebooting system...")
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'reboot']; running: true }", dashboardRoot)
-    }
-    
-    function shutdownSystem() {
-        console.log("Shutting down system...")
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['systemctl', 'poweroff']; running: true }", dashboardRoot)
-    }
-    
-    function logoutSystem() {
-        console.log("Logging out...")
-        // Try loginctl first, fallback to pkill
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'loginctl terminate-session $(loginctl list-sessions | grep $(whoami) | awk \"{print $1}\" | head -1) 2>/dev/null || pkill -KILL -u $(whoami)']; running: true }", dashboardRoot)
-=======
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'suspend'])
     }
     
@@ -4307,14 +2649,10 @@ PanelWindow {
     function logoutSystem() {
         // Try loginctl first, fallback to pkill
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'loginctl terminate-session $(loginctl list-sessions | grep $(whoami) | awk "{print $1}" | head -1) 2>/dev/null || pkill -KILL -u $(whoami)'])
->>>>>>> master
     }
     
     // ============ NOTIFICATION FUNCTIONS ============
     function copyToClipboard(text) {
-<<<<<<< HEAD
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['wl-copy', '" + text.replace(/'/g, "'\\''").replace(/\n/g, "\\n") + "']; running: true }", dashboardRoot)
-=======
         var esc = text.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$").replace(/`/g, "\\`")
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo -n "' + esc + '" > /tmp/quickshell_clipboard_copy'], copyFromFile)
         lastClipboardContent = text
@@ -4368,7 +2706,6 @@ PanelWindow {
         
         dashboardClipboardHistoryModel.insert(0, { text: trimmed })
         lastClipboardContent = trimmed
->>>>>>> master
     }
 }
 
