@@ -20,9 +20,6 @@ PanelWindow {
     property string qBtStatus: "Checking..."
     property int qBtDevices: 0
     property string qPwrStatus: "Checking..."
-    property int qBrightness: 0
-    property int qBrightnessMax: 255
-    
     property int qBatteryPct: 0
     property string qBatteryStatus: "Unknown"
     property int qNetSignal: 0
@@ -416,7 +413,7 @@ PanelWindow {
         anchors.rightMargin: isHorizontal ? 12 : 0
         anchors.verticalCenter: isHorizontal ? sidePanelRect.verticalCenter : undefined
         anchors.bottom: !isHorizontal ? sidePanelRect.bottom : undefined
-        anchors.bottomMargin: !isHorizontal ? 6 : 0
+        anchors.bottomMargin: !isHorizontal ? 2 : 0
         opacity: panelActive ? 1.0 : 0.0
         scale: panelActive ? 1.0 : 0.7
         Behavior on opacity { 
@@ -481,12 +478,6 @@ PanelWindow {
                     sidePanelRoot.runAndRead('powerprofilesctl get 2>/dev/null || echo "N/A"', function(out) { 
                         if (out !== undefined) root.qPwrStatus = (out.trim() && out.trim() !== "N/A") ? out.trim() : "Default" 
                     })
-                    sidePanelRoot.runAndRead('brightnessctl get', function(out) { 
-                        if (out !== undefined) root.qBrightness = parseInt(out) || 0 
-                    })
-                    sidePanelRoot.runAndRead('brightnessctl max', function(out) { 
-                        if (out !== undefined) root.qBrightnessMax = parseInt(out) || 255 
-                    })
                     sidePanelRoot.runAndRead('B_CAP=$(cat /sys/class/power_supply/*/capacity 2>/dev/null | head -n1); [ -z "$B_CAP" ] && B_CAP=$(upower -i $(upower -e | grep BAT | head -n1) 2>/dev/null | grep percentage | awk \'{print $2}\' | tr -d "%"); [ -n "$B_CAP" ] && echo "$B_CAP" || echo 0', function(out) {
                         if (out !== undefined) {
                             var val = parseInt(out.trim())
@@ -523,8 +514,10 @@ PanelWindow {
         anchors.top: isHorizontal ? sidePanelRect.top : undefined
         anchors.bottom: isHorizontal ? sidePanelRect.bottom : (!isHorizontal ? statusContainer.top : undefined)
         
-        anchors.bottomMargin: 2
-        anchors.rightMargin: 2
+        anchors.leftMargin: 1
+        anchors.topMargin: 1
+        anchors.rightMargin: 1
+        anchors.bottomMargin: 1
         
         color: (sharedData && sharedData.colorPrimary) ? Qt.lighter(sharedData.colorPrimary, 1.2) : "#252525"
         border.width: 0
@@ -747,7 +740,7 @@ PanelWindow {
                 popoverContent: Component {
                     Rectangle {
                         width: 180
-                        height: 190
+                        height: 140
                         color: (sharedData.colorBackground || "#0d0d0d")
                         radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         Column { 
@@ -767,32 +760,6 @@ PanelWindow {
                                     text: sidePanel.qBatteryPct + "% " + (sidePanel.qBatteryStatus === "Charging" ? "󱐌" : (sidePanel.qBatteryStatus === "Full" ? "󰁹" : "󰂌"))
                                     color: sidePanel.qBatteryPct > 20 ? "#fff" : "#f44336"
                                     font.pixelSize: 12; font.weight: Font.Medium
-                                }
-                            }
-                            
-                            Column {
-                                width: parent.width; spacing: 6
-                                Row {
-                                    width: parent.width
-                                    Text { text: "BRIGHTNESS"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
-                                    Text { text: Math.round(sidePanel.qBrightness/sidePanel.qBrightnessMax*100) + "%"; color: "#aaa"; font.pixelSize: 10; font.weight: Font.Medium; Layout.alignment: Qt.AlignRight }
-                                }
-                                Rectangle {
-                                    width: parent.width; height: 16; color: "#1a1a1a"; radius: 2
-                                    Rectangle {
-                                        width: (sidePanel.qBrightness / sidePanel.qBrightnessMax) * parent.width
-                                        height: parent.height; color: sharedData.colorAccent; radius: 2
-                                    }
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        function update(mouse) {
-                                            var p = Math.max(0, Math.min(1, mouse.x / width))
-                                            var val = Math.round(p * sidePanel.qBrightnessMax)
-                                            sharedData.runCommand(['brightnessctl', 'set', val.toString()])
-                                            sidePanel.qBrightness = val
-                                        }
-                                        onPressed: update(mouse); onPositionChanged: update(mouse)
-                                    }
                                 }
                             }
                             
