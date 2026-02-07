@@ -696,22 +696,23 @@ PanelWindow {
                                     model: 3
                                     Rectangle {
                                         width: 48; height: 48; color: pMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                        property int profileIndex: index
                                         Column {
                                             anchors.centerIn: parent
                                             spacing: 4
                                             Text { 
                                                 anchors.horizontalCenter: parent.horizontalCenter
-                                                text: index === 0 ? "󰌪" : (index === 1 ? "󰗑" : "󰓅")
-                                                color: sidePanel.qPwrStatus.toLowerCase().includes(parent.parent.profiles[index]) ? sharedData.colorAccent : "#fff"
+                                                text: parent.parent.profileIndex === 0 ? "󰌪" : (parent.parent.profileIndex === 1 ? "󰗑" : "󰓅")
+                                                color: sidePanel.qPwrStatus.toLowerCase().includes(parent.parent.parent.parent.profiles[parent.parent.profileIndex]) ? sharedData.colorAccent : "#fff"
                                                 font.pixelSize: 18
                                             }
                                             Text {
                                                 anchors.horizontalCenter: parent.horizontalCenter
-                                                text: index === 0 ? "Saver" : (index === 1 ? "Bal" : "Perf")
+                                                text: parent.parent.profileIndex === 0 ? "Saver" : (parent.parent.profileIndex === 1 ? "Bal" : "Perf")
                                                 color: "#888"; font.pixelSize: 8
                                             }
                                         }
-                                        MouseArea { id: pMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['powerprofilesctl', 'set', parent.parent.profiles[index]]) }
+                                        MouseArea { id: pMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['powerprofilesctl', 'set', parent.parent.profiles[parent.profileIndex]]) }
                                     }
                                 }
                             }
@@ -724,13 +725,18 @@ PanelWindow {
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
+                z: 1
+                
                 Text { 
                     text: "󰄀"
                     font.pixelSize: 14
                     font.family: "sans-serif"
                     anchors.centerIn: parent
-                    color: screenshotButtonMouseArea.containsMouse ? sidePanel.btnIconHover : sidePanel.btnIcon 
+                    color: screenshotButtonMouseArea.containsMouse ? sidePanel.btnIconHover : sidePanel.btnIcon
+                    
+                    Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
                 }
+                
                 MouseArea { 
                     id: screenshotButtonMouseArea
                     anchors.fill: parent
@@ -830,7 +836,7 @@ PanelWindow {
             id: contentCleanupTimer
             interval: 350
             onTriggered: {
-                if (!shouldShow) {
+                if (!popoverWindow.shouldShow) {
                     popoverLoader.sourceComponent = null
                 }
             }

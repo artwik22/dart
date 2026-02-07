@@ -11,16 +11,9 @@ Dart provides a fluid UI with integrated system monitoring and deep customizatio
 
 ## 🖼️ Showcase
 
-<table align="center">
-  <tr>
-    <td align="center"><b>Dashboard</b><br/><img src="showcase/dashboard.png" width="300"/></td>
-    <td align="center"><b>Launcher</b><br/><img src="showcase/launcher.png" width="300"/></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Clipboard</b><br/><img src="showcase/clipboard.png" width="300"/></td>
-    <td align="center"><b>Media</b><br/><img src="showcase/media.png" width="300"/></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="showcase/showcase.png" width="800" alt="Dart Desktop Shell"/>
+</p>
 
 ---
 
