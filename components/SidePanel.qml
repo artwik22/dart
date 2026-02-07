@@ -521,6 +521,11 @@ PanelWindow {
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
+                onClicked: {
+                    if (sharedData && sharedData.runCommand) {
+                        sharedData.runCommand(['sh', '-c', 'nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on'])
+                    }
+                }
                 popoverContent: Component {
                     Rectangle {
                         width: 170
@@ -540,14 +545,14 @@ PanelWindow {
                                     font.weight: Font.Bold
                                 }
                                 Text { 
-                                    text: sidePanel.qNetSSID || "Not connected"
+                                    text: (sidePanel.qNetSSID && sidePanel.qNetSSID.length > 0) ? sidePanel.qNetSSID : "Not connected"
                                     color: "#fff"
                                     font.pixelSize: 11
                                     elide: Text.ElideRight
                                     width: parent.width
                                 }
                                 Text { 
-                                    text: sidePanel.qNetIP || "Offline"
+                                    text: (sidePanel.qNetIP && sidePanel.qNetIP.length > 0) ? sidePanel.qNetIP : "No IP"
                                     color: "#888"
                                     font.pixelSize: 9
                                 }
@@ -589,6 +594,12 @@ PanelWindow {
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
+                onClicked: {
+                    if (sharedData && sharedData.runCommand) {
+                        var cmd = (sidePanel.qBtStatus === "On") ? 'bluetoothctl power off' : 'bluetoothctl power on'
+                        sharedData.runCommand(['sh', '-c', cmd])
+                    }
+                }
                 popoverContent: Component {
                     Rectangle {
                         width: 170
@@ -647,6 +658,17 @@ PanelWindow {
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
+                onClicked: {
+                    if (sharedData && sharedData.runCommand) {
+                        // Cycle through power profiles: power-saver -> balanced -> performance -> power-saver
+                        var currentProfile = sidePanel.qPwrStatus.toLowerCase()
+                        var nextProfile = "balanced"
+                        if (currentProfile.includes("power-saver")) nextProfile = "balanced"
+                        else if (currentProfile.includes("balanced")) nextProfile = "performance"
+                        else if (currentProfile.includes("performance")) nextProfile = "power-saver"
+                        sharedData.runCommand(['powerprofilesctl', 'set', nextProfile])
+                    }
+                }
                 popoverContent: Component {
                     Rectangle {
                         width: 170
@@ -728,22 +750,24 @@ PanelWindow {
                 z: 1
                 
                 Text { 
-                    text: "󰄀"
+                    text: "󰒓"
                     font.pixelSize: 14
                     font.family: "sans-serif"
                     anchors.centerIn: parent
-                    color: screenshotButtonMouseArea.containsMouse ? sidePanel.btnIconHover : sidePanel.btnIcon
+                    color: settingsButtonMouseArea.containsMouse ? sidePanel.btnIconHover : sidePanel.btnIcon
                     
                     Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
                 }
                 
                 MouseArea { 
-                    id: screenshotButtonMouseArea
+                    id: settingsButtonMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: { 
-                        if (sidePanel.screenshotFunction) sidePanel.screenshotFunction() 
+                        if (sharedData && sharedData.runCommand) {
+                            sharedData.runCommand(['sh', '-c', 'fuse 2>/dev/null || $HOME/.local/bin/fuse 2>/dev/null || $HOME/.config/alloy/fuse/target/release/fuse 2>/dev/null &'])
+                        }
                     } 
                 }
             }

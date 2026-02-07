@@ -10,11 +10,12 @@ PanelWindow {
     required property var screen  // ekran z Variants (screen: modelData) – PanelWindow go używa do outputu
     property var sharedData: null
 
-    anchors.top: true
-    anchors.right: true
+    // anchors.top: true - handled in window properties
+    // anchors.left: true - removed to allow centering
+    // anchors.right: true - removed to allow centering
 
-    implicitWidth: notifications.length > 0 ? 304 : 0
-    implicitHeight: notifications.length > 0 ? 640 : 0
+    implicitWidth: notificationColumn.width
+    implicitHeight: notificationColumn.height
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qsnotifications" + (screen && screen.name ? "-" + screen.name : "")
@@ -23,8 +24,15 @@ PanelWindow {
     visible: notifications.length > 0
     color: "transparent"
 
+    // Anchor window to top center
+    anchors.top: true
+    anchors.bottom: false
+    anchors.left: false
+    anchors.right: false
+
     margins {
-        top: 0
+        top: 10
+        left: 0
         right: 0
     }
     
@@ -126,8 +134,10 @@ PanelWindow {
     
     Column {
         id: notificationColumn
-        anchors.fill: parent
-        spacing: 7
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        width: 340  // Increased width to match NotificationItem
+        spacing: 12
 
         // Premium smooth animation for notification repositioning
         move: Transition {

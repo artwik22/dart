@@ -17,6 +17,9 @@ Item {
     // Popover content - can be any Item
     property Component popoverContent: null
     
+    // Click handler signal
+    signal clicked()
+    
     implicitWidth: 26
     implicitHeight: 26
     
@@ -52,6 +55,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
     }
     
     // Watch mouse state

@@ -1,116 +1,102 @@
 import QtQuick
 import Quickshell.Services.Notifications
 
-Rectangle {
-    id: notificationItem
+Item {
+    id: notificationWrapper
+    width: 340  // Increased width
+    height: 52  // Increased height
     
+    // Properties passed from NotificationDisplay
     property Notification notification: null
     property var sharedData: null
     
+    // Forward signal from inner Rectangle
     signal notificationClosed()
     
-    // Store notification reference to prevent garbage collection
-    property var storedNotification: null
+    Rectangle {
+        id: notificationItem
+        
+        property Notification notification: parent.notification
+        property var sharedData: parent.sharedData
+        
+        signal notificationClosed()
+        
+        // Connect inner signal to wrapper signal
+        onNotificationClosed: parent.notificationClosed()
+        
+        // Store notification reference to prevent garbage collection
+        property var storedNotification: null
+        
+        // Flag to prevent double timer start
+        property bool timerStarted: false
+        
+        // OneUI 6 Animation Properties
+        property real pillWidth: 52  // Starts as a square/quircle
+        property real contentOpacity: 0.0  // Content starts invisible
+        property real contentOffset: 5  // Content slides up slightly
+        property real iconX: 14 // Center of 52px ( (52-24)/2 )
+        
+        // Dimensions
+        width: pillWidth
+        height: 52  // Increased height
+        radius: 14  // Updated radius for larger size
+        
+        // Symmetric expansion from center - shift left as width increases
+        // When width = 52 (square), x = 144 (center at 170 of 340)
+        // When width = 340 (full), x = 0 (center still at 170)
+        x: (340 - pillWidth) / 2
+        
+        transform: Translate {
+            id: entranceTranslate
+            y: 0
+        }
     
-    // Flag to prevent double timer start
-    property bool timerStarted: false
+    color: getBackgroundColor()
     
     // Helper function to start auto-dismiss timer
     function startAutoDismissTimer() {
-        if (timerStarted) {
-            return
-        }
+        // Force 4000ms timeout as requested by user ("ma byc timer 4 sekundy")
+        var timeout = 4000 
         
-        // Use storedNotification as fallback if notification is null
-        var notif = notification || storedNotification
-        
-        if (!notif) {
-            return
-        }
-        
-        // Check expireTimeout - handle undefined, null, 0, -1, and positive values
-        var expireTimeout = notif.expireTimeout
-        
-        
-        // Always use default 5 seconds for auto-dismiss, regardless of expireTimeout
-        // Many notifications have expireTimeout = -1, but we want them to auto-dismiss anyway
-        // Only use expireTimeout if it's a positive number greater than 0
-        var timeout = 5000  // Default 5 seconds
-        
-        if (expireTimeout && expireTimeout > 0 && expireTimeout !== -1) {
-            // Use the notification's timeout if it's valid and positive
-            timeout = expireTimeout
-        } else {
-        }
-        
-        
-        // Stop timer if already running
         if (autoDismissTimer.running) {
             autoDismissTimer.stop()
         }
-        
-        // Set interval first
+
         autoDismissTimer.interval = timeout
-        
         autoDismissTimer.start()
         
-        // Start progress bar animation - wait for progressBar to be ready
-        var startProgressAnimation = function() {
-            if (progressBar && progressBar.width > 0) {
-                // Set initial width to full
-                progressBarWidth = progressBar.width
-                // Configure animation
-                progressBarAnimation.from = progressBar.width
-                progressBarAnimation.to = 0
-                progressBarAnimation.duration = timeout
-                // Start animation
-                progressBarAnimation.start()
-            } else {
-                // Retry after a short delay
-                var retryTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 200; running: true; repeat: false }', notificationItem)
-                retryTimer.triggered.connect(startProgressAnimation)
-            }
-        }
-        
-        // Start animation after a small delay to ensure progressBar is ready
-        Qt.callLater(startProgressAnimation)
-        
-        timerStarted = true
-        
-        
-        // Verify after a moment
-        var verifyTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 200; running: true; repeat: false }', notificationItem)
-        verifyTimer.triggered.connect(function() {
-        })
+        notificationItem.timerStarted = true
     }
     
     // Auto-dismiss timer
     Timer {
         id: autoDismissTimer
-        interval: 5000  // 5 seconds
+        interval: 4000
         running: false
         repeat: false
         onTriggered: {
-            startExitAnimation()
-        }
-        onRunningChanged: {
+            var n = notification || notificationItem.storedNotification
+            if (n) {
+                try {
+                    n.dismiss()
+                } catch (err) {
+                    // Fallback to force destroy
+                    notificationItem.notificationClosed()
+                }
+            } else {
+                // Bypass animation to ensure removal
+                notificationItem.notificationClosed()
+            }
         }
     }
+
+
     
-    // Progress bar width property - will be animated from full to zero
-    property real progressBarWidth: 0
-    
-    width: 304
-    height: notificationContent.height + 32
-    radius: 0
-    color: getBackgroundColor()
-    
-    // Enhanced shadow effect with multiple layers
+
     
     function getBackgroundColor() {
         if (!sharedData) return "#1e1e1e"
         
-        // Different colors based on urgency with better contrast
         if (notification && notification.urgency === NotificationUrgency.Critical) {
             return sharedData.colorAccent ? Qt.darker(sharedData.colorAccent, 1.2) : "#2a1a1a"
         } else if (notification && notification.urgency === NotificationUrgency.Normal) {
@@ -120,326 +106,196 @@ Rectangle {
         }
     }
     
-    // Border removed as requested
-    
-    // Content
+    // Content container - positioned with offset for slide-in effect
     Item {
-        id: notificationContent
-        anchors.left: parent.left
+        id: contentContainer
+        anchors.fill: parent
         anchors.leftMargin: 20
-        anchors.right: parent.right
         anchors.rightMargin: 20
-        anchors.top: parent.top
-        anchors.topMargin: 16
-        height: contentColumn.height
+        anchors.topMargin: 8
+        anchors.bottomMargin: 8
+        opacity: notificationItem.contentOpacity
         
-        Column {
-            id: contentColumn
-            width: parent.width
-            spacing: 8
+        transform: Translate {
+            y: notificationItem.contentOffset
+        }
+        
+        Row {
+            id: contentRow
+            anchors.fill: parent
+            spacing: 12
             
-            // Header row: icon, app name, close button
-            Row {
-                width: parent.width
-                spacing: 14
+            // Icon Spacer (keeps layout consistent when icon moves out)
+            Item {
+                width: 24
+                height: 24
+                visible: notification && notification.appIcon && notification.appIcon.length > 0
+            }
+            
+            // Text content
+            Column {
+                id: textColumn
+                width: parent.width - (iconRect.visible ? iconRect.width + 12 : 0) - (closeButton.visible ? closeButton.width + 12 : 0)
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
                 
-                // App icon with better styling
+                Text {
+                    id: appNameText
+                    text: "Notification"
+                    font.pixelSize: 9
+                    font.family: "sans-serif"
+                    font.weight: Font.Bold
+                    color: sharedData && sharedData.colorAccent ? Qt.lighter(sharedData.colorAccent, 1.2) : "#9aa0a6"
+                    elide: Text.ElideRight
+                    width: parent.width
+                    opacity: 0.9
+                }
+                
+                Text {
+                    id: summaryText
+                    text: ""
+                    font.pixelSize: 11
+                    font.family: "sans-serif"
+                    font.weight: Font.DemiBold
+                    color: "#ffffff"
+                    elide: Text.ElideRight
+                    width: parent.width
+                    visible: text && text.length > 0
+                }
+            }
+            
+            // Close button
+            Item {
+                id: closeButton
+                width: 20
+                height: 20
+                anchors.verticalCenter: parent.verticalCenter
+                
                 Rectangle {
-                    id: iconRect
-                    width: 44
-                    height: 44
-                    radius: 0
-                    color: sharedData && sharedData.colorSecondary ? Qt.lighter(sharedData.colorSecondary, 1.1) : "#1f1f1f"
-                    visible: notification && notification.appIcon && notification.appIcon.length > 0
+                    anchors.fill: parent
+                    radius: 10
+                    color: closeButtonMouseArea.containsMouse ? 
+                        (sharedData && sharedData.colorAccent ? sharedData.colorAccent : "#ff4444") : 
+                        "transparent"
                     
-                    // Icon border
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: 1
-                        radius: 0
-                        color: "transparent"
+                    opacity: closeButtonMouseArea.containsMouse ? 1.0 : 0.7
+                    
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                            easing.type: Easing.OutQuart
+                        }
                     }
                     
-                    Image {
-                        anchors.fill: parent
-                        anchors.margins: 6
-                        source: notification ? notification.appIcon : ""
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        antialiasing: true
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 150
+                            easing.type: Easing.OutQuart
+                        }
                     }
                 }
                 
-                // App name and summary
-                Column {
-                    id: textColumn
-                    width: Math.max(100, parent.width - (closeButton.visible ? 60 : 0) - (iconRect.visible ? 58 : 0))
-                    spacing: 5
-                    anchors.verticalCenter: iconRect.visible ? undefined : parent.verticalCenter
+                Text {
+                    text: "×"
+                    font.pixelSize: 16
+                    font.weight: Font.Bold
+                    anchors.centerIn: parent
+                    color: closeButtonMouseArea.containsMouse ? "#ffffff" : "#888888"
                     
-                    Text {
-                        id: appNameText
-                        text: "Notification"  // Default, will be updated in onNotificationChanged
-                        font.pixelSize: 9
-                        font.family: "sans-serif"
-                        font.weight: Font.Bold
-                        color: sharedData && sharedData.colorAccent ? Qt.lighter(sharedData.colorAccent, 1.2) : "#9aa0a6"
-                        elide: Text.ElideRight
-                        width: parent.width
-                        visible: true
-                        opacity: 0.9
-                    }
-                    
-                    Text {
-                        id: summaryText
-                        text: ""  // Will be updated in onNotificationChanged
-                        font.pixelSize: 13
-                        font.family: "sans-serif"
-                        font.weight: Font.DemiBold
-                        color: "#ffffff"
-                        elide: Text.ElideRight
-                        width: parent.width
-                        visible: text && text.length > 0
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                            easing.type: Easing.OutQuart
+                        }
                     }
                 }
                 
-                // Close button with enhanced styling
-                Item {
-                    id: closeButton
-                    width: 25
-                    height: 25
-                    anchors.verticalCenter: iconRect.visible ? iconRect.verticalCenter : textColumn.verticalCenter
-                    
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 0
-                        color: closeButtonMouseArea.containsMouse ? 
-                            (sharedData && sharedData.colorAccent ? sharedData.colorAccent : "#ff4444") : 
-                            (sharedData && sharedData.colorSecondary ? Qt.lighter(sharedData.colorSecondary, 1.05) : "#1f1f1f")
-                        
-                        border.color: closeButtonMouseArea.containsMouse ? 
-                            Qt.rgba(255, 255, 255, 0.2) : 
-                            Qt.rgba(255, 255, 255, 0.05)
-                        border.width: 1
-                        
-                        property real buttonScale: closeButtonMouseArea.pressed ? 0.85 : (closeButtonMouseArea.containsMouse ? 1.05 : 1.0)
-                        property real buttonOpacity: closeButtonMouseArea.containsMouse ? 1.0 : 0.7
-                        
-                        opacity: buttonOpacity
-                        
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: 200
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-                        
-                        Behavior on buttonScale {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-                        
-                        Behavior on buttonOpacity {
-                            NumberAnimation {
-                                duration: 150
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-                        
-                        scale: buttonScale
-                    }
-                    
-                    Text {
-                        text: "󰅖"
-                        font.pixelSize: 13
-                        anchors.centerIn: parent
-                        color: closeButtonMouseArea.containsMouse ? 
-                            "#ffffff" : 
-                            (sharedData && sharedData.colorAccent ? sharedData.colorAccent : "#888888")
-                        z: 1
-                        
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: 200
-                                easing.type: Easing.OutQuart
-                            }
-                        }
-                    }
-                    
-                    MouseArea {
-                        id: closeButtonMouseArea
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        z: 10000  // Very high z to ensure it's on top of everything
-                        propagateComposedEvents: false
-                        acceptedButtons: Qt.LeftButton
-                        enabled: true
-                        onClicked: function(mouse) {
-                            mouse.accepted = true
-                            
-                            // Try to dismiss notification - use storedNotification as fallback
-                            var notif = notificationItem.notification || notificationItem.storedNotification
-                            if (notif) {
-                                try {
-                                    notif.dismiss()
-                                } catch(e) {
-                                    // Fallback: start exit animation
-                                    notificationItem.startExitAnimation()
-                                }
-                            } else {
-                                // If notification is null, start exit animation
+                MouseArea {
+                    id: closeButtonMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+                    z: 10000
+                    propagateComposedEvents: false
+                    acceptedButtons: Qt.LeftButton
+                    enabled: true
+                    onClicked: function(mouse) {
+                        mouse.accepted = true
+                        var notif = notificationItem.notification || notificationItem.storedNotification
+                        if (notif) {
+                            try {
+                                notif.dismiss()
+                            } catch(e) {
                                 notificationItem.startExitAnimation()
                             }
+                        } else {
+                            notificationItem.startExitAnimation()
                         }
                     }
                 }
             }
-            
-            // Body text - always show if there's content
-            Text {
-                id: bodyText
-                text: ""  // Will be updated in onNotificationChanged
-                font.pixelSize: 10
-                font.family: "sans-serif"
-                font.weight: Font.Normal
-                color: "#b0b0b0"
-                wrapMode: Text.Wrap
-                width: parent.width
-                visible: text && text.length > 0
-                lineHeight: 1.4
-                topPadding: 2
-            }
-            
-            // Image if available with border
-            Rectangle {
-                width: parent.width
-                height: notification && notification.image ? Math.min(200, width * 0.75) : 0
-                visible: notification && notification.image && notification.image.length > 0
-                color: "transparent"
-                radius: 0
-                
-                Image {
-                    anchors.fill: parent
-                    anchors.margins: 1
-                    source: notification && notification.image ? notification.image : ""
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
-                    antialiasing: true
-                }
-            }
+        }
         }
     }
     
-    // Progress bar showing time until auto-dismiss - at the bottom
-    // This line shrinks from left to right as time passes
+    // Floating App Icon (Visible on Squircle)
     Rectangle {
-        id: progressBar
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        height: 2
-        color: "transparent"  // Background is transparent, only the fill is visible
-        visible: true  // Always visible when notification exists
-        z: 100  // Ensure it's above other elements
+        id: iconRect
+        x: notificationItem.iconX
+        width: 24
+        height: 24
+        radius: 12
+        anchors.verticalCenter: parent.verticalCenter
+        color: sharedData && sharedData.colorSecondary ? Qt.lighter(sharedData.colorSecondary, 1.1) : "#1f1f1f"
+        visible: notification && notification.appIcon && notification.appIcon.length > 0
+        z: 10 // On top of background, below content text (if overlapping)
         
-        Rectangle {
-            id: progressFill
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: notificationItem.progressBarWidth
-            radius: 0
-            // Use white/light color for better visibility
-            color: sharedData && sharedData.colorAccent ? sharedData.colorAccent : "#ffffff"
-            opacity: 1.0  // Full opacity for visibility
+        Image {
+            anchors.fill: parent
+            anchors.margins: 4
+            source: notification ? notification.appIcon : ""
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            antialiasing: true
         }
     }
     
-    // Animation for progress bar width - shrinks from full to zero
-    NumberAnimation {
-        id: progressBarAnimation
-        target: notificationItem
-        property: "progressBarWidth"
-        from: 0  // Will be set before starting
-        to: 0
-        duration: 5000
-        easing.type: Easing.Linear
-        running: false
-    }
+
     
-    // Click to dismiss - exclude close button area completely
+    // Click to dismiss (excluding close button area)
     MouseArea {
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.rightMargin: 50  // Leave space for close button (right 50px)
+        anchors.fill: parent
+        anchors.rightMargin: 40
         cursorShape: Qt.PointingHandCursor
-        z: -1  // Lower than close button (z: 10000) - use negative to ensure it doesn't block
-        propagateComposedEvents: false  // Don't propagate to avoid conflicts
+        z: -1
+        propagateComposedEvents: false
         enabled: true
         onClicked: function(mouse) {
-            // Only dismiss if not clicking on close button area
-            var clickX = mouse.x
-            var buttonAreaStart = width - 50
-            if (clickX < buttonAreaStart) {
-                if (notification) {
-                    notification.dismiss()
-                } else {
-                    startExitAnimation()
-                }
+            if (notification) {
+                notification.dismiss()
+            } else {
+                startExitAnimation()
             }
         }
     }
     
-    // Animation states
-    property real slideOffset: 304  // Start exactly at the width of the item
-    property real fadeOpacity: 0.0  // Start invisible
-    property real itemScale: 0.95   // Slight scale start
-    
-    // Premium Look Bindings
-    opacity: fadeOpacity
-    scale: itemScale
-    
-    transform: Translate {
-        x: slideOffset
-    }
-    
-    // Ensure content is visible
-    clip: false
-    
-    // Component.onCompleted - update texts if notification is already set
+    // Component initialization
     Component.onCompleted: {
-        
         if (notification) {
-            storedNotification = notification
+            notificationItem.storedNotification = notification
             
             // Update texts immediately
             if (appNameText) appNameText.text = notification.appName || notification.desktopEntry || "Notification"
             if (summaryText) summaryText.text = notification.summary || ""
-            if (bodyText) {
-                var body = notification.body || ""
-                if (body.length === 0) body = notification.summary || ""
-                bodyText.text = body
-            }
             
-            // Start auto-dismiss timer
-            if (!timerStarted) {
-                var notifRef = notification
-                var startTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 200; running: true; repeat: false }', notificationItem)
-                startTimer.triggered.connect(function() {
-                    if (!timerStarted && notifRef) {
-                        if (!storedNotification) storedNotification = notifRef
-                        startAutoDismissTimer()
-                    }
-                })
+            // Start auto-dismiss timer directly
+            if (!notificationItem.timerStarted) {
+                notificationItem.startAutoDismissTimer()
             }
+
         }
         
-        // Premium Entrance Animation
+        // Start OneUI 6 entrance animation
         enterAnimation.start()
     }
     
@@ -449,52 +305,95 @@ Rectangle {
             storedNotification = notification
             if (appNameText) appNameText.text = notification.appName || notification.desktopEntry || "Notification"
             if (summaryText) summaryText.text = notification.summary || ""
-            if (bodyText) bodyText.text = notification.body || notification.summary || ""
             
-            if (!timerStarted) {
-                var notifRef = notification
-                var startTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 100; running: true; repeat: false }', notificationItem)
-                startTimer.triggered.connect(function() {
-                    if (!timerStarted && notifRef) {
-                        if (!storedNotification) storedNotification = notifRef
-                        startAutoDismissTimer()
-                    }
-                })
+            if (!notificationItem.timerStarted) {
+                notificationItem.startAutoDismissTimer()
+            }
+
+        }
+    }
+    
+    // OneUI 6 Entrance Animation - "Fast Drop-In Quircle"
+    SequentialAnimation {
+        id: enterAnimation
+        
+        // Stage 1: Drop & Appear as Quircle
+        ParallelAnimation {
+            NumberAnimation {
+                target: notificationItem
+                property: "scale"
+                from: 0.5
+                to: 1.0
+                duration: 250
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.0
+            }
+            NumberAnimation {
+                target: notificationItem
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: 200
+                easing.type: Easing.OutQuint
+            }
+            // Drop effect (animate Y translation)
+            NumberAnimation {
+                target: entranceTranslate
+                property: "y"
+                from: -40
+                to: 0
+                duration: 250
+                easing.type: Easing.OutQuint
+            }
+            // Ensure width starts at height (square/quircle)
+            ScriptAction { script: notificationItem.pillWidth = 52 }
+        }
+        
+        // Brief pause
+        PauseAnimation { duration: 50 }
+        
+        // Stage 2: Expand Width (Faster)
+        ParallelAnimation {
+            NumberAnimation {
+                target: notificationItem
+                property: "pillWidth"
+                from: 52
+                to: 340
+                duration: 350
+                easing.type: Easing.OutQuint
+            }
+            NumberAnimation {
+                target: notificationItem
+                property: "iconX"
+                from: 14
+                to: 20
+                duration: 350
+                easing.type: Easing.OutQuint
+            }
+        }
+        
+        // Stage 3: Content Fade In (Faster)
+        ParallelAnimation {
+            NumberAnimation {
+                target: notificationItem
+                property: "contentOpacity"
+                from: 0
+                to: 1
+                duration: 200
+                easing.type: Easing.OutQuint
+            }
+            NumberAnimation {
+                target: notificationItem
+                property: "contentOffset"
+                from: 10
+                to: 0
+                duration: 200
+                easing.type: Easing.OutQuint
             }
         }
     }
     
-    // Premium Entrance Animation
-    ParallelAnimation {
-        id: enterAnimation
-        NumberAnimation {
-            target: notificationItem
-            property: "slideOffset"
-            from: 304
-            to: 0
-            duration: 600
-            easing.type: Easing.OutExpo
-        }
-        NumberAnimation {
-            target: notificationItem
-            property: "fadeOpacity"
-            from: 0.0
-            to: 1.0
-            duration: 500
-            easing.type: Easing.OutQuart
-        }
-        NumberAnimation {
-            target: notificationItem
-            property: "itemScale"
-            from: 0.9
-            to: 1.0
-            duration: 650
-            easing.type: Easing.OutBack
-            easing.amplitude: 1.1
-        }
-    }
-    
-    // Exit animation
+    // Exit animation - Snappy Tuck Away
     function startExitAnimation() {
         if (exitAnimation.running) exitAnimation.stop()
         exitAnimation.start()
@@ -506,24 +405,31 @@ Rectangle {
         ParallelAnimation {
             NumberAnimation {
                 target: notificationItem
-                property: "slideOffset"
-                to: 304
-                duration: 500
-                easing.type: Easing.InExpo
+                property: "scale"
+                to: 0.9
+                duration: 250
+                easing.type: Easing.OutQuint
             }
             NumberAnimation {
                 target: notificationItem
-                property: "fadeOpacity"
-                to: 0.0
-                duration: 400
-                easing.type: Easing.InQuart
+                property: "opacity"
+                to: 0
+                duration: 250
+                easing.type: Easing.OutQuint
             }
             NumberAnimation {
                 target: notificationItem
-                property: "itemScale"
-                to: 0.95
-                duration: 500
-                easing.type: Easing.InBack
+                property: "pillWidth"
+                to: 52
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+            NumberAnimation {
+                target: notificationItem
+                property: "contentOpacity"
+                to: 0
+                duration: 150
+                easing.type: Easing.OutQuint
             }
         }
         ScriptAction {
@@ -543,4 +449,3 @@ Rectangle {
         }
     }
 }
-
