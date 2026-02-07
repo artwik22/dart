@@ -18,3 +18,4 @@ VolumeSlider 1.0 VolumeSlider.qml
 WallpaperBackground 1.0 WallpaperBackground.qml
 CalendarView 1.0 CalendarView.qml
 GithubActivity 1.0 GithubActivity.qml
+QuickToggle 1.0 QuickToggle.qml
