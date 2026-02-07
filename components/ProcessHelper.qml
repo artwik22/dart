@@ -13,29 +13,21 @@ Item {
 
     function _runCommand(args, onDone) {
         if (!Array.isArray(args)) return
-        _queue.push({ cmd: args, cb: onDone || null })
-        _processNext()
-    }
-
-    function _processNext() {
-        if (sharedProcess.running || _queue.length === 0) return
-        var next = _queue.shift()
-        sharedProcess.command = next.cmd
-        _pendingCallback = next.cb
-        sharedProcess.running = true
-    }
-
-    Process {
-        id: sharedProcess
-        onRunningChanged: {
-            if (!sharedProcess.running) {
-                if (root._pendingCallback) {
-                    var cb = root._pendingCallback
-                    root._pendingCallback = null
-                    if (typeof cb === "function") cb()
+        var proc = processLauncher.createObject(root, { command: args })
+        if (onDone) {
+            proc.onRunningChanged.connect(function() {
+                if (!proc.running) {
+                    onDone()
+                    proc.destroy()
                 }
-                root._processNext()
-            }
+            })
+        }
+        proc.running = true
+    }
+
+    Component {
+        id: processLauncher
+        Process {
         }
     }
 }

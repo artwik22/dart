@@ -23,6 +23,13 @@ PanelWindow {
     property int qBrightness: 0
     property int qBrightnessMax: 255
     
+    property int qBatteryPct: 0
+    property string qBatteryStatus: "Unknown"
+    property int qNetSignal: 0
+    property string qNetNearby: ""
+    property string qBtDeviceNames: ""
+    property string qBtPaired: ""
+    
     property var sidePanelRoot: sidePanel
     property bool isHorizontal: panelPosition === "top" || panelPosition === "bottom"
     
@@ -450,7 +457,7 @@ PanelWindow {
             onTriggered: {
                 if (sharedData && sharedData.runCommand) {
                     var root = sidePanelRoot
-                    sidePanelRoot.runAndRead('NW_SSID=$(networkctl status 2>/dev/null | grep -i "SSID:" | cut -d: -f2- | sed "s/^[[:space:]]*//"); [ -n "$NW_SSID" ] && echo "$NW_SSID" || nmcli -t -f ACTIVE,SSID dev wifi | grep "^yes" | cut -d: -f2 || echo ""', function(out) { 
+                    sidePanelRoot.runAndRead('nmcli -t -f TYPE,NAME connection show --active | grep -E "^(802-11-wireless|ethernet)" | head -n 1 | cut -d: -f2-', function(out) { 
                         if (out !== undefined) root.qNetSSID = out.trim() 
                     })
                     sidePanelRoot.runAndRead('NW_IP=$(networkctl status 2>/dev/null | grep -i "Address:" | awk \'{print $2}\' | grep -v ":" | head -n1); [ -n "$NW_IP" ] && echo "$NW_IP" || ip -o -4 addr show scope global | awk \'{print $4}\' | cut -d/ -f1 | head -n1 || echo ""', function(out) { 
@@ -479,6 +486,27 @@ PanelWindow {
                     })
                     sidePanelRoot.runAndRead('brightnessctl max', function(out) { 
                         if (out !== undefined) root.qBrightnessMax = parseInt(out) || 255 
+                    })
+                    sidePanelRoot.runAndRead('B_CAP=$(cat /sys/class/power_supply/*/capacity 2>/dev/null | head -n1); [ -z "$B_CAP" ] && B_CAP=$(upower -i $(upower -e | grep BAT | head -n1) 2>/dev/null | grep percentage | awk \'{print $2}\' | tr -d "%"); [ -n "$B_CAP" ] && echo "$B_CAP" || echo 0', function(out) {
+                        if (out !== undefined) {
+                            var val = parseInt(out.trim())
+                            root.qBatteryPct = isNaN(val) ? 0 : val
+                        }
+                    })
+                    sidePanelRoot.runAndRead('B_STAT=$(cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -n1); [ -z "$B_STAT" ] && B_STAT=$(cat /sys/class/power_supply/*/status 2>/dev/null | head -n1); [ -z "$B_STAT" ] && B_STAT=$(upower -i $(upower -e | grep BAT | head -n1) 2>/dev/null | grep state | awk \'{print $2}\'); [ -n "$B_STAT" ] && echo "$B_STAT" || echo "Unknown"', function(out) {
+                        if (out !== undefined) root.qBatteryStatus = out.trim() || "Unknown"
+                    })
+                    sidePanelRoot.runAndRead('nmcli -f IN-USE,SIGNAL dev wifi | grep "*" | awk \'{print $2}\' || echo 0', function(out) {
+                        if (out !== undefined) root.qNetSignal = parseInt(out.trim()) || 0
+                    })
+                    sidePanelRoot.runAndRead('nmcli -t -f SSID dev wifi | grep -v "^$" | head -n 4 | tr "\\n" ";"', function(out) {
+                        if (out !== undefined) root.qNetNearby = out.trim()
+                    })
+                    sidePanelRoot.runAndRead('bluetoothctl devices Connected | cut -d" " -f3- | head -n 2 | tr "\\n" ";"', function(out) {
+                        if (out !== undefined) root.qBtDeviceNames = out.trim()
+                    })
+                    sidePanelRoot.runAndRead('bluetoothctl devices | head -n 10 | while read -r line; do mac=$(echo $line | cut -d" " -f2); name=$(echo $line | cut -d" " -f3-); bluetoothctl info $mac | grep -q "Connected: yes" || echo "$mac|$name"; done | head -n 3 | tr "\\n" ";"', function(out) {
+                        if (out !== undefined) root.qBtPaired = out.trim()
                     })
                 }
             }
@@ -528,55 +556,65 @@ PanelWindow {
                 }
                 popoverContent: Component {
                     Rectangle {
-                        width: 170
-                        height: 160
+                        width: 180
+                        height: 190
                         color: (sharedData.colorBackground || "#0d0d0d")
                         radius: 0
                         Column { 
                             anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 8
+                            anchors.margins: 10
+                            spacing: 12
                             Column { 
-                                spacing: 4
+                                spacing: 3
+                                width: parent.width
                                 Text { 
                                     text: "󰖩 Network"
                                     color: (sharedData.colorAccent || "#4a9eff")
-                                    font.pixelSize: 14
-                                    font.weight: Font.Bold
+                                    font.pixelSize: 15
+                                    font.weight: Font.ExtraBold
                                 }
                                 Text { 
                                     text: (sidePanel.qNetSSID && sidePanel.qNetSSID.length > 0) ? sidePanel.qNetSSID : "Not connected"
                                     color: "#fff"
-                                    font.pixelSize: 11
+                                    font.pixelSize: 12
+                                    font.weight: Font.Medium
                                     elide: Text.ElideRight
                                     width: parent.width
                                 }
-                                Text { 
-                                    text: (sidePanel.qNetIP && sidePanel.qNetIP.length > 0) ? sidePanel.qNetIP : "No IP"
-                                    color: "#888"
-                                    font.pixelSize: 9
-                                }
                             }
                             
-                            GridLayout {
-                                columns: 2
-                                rowSpacing: 4
-                                columnSpacing: 4
+                            Column {
+                                spacing: 4
                                 width: parent.width
-                                
+                                visible: sidePanel.qNetNearby.length > 0
+                                Text { text: "NEARBY"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
+                                Flow {
+                                    width: parent.width; spacing: 4
+                                    Repeater {
+                                        model: sidePanel.qNetNearby.split(";").filter(s => s.length > 0 && s !== sidePanel.qNetSSID).slice(0, 3)
+                                        Rectangle {
+                                            width: Math.min(60, nl.implicitWidth + 8); height: 18; color: "#1a1a1a"; radius: 2
+                                            Text { id: nl; anchors.centerIn: parent; text: modelData; color: "#aaa"; font.pixelSize: 8; elide: Text.ElideRight; width: parent.width - 4 }
+                                        }
+                                    }
+                                }
+                            }
+
+                            GridLayout {
+                                columns: 2; rowSpacing: 4; columnSpacing: 4; width: parent.width
                                 Rectangle {
-                                    Layout.fillWidth: true; height: 28; color: netMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    Text { anchors.centerIn: parent; text: "󰖩 Toggle"; color: "#fff"; font.pixelSize: 10 }
+                                    Layout.fillWidth: true; height: 30; color: netMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
+                                    Text { anchors.centerIn: parent; text: "󰖩 Toggle"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
                                     MouseArea { id: netMa1; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['sh', '-c', 'nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on']) }
                                 }
                                 Rectangle {
-                                    Layout.fillWidth: true; height: 28; color: netMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    Text { anchors.centerIn: parent; text: "󰱔 Rescan"; color: "#fff"; font.pixelSize: 10 }
+                                    Layout.fillWidth: true; height: 30; color: netMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
+                                    Text { anchors.centerIn: parent; text: "󰱔 Scan"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
                                     MouseArea { id: netMa2; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['sh', '-c', 'nmcli dev wifi rescan']) }
                                 }
                                 Rectangle {
-                                    Layout.columnSpan: 2; Layout.fillWidth: true; height: 28; color: netMa3.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    Text { anchors.centerIn: parent; text: "󰒓 Settings"; color: "#fff"; font.pixelSize: 10 }
+                                    Layout.columnSpan: 2; Layout.fillWidth: true; height: 30; color: netMa3.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
+                                    Text { anchors.centerIn: parent; text: "󰒓 Settings"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
                                     MouseArea { id: netMa3; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['nm-connection-editor']) }
                                 }
                             }
@@ -602,45 +640,82 @@ PanelWindow {
                 }
                 popoverContent: Component {
                     Rectangle {
-                        width: 170
-                        height: 160
+                        width: 180
+                        height: 190
                         color: (sharedData.colorBackground || "#0d0d0d")
                         radius: 0
                         Column { 
                             anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 8
+                            anchors.margins: 10
+                            spacing: 12
                             Column { 
-                                spacing: 4
+                                spacing: 3
+                                width: parent.width
                                 Text { 
                                     text: "󰂯 Bluetooth"
                                     color: (sharedData.colorAccent || "#4a9eff")
-                                    font.pixelSize: 14
-                                    font.weight: Font.Bold
+                                    font.pixelSize: 15
+                                    font.weight: Font.ExtraBold
                                 }
                                 Text { 
-                                    text: sidePanel.qBtStatus + (sidePanel.qBtDevices > 0 ? " (" + sidePanel.qBtDevices + " connected)" : "")
-                                    color: "#fff"
-                                    font.pixelSize: 11
+                                    text: sidePanel.qBtStatus + (sidePanel.qBtDevices > 0 ? " (" + sidePanel.qBtDevices + " Connected)" : "")
+                                    color: "#fff"; font.pixelSize: 12; font.weight: Font.Medium
                                 }
                             }
                             
                             Column {
-                                width: parent.width
-                                spacing: 6
+                                spacing: 4; width: parent.width
+                                visible: sidePanel.qBtDeviceNames.length > 0
+                                Text { text: "CONNECTED"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
+                                Column {
+                                    width: parent.width; spacing: 4
+                                    Repeater {
+                                        model: sidePanel.qBtDeviceNames.split(";").filter(s => s.length > 0).slice(0, 2)
+                                        Text { text: "• " + modelData; color: "#eee"; font.pixelSize: 12; font.weight: Font.Medium; elide: Text.ElideRight; width: parent.width }
+                                    }
+                                }
+                            }
+                            
+                            Column {
+                                spacing: 2; width: parent.width
+                                visible: sidePanel.qBtPaired.length > 0
+                                Text { text: "PAIRED"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
+                                Column {
+                                    width: parent.width; spacing: 4
+                                    Repeater {
+                                        model: sidePanel.qBtPaired.split(";").filter(s => s.length > 0).slice(0, 2)
+                                        Rectangle {
+                                            width: parent.width; height: 18; color: "transparent"
+                                            property var devInfo: modelData.split("|")
+                                            Text { 
+                                                anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
+                                                text: "• " + (devInfo[1] || "Unknown"); color: "#aaa"; font.pixelSize: 10; elide: Text.ElideRight; width: parent.width - 60 
+                                            }
+                                            Rectangle {
+                                                anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                                width: 54; height: 18; radius: 3; color: btConnMa.containsMouse ? (sharedData.colorAccent || "#4a9eff") : "#1a1a1a"
+                                                Text { anchors.centerIn: parent; text: "Connect"; color: btConnMa.containsMouse ? "#000" : "#fff"; font.pixelSize: 9; font.weight: Font.Bold }
+                                                MouseArea { id: btConnMa; anchors.fill: parent; hoverEnabled: true; onClicked: if (devInfo.length > 0) sharedData.runCommand(['bluetoothctl', 'connect', devInfo[0]]) }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            GridLayout {
+                                columns: 2; rowSpacing: 4; columnSpacing: 4; width: parent.width
                                 Rectangle {
-                                    width: parent.width; height: 32; color: btMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    Layout.fillWidth: true; height: 30; color: btMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
                                     Text { 
                                         anchors.centerIn: parent
-                                        text: "󰂯 Power " + (sidePanel.qBtStatus === "On" ? "Off" : "On")
-                                        color: sidePanel.qBtStatus === "On" ? sharedData.colorAccent : "#fff"
-                                        font.pixelSize: 11
+                                        text: "󰂯 Toggle"
+                                        color: sidePanel.qBtStatus === "On" ? sharedData.colorAccent : "#fff"; font.pixelSize: 10; font.weight: Font.Medium
                                     }
                                     MouseArea { id: btMa1; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['sh', '-c', (sidePanel.qBtStatus === "On" ? 'bluetoothctl power off' : 'bluetoothctl power on')]) }
                                 }
                                 Rectangle {
-                                    width: parent.width; height: 32; color: btMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    Text { anchors.centerIn: parent; text: "󰒓 Manager"; color: "#fff"; font.pixelSize: 10 }
+                                    Layout.fillWidth: true; height: 30; color: btMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
+                                    Text { anchors.centerIn: parent; text: "󰒓 Manager"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
                                     MouseArea { id: btMa2; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['blueman-manager']) }
                                 }
                             }
@@ -650,7 +725,7 @@ PanelWindow {
             }
 
             QuickToggle {
-                icon: "󰈐"
+                icon: "󰐥"
                 sharedData: sidePanel.sharedData
                 panelPosition: sidePanel.panelPosition
                 screen: sidePanel.screen
@@ -671,31 +746,42 @@ PanelWindow {
                 }
                 popoverContent: Component {
                     Rectangle {
-                        width: 170
-                        height: 160
+                        width: 180
+                        height: 190
                         color: (sharedData.colorBackground || "#0d0d0d")
                         radius: 0
                         Column { 
                             anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 8
-                            Text { 
-                                text: "󰈐 System & Power"
-                                color: (sharedData.colorAccent || "#4a9eff")
-                                font.pixelSize: 14
-                                font.weight: Font.Bold
+                            anchors.margins: 10
+                            spacing: 12
+                            Row {
+                                width: parent.width; spacing: 6
+                                Text { 
+                                    text: "󰐥 Power"
+                                    color: (sharedData.colorAccent || "#4a9eff")
+                                    font.pixelSize: 15; font.weight: Font.ExtraBold
+                                    Layout.fillWidth: true
+                                }
+                                Text {
+                                    visible: sidePanel.qBatteryPct > 0
+                                    text: sidePanel.qBatteryPct + "% " + (sidePanel.qBatteryStatus === "Charging" ? "󱐌" : (sidePanel.qBatteryStatus === "Full" ? "󰁹" : "󰂌"))
+                                    color: sidePanel.qBatteryPct > 20 ? "#fff" : "#f44336"
+                                    font.pixelSize: 12; font.weight: Font.Medium
+                                }
                             }
                             
                             Column {
-                                width: parent.width
-                                spacing: 6
-                                Text { text: "Brightness: " + Math.round(sidePanel.qBrightness/sidePanel.qBrightnessMax*100) + "%"; color: "#aaa"; font.pixelSize: 10 }
+                                width: parent.width; spacing: 6
+                                Row {
+                                    width: parent.width
+                                    Text { text: "BRIGHTNESS"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
+                                    Text { text: Math.round(sidePanel.qBrightness/sidePanel.qBrightnessMax*100) + "%"; color: "#aaa"; font.pixelSize: 10; font.weight: Font.Medium; Layout.alignment: Qt.AlignRight }
+                                }
                                 Rectangle {
-                                    width: parent.width; height: 20; color: "#222"
+                                    width: parent.width; height: 16; color: "#1a1a1a"; radius: 2
                                     Rectangle {
                                         width: (sidePanel.qBrightness / sidePanel.qBrightnessMax) * parent.width
-                                        height: parent.height
-                                        color: sharedData.colorAccent
+                                        height: parent.height; color: sharedData.colorAccent; radius: 2
                                     }
                                     MouseArea {
                                         anchors.fill: parent
@@ -710,32 +796,49 @@ PanelWindow {
                                 }
                             }
                             
-                            Row {
-                                spacing: 6
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                property var profiles: ["power-saver", "balanced", "performance"]
-                                Repeater {
-                                    model: 3
-                                    Rectangle {
-                                        width: 48; height: 48; color: pMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                        property int profileIndex: index
-                                        Column {
-                                            anchors.centerIn: parent
-                                            spacing: 4
-                                            Text { 
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                text: parent.parent.profileIndex === 0 ? "󰌪" : (parent.parent.profileIndex === 1 ? "󰗑" : "󰓅")
-                                                color: sidePanel.qPwrStatus.toLowerCase().includes(parent.parent.parent.parent.profiles[parent.parent.profileIndex]) ? sharedData.colorAccent : "#fff"
-                                                font.pixelSize: 18
+                            Column {
+                                width: parent.width; spacing: 4
+                                Text { text: "PROFILE"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
+                                Row {
+                                    id: pwrProfilesRow
+                                    spacing: 4; anchors.horizontalCenter: parent.horizontalCenter
+                                    property var profiles: ["power-saver", "balanced", "performance"]
+                                    Repeater {
+                                        model: 3
+                                        Rectangle {
+                                            width: 46; height: 44; color: pMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 4
+                                            property int profileIndex: index
+                                            Column {
+                                                anchors.centerIn: parent; spacing: 0
+                                                Text { 
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: index === 0 ? "󰌪" : (index === 1 ? "󰗑" : "󰓅")
+                                                    color: sidePanel.qPwrStatus.toLowerCase().includes(pwrProfilesRow.profiles[index]) ? sharedData.colorAccent : "#fff"
+                                                    font.pixelSize: 16
+                                                }
+                                                Text {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: index === 0 ? "Saver" : (index === 1 ? "Bal" : "Perf")
+                                                    color: "#888"; font.pixelSize: 8; font.weight: Font.Medium
+                                                }
                                             }
-                                            Text {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                text: parent.parent.profileIndex === 0 ? "Saver" : (parent.parent.profileIndex === 1 ? "Bal" : "Perf")
-                                                color: "#888"; font.pixelSize: 8
-                                            }
+                                            MouseArea { id: pMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['powerprofilesctl', 'set', pwrProfilesRow.profiles[index]]) }
                                         }
-                                        MouseArea { id: pMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['powerprofilesctl', 'set', parent.parent.profiles[parent.profileIndex]]) }
                                     }
+                                }
+                            }
+
+                            Row {
+                                width: parent.width; spacing: 4
+                                Rectangle {
+                                    width: (parent.width - 4) / 2; height: 28; color: rbMa.containsMouse ? "#d32f2f" : Qt.rgba(1,1,1,0.05); radius: 3
+                                    Text { anchors.centerIn: parent; text: "󰑐 Reboot"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
+                                    MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['systemctl', 'reboot']) }
+                                }
+                                Rectangle {
+                                    width: (parent.width - 4) / 2; height: 28; color: sdMa.containsMouse ? "#f44336" : Qt.rgba(1,1,1,0.05); radius: 3
+                                    Text { anchors.centerIn: parent; text: "󰐥 Power Off"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
+                                    MouseArea { id: sdMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['systemctl', 'poweroff']) }
                                 }
                             }
                         }
@@ -792,10 +895,10 @@ PanelWindow {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "qssidepanel-popover"
         
-        implicitWidth: 160
-        implicitHeight: 140
-        width: 170
-        height: 160
+        implicitWidth: 180
+        implicitHeight: 190
+        width: 180
+        height: 190
         color: "transparent"
         
         
