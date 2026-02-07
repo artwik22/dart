@@ -34,7 +34,7 @@ Item {
     Rectangle {
         id: bgRect
         anchors.fill: parent
-        radius: 0
+        radius: (root.sharedData && root.sharedData.quickshellBorderRadius) ? root.sharedData.quickshellBorderRadius : 0
         color: mouseArea.containsMouse ? root.btnBgHover : root.btnBg
         visible: root.showBackground
         Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }

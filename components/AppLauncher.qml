@@ -1336,7 +1336,7 @@ PanelWindow {
         Rectangle {
             id: launcherBackground
             anchors.fill: parent
-            radius: 0
+            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
             
             // Użyj sharedData.colorBackground jeśli dostępny - jednolite tło bez gradientu
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : colorBackground
@@ -1676,7 +1676,7 @@ PanelWindow {
                 id: modeItem
                 width: modesList.width
                 height: 50
-                radius: 0
+                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                 color: (selectedIndex === index || modeItemMouseArea.containsMouse) ?
                     ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
                     "transparent"
@@ -1839,7 +1839,7 @@ PanelWindow {
                                 width: parent.width
                                 height: 36
                                 color: searchInput.activeFocus ? colorPrimary : colorSecondary
-                                radius: 0
+                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                 
                                 opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
                                 scale: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0.9
@@ -1992,7 +1992,7 @@ PanelWindow {
                                     id: appItem
                                     width: appsList.width
                                     height: 50
-                                    radius: 0
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     
                                     opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
                                     scale: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0.8
@@ -2151,7 +2151,7 @@ PanelWindow {
                     id: packageOptionItem
                     width: packagesOptionsList.width
                     height: 50
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     color: (selectedIndex === index || packageOptionItemMouseArea.containsMouse) ?
                         ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
                         "transparent"
@@ -2295,7 +2295,7 @@ PanelWindow {
                     id: installSourceItem
                     width: installSourceList.width
                     height: 50
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     color: (selectedIndex === index || installSourceItemMouseArea.containsMouse) ?
                         ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
                         "transparent"
@@ -2419,7 +2419,7 @@ PanelWindow {
                 
                 highlight: Rectangle {
                     color: colorPrimary
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     
                     Behavior on color {
                         ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
@@ -2445,7 +2445,7 @@ PanelWindow {
                         width: parent.width
                         height: 30
                         color: pacmanSearchInput.activeFocus ? colorPrimary : colorSecondary
-                        radius: 0
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         
                         opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 1 : 0
                         scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 1 : 0.9
@@ -2546,7 +2546,7 @@ PanelWindow {
                             id: packageItem
                             width: pacmanPackagesList.width
                             height: 50
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                             color: (selectedIndex === index || packageItemMouseArea.containsMouse) ?
                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
                                 "transparent"
@@ -2645,7 +2645,7 @@ PanelWindow {
                         
                         highlight: Rectangle {
                             color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         }
                     }
                 }
@@ -2669,7 +2669,7 @@ PanelWindow {
                         width: parent.width
                         height: 30
                         color: aurSearchInput.activeFocus ? colorPrimary : colorSecondary
-                        radius: 0
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         
                         opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 1 : 0
                         scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 1 : 0.9
@@ -2770,7 +2770,7 @@ PanelWindow {
                             id: aurPackageItem
                             width: aurPackagesList.width
                             height: 50
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                             color: (selectedIndex === index || aurPackageItemMouseArea.containsMouse) ?
                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
                                 "transparent"
@@ -2869,7 +2869,7 @@ PanelWindow {
                         
                         highlight: Rectangle {
                             color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         }
                     }
                 }
@@ -2894,7 +2894,7 @@ PanelWindow {
                     id: removeSourceItem
                     width: removeSourceList.width
                     height: 50
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     color: (selectedIndex === index || removeSourceItemMouseArea.containsMouse) ?
                         ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
                         "transparent"
@@ -3017,7 +3017,7 @@ PanelWindow {
                 
                 highlight: Rectangle {
                     color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     Behavior on color {
                         ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
                     }
@@ -3042,7 +3042,7 @@ PanelWindow {
                         width: parent.width
                         height: 30
                         color: removeSearchInput.activeFocus ? colorPrimary : colorSecondary
-                        radius: 0
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         
                         opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 4) ? 1 : 0
                         scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 4) ? 1 : 0.9
@@ -3143,7 +3143,7 @@ PanelWindow {
                             id: installedPackageItem
                             width: removePackagesList.width
                             height: 50
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                             color: (selectedIndex === index || installedPackageItemMouseArea.containsMouse) ?
                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
                                 "transparent"
@@ -3258,7 +3258,7 @@ PanelWindow {
                         
                         highlight: Rectangle {
                             color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         }
                     }
                 }
@@ -3282,7 +3282,7 @@ PanelWindow {
                         width: parent.width
                         height: 30
                         color: removeAurSearchInput.activeFocus ? colorPrimary : colorSecondary
-                        radius: 0
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         
                         opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 5) ? 1 : 0
                         scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 5) ? 1 : 0.9
@@ -3379,7 +3379,7 @@ PanelWindow {
                             id: installedAurPackageItem
                             width: removeAurPackagesList.width
                             height: 50
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                             color: (selectedIndex === index || installedAurPackageItemMouseArea.containsMouse) ?
                                 ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
                                 "transparent"
@@ -3462,7 +3462,7 @@ PanelWindow {
                         
                         highlight: Rectangle {
                             color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         }
                     }
                 }

@@ -112,7 +112,7 @@ PanelWindow {
             id: clipboardBackground
             anchors.fill: parent
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0a0a0a"
-            radius: 0
+            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
             
             // Material Design elevation shadow
             Rectangle {
@@ -144,12 +144,11 @@ PanelWindow {
                     
                     Item { width: parent.width - 160; height: 1 }
                     
-                    // Material Design button with elevation
                     Rectangle {
                         id: clearButtonRect
                         width: 25
                         height: 25
-                        radius: 0
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         // Material Design button color
                         color: clearButtonMouseArea.containsMouse ? 
                             ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
@@ -232,7 +231,7 @@ PanelWindow {
                         delegate: Rectangle {
                             width: clipboardListView.width
                             height: Math.max(32, contentText.implicitHeight + 13)
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                             // Material Design card color
                             color: itemMouseArea.containsMouse ? 
                                 ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 

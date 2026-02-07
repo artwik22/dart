@@ -148,27 +148,41 @@ Item {
                 spacing: 2
                 
                 Text {
-                    id: appNameText
-                    text: "Notification"
-                    font.pixelSize: 9
-                    font.family: "sans-serif"
-                    font.weight: Font.Bold
-                    color: sharedData && sharedData.colorAccent ? Qt.lighter(sharedData.colorAccent, 1.2) : "#9aa0a6"
-                    elide: Text.ElideRight
-                    width: parent.width
-                    opacity: 0.9
-                }
-                
-                Text {
                     id: summaryText
                     text: ""
                     font.pixelSize: 11
                     font.family: "sans-serif"
-                    font.weight: Font.DemiBold
+                    font.weight: Font.Bold
                     color: "#ffffff"
                     elide: Text.ElideRight
                     width: parent.width
                     visible: text && text.length > 0
+                }
+                
+                Text {
+                    id: bodyText
+                    text: ""
+                    font.pixelSize: 10
+                    font.family: "sans-serif"
+                    color: "#e0e0e0"
+                    elide: Text.ElideRight
+                    width: parent.width
+                    maximumLineCount: 2
+                    wrapMode: Text.WordWrap
+                    visible: text && text.length > 0
+                }
+
+                Text {
+                    id: appNameText
+                    text: ""
+                    font.pixelSize: 8
+                    font.family: "sans-serif"
+                    font.weight: Font.Normal
+                    color: sharedData && sharedData.colorAccent ? Qt.lighter(sharedData.colorAccent, 1.2) : "#9aa0a6"
+                    elide: Text.ElideRight
+                    width: parent.width
+                    opacity: 0.7
+                    visible: text && text.length > 0 && text !== "notify-send"
                 }
             }
             
@@ -318,8 +332,9 @@ Item {
             notificationItem.storedNotification = notification
             
             // Update texts immediately
-            if (appNameText) appNameText.text = notification.appName || notification.desktopEntry || "Notification"
             if (summaryText) summaryText.text = notification.summary || ""
+            if (bodyText) bodyText.text = notification.body || ""
+            if (appNameText) appNameText.text = notification.appName || notification.desktopEntry || ""
             
             // Start auto-dismiss timer directly
             if (!notificationItem.timerStarted) {
@@ -336,8 +351,9 @@ Item {
     onNotificationChanged: {
         if (notification) {
             storedNotification = notification
-            if (appNameText) appNameText.text = notification.appName || notification.desktopEntry || "Notification"
             if (summaryText) summaryText.text = notification.summary || ""
+            if (bodyText) bodyText.text = notification.body || ""
+            if (appNameText) appNameText.text = notification.appName || notification.desktopEntry || ""
             
             if (!notificationItem.timerStarted) {
                 notificationItem.startAutoDismissTimer()

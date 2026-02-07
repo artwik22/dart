@@ -179,7 +179,7 @@ PanelWindow {
             id: volumeSliderBackground
             anchors.fill: parent
             anchors.rightMargin: 0
-            radius: 0
+            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#111111"
             opacity: (sharedData && sharedData.volumeVisible) ? 1.0 : 0.0
             
@@ -253,7 +253,7 @@ PanelWindow {
                     width: 5
                     height: parent.height
                     color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     z: 1
                 }
 
@@ -265,7 +265,7 @@ PanelWindow {
                     width: brightnessSliderTrack.width
                     height: brightnessSliderTrack.height * (brightnessValue / 100)
                     color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     z: 2
                     
                     Behavior on height {
@@ -319,7 +319,7 @@ PanelWindow {
                     width: 5
                     height: parent.height
                     color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     z: 1
                 }
 
@@ -331,7 +331,7 @@ PanelWindow {
                     width: volumeSliderTrack.width
                     height: volumeSliderTrack.height * (volumeValue / 100)
                     color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     z: 2
                     
                     Behavior on height {

@@ -47,6 +47,7 @@ ShellRoot {
         property string dashboardResource2: "ram" // "cpu", "ram", "gpu", "network"
         property string notificationPosition: "top" // "top", "top-left", "top-right"
         property string notificationRounding: "standard" // "none", "standard", "pill"
+        property int quickshellBorderRadius: 0 // Border radius for QuickShell elements (0 = disabled)
     }
     
     // Color config file path - dynamically determined
@@ -267,6 +268,11 @@ ShellRoot {
                         }
                         if (json.notificationRounding && (json.notificationRounding === "none" || json.notificationRounding === "standard" || json.notificationRounding === "pill")) {
                             sharedData.notificationRounding = json.notificationRounding
+                        }
+                        // Load quickshell border radius (default 0 = disabled)
+                        if (json.quickshellBorderRadius !== undefined) {
+                            var rad = parseInt(json.quickshellBorderRadius)
+                            sharedData.quickshellBorderRadius = isNaN(rad) ? 0 : rad
                         }
                     } catch (e) {
                     }
@@ -495,6 +501,13 @@ ShellRoot {
                                 if (json.notificationRounding && json.notificationRounding !== sharedData.notificationRounding) {
                                     sharedData.notificationRounding = json.notificationRounding
                                     changed = true
+                                }
+                                if (json.quickshellBorderRadius !== undefined) {
+                                    var qbr = parseInt(json.quickshellBorderRadius)
+                                    if (!isNaN(qbr) && qbr !== sharedData.quickshellBorderRadius) {
+                                        sharedData.quickshellBorderRadius = qbr
+                                        changed = true
+                                    }
                                 }
                                 
                                 // Note: We don't auto-reload sidebarVisible from file watcher

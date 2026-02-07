@@ -63,7 +63,7 @@ Item {
                         delegate: Rectangle {
                             width: root.calculatedTileSize
                             height: root.calculatedTileSize
-                            radius: 0 // No rounding as requested
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                             
                             color: {
                                 if (level === 0) return (sharedData && sharedData.colorSecondary) ? Qt.lighter(sharedData.colorSecondary, 1.2) : "#2d2d2d"
@@ -96,7 +96,7 @@ Item {
                                 height: ttLabel.height + 8
                                 color: "#1a1a1a"
                                 border.color: "#555"
-                                radius: 0
+                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                 y: -height - 4
                                 x: (parent.width - width) / 2
                                 

@@ -335,7 +335,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             width: 3
                             height: workspaceItem.isActive ? 64 : (workspaceItem.hasWindows ? 32 : 16)
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                             color: workspaceItem.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItem.hasWindows ? "#fff" : "#666")
                             opacity: workspaceItem.isActive ? 1.0 : (workspaceItem.hasWindows ? 0.8 : 0.4)
                             Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
@@ -391,7 +391,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             height: 3
                             width: workspaceItemTop.isActive ? 64 : (workspaceItemTop.hasWindows ? 32 : 16)
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                             color: workspaceItemTop.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItemTop.hasWindows ? "#fff" : "#666")
                             opacity: workspaceItemTop.isActive ? 1.0 : (workspaceItemTop.hasWindows ? 0.8 : 0.4)
                             Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
@@ -528,7 +528,7 @@ PanelWindow {
         
         color: (sharedData && sharedData.colorPrimary) ? Qt.lighter(sharedData.colorPrimary, 1.2) : "#252525"
         border.width: 0
-        radius: 0
+        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
         visible: panelActive
         z: 100001
 
@@ -559,7 +559,7 @@ PanelWindow {
                         width: 180
                         height: 190
                         color: (sharedData.colorBackground || "#0d0d0d")
-                        radius: 0
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         Column { 
                             anchors.fill: parent
                             anchors.margins: 10
@@ -643,7 +643,7 @@ PanelWindow {
                         width: 180
                         height: 190
                         color: (sharedData.colorBackground || "#0d0d0d")
-                        radius: 0
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         Column { 
                             anchors.fill: parent
                             anchors.margins: 10
@@ -749,7 +749,7 @@ PanelWindow {
                         width: 180
                         height: 190
                         color: (sharedData.colorBackground || "#0d0d0d")
-                        radius: 0
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                         Column { 
                             anchors.fill: parent
                             anchors.margins: 10
@@ -902,11 +902,34 @@ PanelWindow {
         color: "transparent"
         
         
-        property alias content: popoverLoader.sourceComponent
+        property Component content: null
+        property int activeLoader: 1
         property bool isHovered: popoverMouseArea.containsMouse
         property real showProgress: 0.0
-        property bool shouldShow: content !== null
+        property bool shouldShow: false
         
+        onContentChanged: {
+            if (content !== null) {
+                shouldShow = true
+                if (showProgress > 0) {
+                    // Transition between menus
+                    if (activeLoader === 1 && popoverLoader1.sourceComponent !== content) {
+                        popoverLoader2.sourceComponent = content
+                        activeLoader = 2
+                    } else if (activeLoader === 2 && popoverLoader2.sourceComponent !== content) {
+                        popoverLoader1.sourceComponent = content
+                        activeLoader = 1
+                    }
+                } else {
+                    // Initial opening
+                    popoverLoader1.sourceComponent = content
+                    activeLoader = 1
+                }
+            } else {
+                shouldShow = false
+            }
+        }
+
         onShouldShowChanged: {
             if (shouldShow) {
                 showProgress = 1.0
@@ -946,8 +969,19 @@ PanelWindow {
             ]
             
             Loader {
-                id: popoverLoader
+                id: popoverLoader1
                 anchors.fill: parent
+                opacity: popoverWindow.activeLoader === 1 ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                onOpacityChanged: if (opacity === 0 && popoverWindow.activeLoader !== 1) sourceComponent = null
+            }
+
+            Loader {
+                id: popoverLoader2
+                anchors.fill: parent
+                opacity: popoverWindow.activeLoader === 2 ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                onOpacityChanged: if (opacity === 0 && popoverWindow.activeLoader !== 2) sourceComponent = null
             }
             
             MouseArea {
@@ -964,7 +998,9 @@ PanelWindow {
             interval: 350
             onTriggered: {
                 if (!popoverWindow.shouldShow) {
-                    popoverLoader.sourceComponent = null
+                    popoverLoader1.sourceComponent = null
+                    popoverLoader2.sourceComponent = null
+                    popoverWindow.activeLoader = 1
                 }
             }
         }

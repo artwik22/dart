@@ -119,7 +119,7 @@ PanelWindow {
             Rectangle {
                 width: parent.width - 0
                 height: 48
-                radius: 0
+                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                 color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
                 border.width: 1
                 border.color: errorLabel.text ? "#c05050" : (Qt.inputMethod.keyboardVisible ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : "transparent")
@@ -180,7 +180,7 @@ PanelWindow {
                 }
 
                 background: Rectangle {
-                    radius: 0
+                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                     color: parent.pressed ? "#2a3a4a" : (parent.enabled && (parent.hovered || parent.activeFocus) ? ((lockScreenRoot.sharedData && lockScreenRoot.sharedData.colorAccent) ? lockScreenRoot.sharedData.colorAccent : "#4a9eff") : "#2a2a2a")
                 }
 

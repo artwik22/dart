@@ -1823,25 +1823,25 @@ PanelWindow {
                                                 Rectangle {
                                                     width: parent.width
                                                     height: 12
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                     color: colorPresets[modelData] ? colorPresets[modelData].background : "#000000"
                                                 }
                                                 Rectangle {
                                                     width: parent.width
                                                     height: 12
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                     color: colorPresets[modelData] ? colorPresets[modelData].primary : "#000000"
                                                 }
                                                 Rectangle {
                                                     width: parent.width
                                                     height: 12
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                     color: colorPresets[modelData] ? colorPresets[modelData].secondary : "#000000"
                                                 }
                                                 Rectangle {
                                                     width: parent.width
                                                     height: 12
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                     color: colorPresets[modelData] ? colorPresets[modelData].text : "#ffffff"
                                                 }
                                             }
@@ -1915,7 +1915,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customBackground || colorBackground
-                                            radius: 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorText
                                             opacity: 0.8
@@ -1947,7 +1947,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -1966,7 +1966,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customPrimary || colorPrimary
-                                            radius: 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorText
                                             opacity: 0.8
@@ -1998,7 +1998,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -2017,7 +2017,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customSecondary || colorSecondary
-                                            radius: 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorText
                                             opacity: 0.8
@@ -2049,7 +2049,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -2068,7 +2068,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customText || colorText
-                                            radius: 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorPrimary
                                             opacity: 0.8
@@ -2100,7 +2100,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -2119,7 +2119,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customAccent || colorAccent
-                                            radius: 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorText
                                             opacity: 0.8
@@ -2151,7 +2151,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -2167,7 +2167,7 @@ PanelWindow {
                                     width: parent.width
                                     height: 45
                                     color: applyButtonMouseArea.containsMouse ? colorAccent : colorSecondary
-                                    radius: 0
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     anchors.horizontalCenter: parent.horizontalCenter
 
                                     Text {
@@ -2453,7 +2453,7 @@ PanelWindow {
                             width: parent.width
                             height: 60
                             color: colorPrimary
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
 
                             Row {
                                 anchors.fill: parent
@@ -2493,14 +2493,14 @@ PanelWindow {
                                     width: 40
                                     height: 20
                                     color: (sharedData && sharedData.sidebarVisible) ? colorAccent : colorSecondary
-                                    radius: 0
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     anchors.verticalCenter: parent.verticalCenter
 
                                     Rectangle {
                                         width: 16
                                         height: 16
                                         color: colorText
-                                        radius: 0
+                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                         x: (sharedData && sharedData.sidebarVisible) ? 20 : 2
                                         anchors.verticalCenter: parent.verticalCenter
 
@@ -2526,7 +2526,7 @@ PanelWindow {
                             width: parent.width
                             height: 60
                             color: colorPrimary
-                            radius: 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
 
                             Row {
                                 anchors.fill: parent
@@ -2570,7 +2570,7 @@ PanelWindow {
                                         width: 60
                                         height: 30
                                         color: (sharedData && sharedData.sidebarPosition === "left") ? colorAccent : colorSecondary
-                                        radius: 0
+                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
 
                                         Text {
                                             text: "Left"
@@ -2596,7 +2596,7 @@ PanelWindow {
                                         width: 60
                                         height: 30
                                         color: (sharedData && sharedData.sidebarPosition === "top") ? colorAccent : colorSecondary
-                                        radius: 0
+                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
 
                                         Text {
                                             text: "Top"
@@ -2758,7 +2758,7 @@ PanelWindow {
                                 width: parent.width
                                 height: 100
                                 color: colorPrimary
-                                radius: 0
+                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
 
                                 Column {
                                     anchors.fill: parent
@@ -2774,7 +2774,7 @@ PanelWindow {
                                             width: 50
                                             height: 50
                                             color: defaultSinkMute ? colorAccent : (defaultSinkMuteMouseArea.containsMouse ? colorSecondary : colorSecondary)
-                                            radius: 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                             anchors.verticalCenter: parent.verticalCenter
 
                                             Text {
@@ -2817,7 +2817,7 @@ PanelWindow {
                                                     width: parent.width - 60
                                                     height: 12
                                                     color: colorSecondary
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                     anchors.verticalCenter: parent.verticalCenter
 
                                                     Rectangle {
@@ -2825,7 +2825,7 @@ PanelWindow {
                                                         width: parent.width * (defaultSinkVolume / 100)
                                                         height: parent.height
                                                         color: defaultSinkMute ? Qt.darker(colorAccent, 1.3) : colorAccent
-                                                        radius: 0
+                                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                     }
 
                                                     MouseArea {
@@ -2912,7 +2912,7 @@ PanelWindow {
                                 width: parent.width
                                 height: 100
                                 color: colorPrimary
-                                radius: 0
+                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
 
                                 Column {
                                     anchors.fill: parent
@@ -2928,7 +2928,7 @@ PanelWindow {
                                             width: 50
                                             height: 50
                                             color: defaultSourceMute ? colorAccent : (defaultSourceMuteMouseArea.containsMouse ? colorSecondary : colorSecondary)
-                                            radius: 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                             anchors.verticalCenter: parent.verticalCenter
 
                                             Text {
@@ -2971,7 +2971,7 @@ PanelWindow {
                                                     width: parent.width - 60
                                                     height: 12
                                                     color: colorSecondary
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                     anchors.verticalCenter: parent.verticalCenter
 
                                                     Rectangle {
@@ -2979,7 +2979,7 @@ PanelWindow {
                                                         width: parent.width * (defaultSourceVolume / 100)
                                                         height: parent.height
                                                         color: defaultSourceMute ? Qt.darker(colorAccent, 1.3) : colorAccent
-                                                        radius: 0
+                                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                     }
 
                                                     MouseArea {
@@ -3065,7 +3065,7 @@ PanelWindow {
                                     width: parent.width
                                     height: 90
                                     color: colorPrimary
-                                    radius: 0
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
 
                                     Column {
                                         anchors.fill: parent
@@ -3104,7 +3104,7 @@ PanelWindow {
                                                 width: 45
                                                 height: 45
                                                 color: muteButton.muteState ? colorAccent : (muteMouseArea.containsMouse ? colorSecondary : colorSecondary)
-                                                radius: 0
+                                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 anchors.verticalCenter: parent.verticalCenter
 
                                                 property bool muteState: false
@@ -3145,7 +3145,7 @@ PanelWindow {
                                                 width: parent.width - 70
                                                 height: 10
                                                 color: colorSecondary
-                                                radius: 0
+                                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 anchors.verticalCenter: parent.verticalCenter
 
                                                 property real volumeValue: 50
@@ -3155,7 +3155,7 @@ PanelWindow {
                                                     width: parent.width * (parent.volumeValue / 100)
                                                     height: parent.height
                                                     color: muteButton.muteState ? Qt.darker(colorAccent, 1.3) : colorAccent
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 MouseArea {
@@ -3240,7 +3240,7 @@ PanelWindow {
                                     width: parent.width
                                     height: 90
                                     color: colorPrimary
-                                    radius: 0
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
 
                                     Column {
                                         anchors.fill: parent
@@ -3279,7 +3279,7 @@ PanelWindow {
                                                 width: 45
                                                 height: 45
                                                 color: inputMuteButton.muteState ? colorAccent : (muteMouseArea.containsMouse ? colorSecondary : colorSecondary)
-                                                radius: 0
+                                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 anchors.verticalCenter: parent.verticalCenter
 
                                                 property bool muteState: false
@@ -3320,7 +3320,7 @@ PanelWindow {
                                                 width: parent.width - 70
                                                 height: 10
                                                 color: colorSecondary
-                                                radius: 0
+                                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 anchors.verticalCenter: parent.verticalCenter
 
                                                 property real volumeValue: 50
@@ -3330,7 +3330,7 @@ PanelWindow {
                                                     width: parent.width * (parent.volumeValue / 100)
                                                     height: parent.height
                                                     color: inputMuteButton.muteState ? Qt.darker(colorAccent, 1.3) : colorAccent
-                                                    radius: 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 MouseArea {
