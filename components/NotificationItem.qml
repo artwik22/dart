@@ -39,12 +39,20 @@ Item {
         // Dimensions
         width: pillWidth
         height: 52  // Increased height
-        radius: 14  // Updated radius for larger size
+        radius: {
+            if (!sharedData || !sharedData.notificationRounding) return 14;
+            if (sharedData.notificationRounding === "pill") return 26;
+            if (sharedData.notificationRounding === "none") return 0;
+            return 14; // standard
+        }
         
-        // Symmetric expansion from center - shift left as width increases
-        // When width = 52 (square), x = 144 (center at 170 of 340)
-        // When width = 340 (full), x = 0 (center still at 170)
-        x: (340 - pillWidth) / 2
+        // Expansion from correct edge based on position
+        x: {
+            if (!sharedData || sharedData.notificationPosition === "top") return (340 - pillWidth) / 2;
+            if (sharedData.notificationPosition === "top-left") return 0;
+            if (sharedData.notificationPosition === "top-right") return 340 - pillWidth;
+            return (340 - pillWidth) / 2;
+        }
         
         transform: Translate {
             id: entranceTranslate
@@ -129,7 +137,7 @@ Item {
             Item {
                 width: 24
                 height: 24
-                visible: notification && notification.appIcon && notification.appIcon.length > 0
+                visible: true // Always visible to prevent text overlap with the floating icon
             }
             
             // Text content
@@ -236,27 +244,52 @@ Item {
             }
         }
         }
-    }
-    
-    // Floating App Icon (Visible on Squircle)
-    Rectangle {
-        id: iconRect
-        x: notificationItem.iconX
-        width: 24
-        height: 24
-        radius: 12
-        anchors.verticalCenter: parent.verticalCenter
-        color: sharedData && sharedData.colorSecondary ? Qt.lighter(sharedData.colorSecondary, 1.1) : "#1f1f1f"
-        visible: notification && notification.appIcon && notification.appIcon.length > 0
-        z: 10 // On top of background, below content text (if overlapping)
         
-        Image {
-            anchors.fill: parent
-            anchors.margins: 4
-            source: notification ? notification.appIcon : ""
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-            antialiasing: true
+        // Floating App Icon (Visible on Squircle)
+        Rectangle {
+            id: iconRect
+            x: notificationItem.iconX
+            width: 24
+            height: 24
+            radius: 12
+            anchors.verticalCenter: parent.verticalCenter
+            color: sharedData && sharedData.colorSecondary ? Qt.lighter(sharedData.colorSecondary, 1.1) : "#1f1f1f"
+            z: 10 // On top of background, below content text (if overlapping)
+            
+            // Generic Notification Icon (Bell) - visible in squircle / as fallback
+            Text {
+                text: "󱅫" // Material Design bell icon if font supports it, or standard bell
+                font.pixelSize: 16
+                color: "#ffffff"
+                anchors.centerIn: parent
+                opacity: notificationItem.pillWidth < 100 ? 1.0 : (notification && notification.appIcon ? 0.0 : 0.8)
+                visible: opacity > 0
+                
+                Component.onCompleted: {
+                    // Use standard bell if nerd font icon fails or just use the emoji with explicit color
+                    if (text === "") text = "🔔"
+                }
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 250 }
+                }
+            }
+
+            // Real App Icon
+            Image {
+                anchors.fill: parent
+                anchors.margins: 4
+                source: notification ? notification.appIcon : ""
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                antialiasing: true
+                opacity: notificationItem.pillWidth > 100 && notification && notification.appIcon ? 1.0 : 0.0
+                visible: opacity > 0
+                
+                Behavior on opacity {
+                    NumberAnimation { duration: 250 }
+                }
+            }
         }
     }
     

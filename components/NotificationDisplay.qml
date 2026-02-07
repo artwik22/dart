@@ -24,16 +24,17 @@ PanelWindow {
     visible: notifications.length > 0
     color: "transparent"
 
-    // Anchor window to top center
+    // Anchor window based on sharedData.notificationPosition
+    // If both left and right are false, it centers naturally for "top"
     anchors.top: true
     anchors.bottom: false
-    anchors.left: false
-    anchors.right: false
+    anchors.left: sharedData && sharedData.notificationPosition === "top-left"
+    anchors.right: sharedData && sharedData.notificationPosition === "top-right"
 
     margins {
         top: 10
-        left: 0
-        right: 0
+        left: sharedData && sharedData.notificationPosition === "top-left" ? 10 : 0
+        right: sharedData && sharedData.notificationPosition === "top-right" ? 10 : 0
     }
     
     // NotificationServer - receives notifications
@@ -134,8 +135,9 @@ PanelWindow {
     
     Column {
         id: notificationColumn
-        anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        
         width: 340  // Increased width to match NotificationItem
         spacing: 12
 

@@ -45,6 +45,8 @@ ShellRoot {
         property string dashboardPosition: "right"  // "right", "left", "top", "bottom"
         property string dashboardResource1: "cpu" // "cpu", "ram", "gpu", "network"
         property string dashboardResource2: "ram" // "cpu", "ram", "gpu", "network"
+        property string notificationPosition: "top" // "top", "top-left", "top-right"
+        property string notificationRounding: "standard" // "none", "standard", "pill"
     }
     
     // Color config file path - dynamically determined
@@ -259,6 +261,12 @@ ShellRoot {
                         }
                         if (json.githubUsername && String(json.githubUsername).length > 0) {
                             sharedData.githubUsername = String(json.githubUsername)
+                        }
+                        if (json.notificationPosition && (json.notificationPosition === "top" || json.notificationPosition === "top-left" || json.notificationPosition === "top-right")) {
+                            sharedData.notificationPosition = json.notificationPosition
+                        }
+                        if (json.notificationRounding && (json.notificationRounding === "none" || json.notificationRounding === "standard" || json.notificationRounding === "pill")) {
+                            sharedData.notificationRounding = json.notificationRounding
                         }
                     } catch (e) {
                     }
@@ -478,6 +486,14 @@ ShellRoot {
                                 }
                                 if (json.githubUsername && String(json.githubUsername) !== sharedData.githubUsername) {
                                     sharedData.githubUsername = String(json.githubUsername)
+                                    changed = true
+                                }
+                                if (json.notificationPosition && json.notificationPosition !== sharedData.notificationPosition) {
+                                    sharedData.notificationPosition = json.notificationPosition
+                                    changed = true
+                                }
+                                if (json.notificationRounding && json.notificationRounding !== sharedData.notificationRounding) {
+                                    sharedData.notificationRounding = json.notificationRounding
                                     changed = true
                                 }
                                 
