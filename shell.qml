@@ -48,6 +48,7 @@ ShellRoot {
         property string notificationPosition: "top" // "top", "top-left", "top-right"
         property string notificationRounding: "standard" // "none", "standard", "pill"
         property int quickshellBorderRadius: 0 // Border radius for QuickShell elements (0 = disabled)
+        property string notificationSound: "message.oga" // "message.oga", "dialog-information.oga", etc.
     }
     
     // Color config file path - dynamically determined
@@ -273,6 +274,9 @@ ShellRoot {
                         if (json.quickshellBorderRadius !== undefined) {
                             var rad = parseInt(json.quickshellBorderRadius)
                             sharedData.quickshellBorderRadius = isNaN(rad) ? 0 : rad
+                        }
+                        if (json.notificationSound && String(json.notificationSound).length > 0) {
+                            sharedData.notificationSound = String(json.notificationSound)
                         }
                     } catch (e) {
                     }

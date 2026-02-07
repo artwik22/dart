@@ -63,7 +63,8 @@ PanelWindow {
             
             // Play notification sound if enabled
             if (sharedData && sharedData.notificationSoundsEnabled && sharedData.runCommand) {
-                sharedData.runCommand(["paplay", "/usr/share/sounds/freedesktop/stereo/message.oga"])
+                var sound = sharedData.notificationSound || "message.oga"
+                sharedData.runCommand(["paplay", "/usr/share/sounds/freedesktop/stereo/" + sound])
             }
             
             addNotification(notification)

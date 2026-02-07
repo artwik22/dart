@@ -86,6 +86,8 @@ if "notificationRounding" in existing_data:
     colors["notificationRounding"] = existing_data["notificationRounding"]
 if "quickshellBorderRadius" in existing_data:
     colors["quickshellBorderRadius"] = existing_data["quickshellBorderRadius"]
+if "notificationSound" in existing_data:
+    colors["notificationSound"] = existing_data["notificationSound"]
 
 # Override with provided values if they exist
 # Argument 10: notificationsEnabled
@@ -198,6 +200,10 @@ if len(sys.argv) > 32 and sys.argv[32]:
         colors["quickshellBorderRadius"] = int(sys.argv[32])
     except ValueError:
         pass
+
+# Argument 33: notificationSound
+if len(sys.argv) > 33 and sys.argv[33]:
+    colors["notificationSound"] = sys.argv[33]
 
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)
