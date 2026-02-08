@@ -624,12 +624,12 @@ PanelWindow {
                                         Rectangle {
                                             width: parent.width; height: 24
                                             radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
-                                            color: netMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
+                                            color: netItemMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.03)
                                             Row {
                                                 anchors.fill: parent; anchors.leftMargin: 4; anchors.rightMargin: 4
                                                 spacing: 8
-                                                Text { text: "󰖩"; color: "#aaa"; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
-                                                Text { text: modelData; color: "#ddd"; font.pixelSize: 11; elide: Text.ElideRight; width: parent.width - 24; anchors.verticalCenter: parent.verticalCenter }
+                                                Text { text: "󰖩"; color: (sharedData.colorAccent || "#4a9eff"); font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                                Text { text: modelData; color: "#fff"; font.pixelSize: 11; elide: Text.ElideRight; width: parent.width - 24; anchors.verticalCenter: parent.verticalCenter; font.weight: Font.Medium }
                                             }
                                             MouseArea { id: netItemMa; anchors.fill: parent; hoverEnabled: true }
                                         }
@@ -784,45 +784,71 @@ PanelWindow {
                                 }
                             }
                             
-                            // Actions
-                            GridLayout {
-                                columns: 2; rowSpacing: 6; columnSpacing: 6; width: parent.width
-                                
-                                // Toggle
-                                Rectangle {
-                                    Layout.fillWidth: true; height: 32
-                                    color: btToggleBtnMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
-                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
-                                    
-                                    Text { 
-                                        anchors.centerIn: parent
-                                        text: sidePanel.qBtStatus === "On" ? "Turn Off" : "Turn On"
-                                        color: sidePanel.qBtStatus === "On" ? "#ff4444" : "#00ff41"
-                                        font.pixelSize: 11; font.weight: Font.Medium
-                                    }
-                                    MouseArea { 
-                                        id: btToggleBtnMa; anchors.fill: parent; hoverEnabled: true
-                                        onClicked: sharedData.runCommand(['sh', '-c', (sidePanel.qBtStatus === "On" ? 'bluetoothctl power off' : 'bluetoothctl power on')])
+                            // Paired devices (disconnected)
+                            Column {
+                                spacing: 6; width: parent.width
+                                visible: sidePanel.qBtPaired.length > 0
+                                Text { text: "PAIRED"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1.2 }
+                                Column {
+                                    width: parent.width; spacing: 4
+                                    Repeater {
+                                        model: sidePanel.qBtPaired.split(";").filter(s => s.length > 0)
+                                        Rectangle {
+                                            width: parent.width; height: 32
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
+                                            color: pairMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.03)
+                                            
+                                            property string mac: modelData.indexOf("|") !== -1 ? modelData.split("|")[0] : ""
+                                            property string deviceName: modelData.indexOf("|") !== -1 ? modelData.split("|")[1] : modelData
+                                            
+                                            Row {
+                                                anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8
+                                                spacing: 8
+                                                Text { text: "󰂯"; color: "#aaa"; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                                Text { 
+                                                    text: parent.parent.deviceName
+                                                    color: "#ddd"; font.pixelSize: 11; elide: Text.ElideRight
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: parent.width - 80 
+                                                }
+                                                
+                                                Rectangle {
+                                                    width: 60; height: 20; radius: 10
+                                                    color: (sharedData.colorAccent || "#4a9eff")
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    Text { anchors.centerIn: parent; text: "Connect"; color: "#141414"; font.pixelSize: 10; font.weight: Font.Bold }
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        onClicked: {
+                                                            if (parent.parent.parent.mac !== "") {
+                                                                sidePanel.qBtConnectingMac = parent.parent.parent.mac
+                                                                sharedData.runCommand(['bluetoothctl', 'connect', parent.parent.parent.mac])
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            MouseArea { id: pairMa; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
+                                        }
                                     }
                                 }
+                            }
+
+                            // Manager
+                            Rectangle {
+                                width: parent.width; height: 32
+                                color: btMgrMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                 
-                                // Manager
-                                Rectangle {
-                                    Layout.fillWidth: true; height: 32
-                                    color: btMgrMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
-                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
-                                    
-                                    Row {
-                                        anchors.centerIn: parent; spacing: 6
-                                        Text { text: "󰒓"; color: "#aaa"; font.pixelSize: 12 }
-                                        Text { text: "Manager"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
-                                    }
-                                    MouseArea { 
-                                        id: btMgrMa; anchors.fill: parent; hoverEnabled: true
-                                        onClicked: sharedData.runCommand(['blueman-manager'])
-                                    }
+                                Row {
+                                    anchors.centerIn: parent; spacing: 6
+                                    Text { text: "󰒓"; color: "#aaa"; font.pixelSize: 12 }
+                                    Text { text: "Bluetooth Manager"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
+                                }
+                                MouseArea { 
+                                    id: btMgrMa; anchors.fill: parent; hoverEnabled: true
+                                    onClicked: sharedData.runCommand(['blueman-manager'])
                                 }
                             }
                         }
