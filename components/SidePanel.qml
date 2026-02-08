@@ -78,6 +78,16 @@ PanelWindow {
 
     property bool isPrimaryPanel: (primaryScreen === null || primaryScreen === undefined || (screen && primaryScreen && screen.name === primaryScreen.name)) && panelActive
 
+    property bool timerRunning: false
+    property int timerRemaining: 0
+    property int timerDuration: 0
+    
+    function formatTime(sec) {
+        var m = Math.floor(sec / 60)
+        var s = sec % 60
+        return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s)
+    }
+
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qssidepanel-" + (panelPosition || "left") + "-" + (screen && screen.name ? screen.name : "0")
     
@@ -553,8 +563,9 @@ PanelWindow {
             QuickToggle {
                 icon: "󰖩"
                 sharedData: sidePanel.sharedData
+                sidePanelRoot: sidePanel
                 panelPosition: sidePanel.panelPosition
-                screen: sidePanel.screen
+                outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
@@ -566,26 +577,29 @@ PanelWindow {
                 }
                 popoverContent: Component {
                     Rectangle {
-                        width: 180
-                        height: 190
-                        color: (sharedData.colorBackground || "#0d0d0d")
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                        width: 240
+                        height: 240
+                        color: (sharedData.colorSecondary || "#141414")
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                        
                         Column { 
                             anchors.fill: parent
-                            anchors.margins: 10
+                            anchors.margins: 12
                             spacing: 12
+                            
+                            // Header
                             Column { 
-                                spacing: 3
+                                spacing: 2
                                 width: parent.width
                                 Text { 
-                                    text: "󰖩 Network"
+                                    text: "Network"
                                     color: (sharedData.colorAccent || "#4a9eff")
-                                    font.pixelSize: 15
+                                    font.pixelSize: 16
                                     font.weight: Font.ExtraBold
                                 }
                                 Text { 
-                                    text: (sidePanel.qNetSSID && sidePanel.qNetSSID.length > 0) ? sidePanel.qNetSSID : "Not connected"
-                                    color: "#fff"
+                                    text: (sidePanel.qNetSSID && sidePanel.qNetSSID.length > 0) ? sidePanel.qNetSSID : "Disconnected"
+                                    color: (sidePanel.qNetSSID && sidePanel.qNetSSID.length > 0) ? "#fff" : "#aaa"
                                     font.pixelSize: 12
                                     font.weight: Font.Medium
                                     elide: Text.ElideRight
@@ -593,76 +607,95 @@ PanelWindow {
                                 }
                             }
                             
+                            // Nearby Networks List
                             Column {
-                                spacing: 4
+                                spacing: 6
                                 width: parent.width
                                 visible: sidePanel.qNetNearby.length > 0
-                                Text { text: "NEARBY"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
-                                Flow {
+                                
+                                Text { 
+                                    text: "NEARBY"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1.2 
+                                }
+                                
+                                Column {
                                     width: parent.width; spacing: 4
                                     Repeater {
                                         model: sidePanel.qNetNearby.split(";").filter(s => s.length > 0 && s !== sidePanel.qNetSSID).slice(0, 3)
                                         Rectangle {
-                                            width: Math.min(60, nl.implicitWidth + 8); height: 18; color: "#1a1a1a"; radius: 2
-                                            Text { id: nl; anchors.centerIn: parent; text: modelData; color: "#aaa"; font.pixelSize: 8; elide: Text.ElideRight; width: parent.width - 4 }
+                                            width: parent.width; height: 24
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
+                                            color: netMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
+                                            Row {
+                                                anchors.fill: parent; anchors.leftMargin: 4; anchors.rightMargin: 4
+                                                spacing: 8
+                                                Text { text: "󰖩"; color: "#aaa"; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                                Text { text: modelData; color: "#ddd"; font.pixelSize: 11; elide: Text.ElideRight; width: parent.width - 24; anchors.verticalCenter: parent.verticalCenter }
+                                            }
+                                            MouseArea { id: netItemMa; anchors.fill: parent; hoverEnabled: true }
                                         }
                                     }
                                 }
                             }
-
+                            
+                            // Actions Grid
                             GridLayout {
-                                columns: 2; rowSpacing: 4; columnSpacing: 4; width: parent.width
-                                    Rectangle {
-                                        id: netToggleBtn
-                                        Layout.fillWidth: true; height: 30; color: netMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
-                                        Text { anchors.centerIn: parent; text: "󰖩 Toggle"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                        MouseArea { 
-                                            id: netMa1; anchors.fill: parent; hoverEnabled: true
-                                            onClicked: {
-                                                netClickAnim1.start()
-                                                sharedData.runCommand(['sh', '-c', 'nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on'])
-                                            }
-                                        }
-                                        SequentialAnimation {
-                                            id: netClickAnim1
-                                            NumberAnimation { target: netToggleBtn; property: "scale"; to: 0.95; duration: 50 }
-                                            NumberAnimation { target: netToggleBtn; property: "scale"; to: 1.0; duration: 100 }
+                                columns: 2; rowSpacing: 6; columnSpacing: 6; width: parent.width
+                                
+                                // Toggle Button
+                                Rectangle {
+                                    Layout.fillWidth: true; height: 32
+                                    color: netToggleMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
+                                    
+                                    Row {
+                                        anchors.centerIn: parent; spacing: 6
+                                        Text { text: "󰖩"; color: (sharedData.colorAccent || "#4a9eff"); font.pixelSize: 12 }
+                                        Text { text: "Toggle"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
+                                    }
+                                    MouseArea { 
+                                        id: netToggleMa; anchors.fill: parent; hoverEnabled: true
+                                        onClicked: {
+                                            sharedData.runCommand(['sh', '-c', 'nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on'])
                                         }
                                     }
-                                    Rectangle {
-                                        id: netScanBtn
-                                        Layout.fillWidth: true; height: 30; color: netMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
-                                        Text { anchors.centerIn: parent; text: "󰱔 Scan"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                        MouseArea { 
-                                            id: netMa2; anchors.fill: parent; hoverEnabled: true
-                                            onClicked: {
-                                                netClickAnim2.start()
-                                                sharedData.runCommand(['sh', '-c', 'nmcli dev wifi rescan'])
-                                            }
-                                        }
-                                        SequentialAnimation {
-                                            id: netClickAnim2
-                                            NumberAnimation { target: netScanBtn; property: "scale"; to: 0.95; duration: 50 }
-                                            NumberAnimation { target: netScanBtn; property: "scale"; to: 1.0; duration: 100 }
-                                        }
+                                }
+                                
+                                // Scan Button
+                                Rectangle {
+                                    Layout.fillWidth: true; height: 32
+                                    color: netScanMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
+                                    
+                                    Row {
+                                        anchors.centerIn: parent; spacing: 6
+                                        Text { text: "󰱔"; color: (sharedData.colorAccent || "#4a9eff"); font.pixelSize: 12 }
+                                        Text { text: "Scan"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
                                     }
-                                    Rectangle {
-                                        id: netSettingsBtn
-                                        Layout.columnSpan: 2; Layout.fillWidth: true; height: 30; color: netMa3.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
-                                        Text { anchors.centerIn: parent; text: "󰒓 Settings"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                        MouseArea { 
-                                            id: netMa3; anchors.fill: parent; hoverEnabled: true
-                                            onClicked: {
-                                                netClickAnim3.start()
-                                                sharedData.runCommand(['nm-connection-editor'])
-                                            }
-                                        }
-                                        SequentialAnimation {
-                                            id: netClickAnim3
-                                            NumberAnimation { target: netSettingsBtn; property: "scale"; to: 0.95; duration: 50 }
-                                            NumberAnimation { target: netSettingsBtn; property: "scale"; to: 1.0; duration: 100 }
-                                        }
+                                    MouseArea { 
+                                        id: netScanMa; anchors.fill: parent; hoverEnabled: true
+                                        onClicked: sharedData.runCommand(['sh', '-c', 'nmcli dev wifi rescan'])
                                     }
+                                }
+                                
+                                // Settings Button (Full Width)
+                                Rectangle {
+                                    Layout.columnSpan: 2; Layout.fillWidth: true; height: 32
+                                    color: netSetMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
+                                    
+                                    Row {
+                                        anchors.centerIn: parent; spacing: 6
+                                        Text { text: "󰒓"; color: "#aaa"; font.pixelSize: 12 }
+                                        Text { text: "Network Settings"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
+                                    }
+                                    MouseArea { 
+                                        id: netSetMa; anchors.fill: parent; hoverEnabled: true
+                                        onClicked: sharedData.runCommand(['nm-connection-editor'])
+                                    }
+                                }
                             }
                         }
                     }
@@ -672,8 +705,9 @@ PanelWindow {
             QuickToggle {
                 icon: "󰂯"
                 sharedData: sidePanel.sharedData
+                sidePanelRoot: sidePanel
                 panelPosition: sidePanel.panelPosition
-                screen: sidePanel.screen
+                outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
@@ -687,203 +721,107 @@ PanelWindow {
                 popoverContent: Component {
                     Rectangle {
                         id: btPopover
-                        width: 180
-                        height: 190
-                        color: (sharedData.colorBackground || "#0d0d0d")
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                        width: 240
+                        height: 240
+                        color: (sharedData.colorSecondary || "#141414")
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 16
                         
-                        // Use popoverWindow's progress for entrance animation instead of explicit opacity: 0
                         scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
                         Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
                         
                         Column { 
                             anchors.fill: parent
-                            anchors.margins: 10
+                            anchors.margins: 12
                             spacing: 12
                             
                             // Header
                             Column { 
-                                spacing: 3
+                                spacing: 2
                                 width: parent.width
-                                
-                                Text { 
-                                    text: "󰂯 Bluetooth"
-                                    color: (sharedData.colorAccent || "#4a9eff")
-                                    font.pixelSize: 15
-                                    font.weight: Font.ExtraBold
-                                    Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutQuad } }
+                                Row {
+                                    spacing: 6
+                                    Text { 
+                                        text: "Bluetooth"
+                                        color: (sharedData.colorAccent || "#4a9eff")
+                                        font.pixelSize: 16
+                                        font.weight: Font.ExtraBold
+                                    }
+                                    Rectangle {
+                                        width: 8; height: 8; radius: 4
+                                        color: sidePanel.qBtStatus === "On" ? "#00ff41" : "#ff4444"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
                                 }
                                 Text { 
-                                    text: sidePanel.qBtStatus + (sidePanel.qBtDevices > 0 ? " (" + sidePanel.qBtDevices + " Connected)" : "")
-                                    color: "#fff"; font.pixelSize: 12; font.weight: Font.Medium
+                                    text: sidePanel.qBtDevices > 0 ? (sidePanel.qBtDevices + " device(s) connected") : "No devices connected"
+                                    color: sidePanel.qBtDevices > 0 ? "#fff" : "#aaa"
+                                    font.pixelSize: 12
+                                    font.weight: Font.Medium
                                 }
                             }
                             
                             // Connected devices
                             Column {
-                                spacing: 4; width: parent.width
+                                spacing: 6; width: parent.width
                                 visible: sidePanel.qBtDeviceNames.length > 0
-                                Text { text: "CONNECTED"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
+                                Text { text: "CONNECTED"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1.2 }
                                 Column {
                                     width: parent.width; spacing: 4
                                     Repeater {
                                         model: sidePanel.qBtDeviceNames.split(";").filter(s => s.length > 0).slice(0, 2)
-                                        Text { 
-                                            text: "• " + modelData
-                                            color: "#eee"
-                                            font.pixelSize: 12
-                                            font.weight: Font.Medium
-                                            elide: Text.ElideRight
-                                            width: parent.width
-                                            
-                                            // Subtle entrance fade
-                                            opacity: typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0
-                                            Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Paired devices with connect buttons
-                            Column {
-                                spacing: 2; width: parent.width
-                                visible: sidePanel.qBtPaired.length > 0
-                                Text { text: "PAIRED"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
-                                Column {
-                                    width: parent.width; spacing: 4
-                                    Repeater {
-                                        model: sidePanel.qBtPaired.split(";").filter(s => s.length > 0).slice(0, 2)
                                         Rectangle {
-                                            width: parent.width; height: 18; color: "transparent"
-                                            property var devInfo: modelData.split("|")
-                                            
-                                            // Subtle slide-up using transform to avoid breaking Column layout
-                                            transform: Translate {
-                                                y: (1.0 - (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0)) * 5
-                                                Behavior on y { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                                            }
-                                            
-                                            Text { 
-                                                anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                                                text: "• " + (devInfo[1] || "Unknown")
-                                                color: "#aaa"
-                                                font.pixelSize: 10
-                                                elide: Text.ElideRight
-                                                width: parent.width - 60
-                                            }
-                                            Rectangle {
-                                                id: btConnBtn
-                                                anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                                                width: 64; height: 18; radius: 3
-                                                property bool isConnecting: sidePanel.qBtConnectingMac === devInfo[0]
-                                                color: isConnecting ? "#333" : (btConnMa.containsMouse ? (sharedData.colorAccent || "#4a9eff") : "#1a1a1a")
-                                                scale: btConnMa.containsMouse && !isConnecting ? 1.05 : 1.0
-                                                
-                                                Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                                
-                                                Text { 
-                                                    anchors.centerIn: parent
-                                                    text: btConnBtn.isConnecting ? "Connecting..." : "Connect"
-                                                    color: btConnBtn.isConnecting ? "#888" : (btConnMa.containsMouse ? "#000" : "#fff")
-                                                    font.pixelSize: 8
-                                                    font.weight: Font.Bold
-                                                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                                }
-                                                MouseArea { 
-                                                    id: btConnMa
-                                                    anchors.fill: parent
-                                                    hoverEnabled: true
-                                                    enabled: !btConnBtn.isConnecting
-                                                    onClicked: {
-                                                        if (devInfo.length > 0 && sharedData && sharedData.runCommand) {
-                                                            // Visual feedback
-                                                            clickFeedback.start()
-                                                            sidePanel.qBtConnectingMac = devInfo[0]
-                                                            btConnectTimeout.restart()
-                                                            sharedData.runCommand(['sh', '-c', 'bluetoothctl connect ' + devInfo[0]])
-                                                        }
-                                                    }
-                                                }
-                                                
-                                                SequentialAnimation {
-                                                    id: clickFeedback
-                                                    NumberAnimation { target: btConnBtn; property: "scale"; to: 0.95; duration: 80 }
-                                                    NumberAnimation { target: btConnBtn; property: "scale"; to: 1.05; duration: 80 }
-                                                }
+                                            width: parent.width; height: 24
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
+                                            color: Qt.rgba(1,1,1,0.05) // Highlight connected
+                                            Row {
+                                                anchors.fill: parent; anchors.leftMargin: 4; anchors.rightMargin: 4
+                                                spacing: 8
+                                                Text { text: "󰂯"; color: (sharedData.colorAccent || "#4a9eff"); font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                                Text { text: modelData; color: "#fff"; font.pixelSize: 11; elide: Text.ElideRight; width: parent.width - 24; anchors.verticalCenter: parent.verticalCenter; font.bold: true }
                                             }
                                         }
                                     }
                                 }
                             }
                             
-                            // Action buttons
+                            // Actions
                             GridLayout {
-                                columns: 2; rowSpacing: 4; columnSpacing: 4; width: parent.width
+                                columns: 2; rowSpacing: 6; columnSpacing: 6; width: parent.width
                                 
+                                // Toggle
                                 Rectangle {
-                                    id: btToggleBtn
-                                    Layout.fillWidth: true; height: 30
-                                    color: btMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: 3
-                                    scale: btMa1.containsMouse ? 1.02 : 1.0
-                                    
-                                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                    Layout.fillWidth: true; height: 32
+                                    color: btToggleBtnMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                     
                                     Text { 
                                         anchors.centerIn: parent
-                                        text: "󰂯 Toggle"
-                                        color: sidePanel.qBtStatus === "On" ? sharedData.colorAccent : "#fff"
-                                        font.pixelSize: 10
-                                        font.weight: Font.Medium
-                                        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                        text: sidePanel.qBtStatus === "On" ? "Turn Off" : "Turn On"
+                                        color: sidePanel.qBtStatus === "On" ? "#ff4444" : "#00ff41"
+                                        font.pixelSize: 11; font.weight: Font.Medium
                                     }
                                     MouseArea { 
-                                        id: btMa1
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        onClicked: {
-                                            btClickAnim1.start()
-                                            sharedData.runCommand(['sh', '-c', (sidePanel.qBtStatus === "On" ? 'bluetoothctl power off' : 'bluetoothctl power on')])
-                                        }
-                                    }
-                                    SequentialAnimation {
-                                        id: btClickAnim1
-                                        NumberAnimation { target: btToggleBtn; property: "scale"; to: 0.95; duration: 50 }
-                                        NumberAnimation { target: btToggleBtn; property: "scale"; to: 1.05; duration: 100 }
+                                        id: btToggleBtnMa; anchors.fill: parent; hoverEnabled: true
+                                        onClicked: sharedData.runCommand(['sh', '-c', (sidePanel.qBtStatus === "On" ? 'bluetoothctl power off' : 'bluetoothctl power on')])
                                     }
                                 }
+                                
+                                // Manager
                                 Rectangle {
-                                    id: btManagerBtn
-                                    Layout.fillWidth: true; height: 30
-                                    color: btMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: 3
-                                    scale: btMa2.containsMouse ? 1.02 : 1.0
+                                    Layout.fillWidth: true; height: 32
+                                    color: btMgrMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                     
-                                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                    
-                                    Text { 
-                                        anchors.centerIn: parent
-                                        text: "󰒓 Manager"
-                                        color: "#fff"
-                                        font.pixelSize: 10
-                                        font.weight: Font.Medium
+                                    Row {
+                                        anchors.centerIn: parent; spacing: 6
+                                        Text { text: "󰒓"; color: "#aaa"; font.pixelSize: 12 }
+                                        Text { text: "Manager"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
                                     }
                                     MouseArea { 
-                                        id: btMa2
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        onClicked: {
-                                            btClickAnim2.start()
-                                            sharedData.runCommand(['blueman-manager'])
-                                        }
-                                    }
-                                    SequentialAnimation {
-                                        id: btClickAnim2
-                                        NumberAnimation { target: btManagerBtn; property: "scale"; to: 0.95; duration: 50 }
-                                        NumberAnimation { target: btManagerBtn; property: "scale"; to: 1.05; duration: 100 }
+                                        id: btMgrMa; anchors.fill: parent; hoverEnabled: true
+                                        onClicked: sharedData.runCommand(['blueman-manager'])
                                     }
                                 }
                             }
@@ -893,10 +831,11 @@ PanelWindow {
             }
 
             QuickToggle {
-                icon: "󰐥"
+                icon: "󰓅"
                 sharedData: sidePanel.sharedData
+                sidePanelRoot: sidePanel
                 panelPosition: sidePanel.panelPosition
-                screen: sidePanel.screen
+                outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
@@ -914,108 +853,116 @@ PanelWindow {
                 }
                 popoverContent: Component {
                     Rectangle {
-                        width: 180
-                        height: 140
-                        color: (sharedData.colorBackground || "#0d0d0d")
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                        id: powerPopover
+                        width: 240
+                        height: 240
+                        color: (sharedData.colorSecondary || "#141414")
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 16
+                        
+                        scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
+                        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                        
                         Column { 
                             anchors.fill: parent
-                            anchors.margins: 10
+                            anchors.margins: 12
                             spacing: 12
-                            Row {
-                                width: parent.width; spacing: 6
+                            
+                            // Header
+                            Column { 
+                                spacing: 2
+                                width: parent.width
                                 Text { 
-                                    text: "󰐥 Power"
+                                    text: "Power"
                                     color: (sharedData.colorAccent || "#4a9eff")
-                                    font.pixelSize: 15; font.weight: Font.ExtraBold
-                                    Layout.fillWidth: true
+                                    font.pixelSize: 16
+                                    font.weight: Font.ExtraBold
                                 }
-                                Text {
-                                    visible: sidePanel.qBatteryPct > 0
-                                    text: sidePanel.qBatteryPct + "% " + (sidePanel.qBatteryStatus === "Charging" ? "󱐌" : (sidePanel.qBatteryStatus === "Full" ? "󰁹" : "󰂌"))
-                                    color: sidePanel.qBatteryPct > 20 ? "#fff" : "#f44336"
-                                    font.pixelSize: 12; font.weight: Font.Medium
+                                Text { 
+                                    text: sharedData.activePowerProfile ? sharedData.activePowerProfile.charAt(0).toUpperCase() + sharedData.activePowerProfile.slice(1) : "Unknown Profile"
+                                    color: "#fff"
+                                    font.pixelSize: 12
+                                    font.weight: Font.Medium
+                                    opacity: 0.7
                                 }
                             }
                             
+                            // Profiles
                             Column {
-                                width: parent.width; spacing: 4
-                                Text { text: "PROFILE"; color: "#666"; font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1 }
-                                Row {
-                                    id: pwrProfilesRow
-                                    spacing: 4; anchors.horizontalCenter: parent.horizontalCenter
-                                    property var profiles: ["power-saver", "balanced", "performance"]
+                                spacing: 6; width: parent.width
+                                Text { text: "PERFORMANCE MODE"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1.2 }
+                                
+                                Column {
+                                    width: parent.width; spacing: 4
                                     Repeater {
-                                        model: 3
-                                            Rectangle {
-                                                id: pwrBtn
-                                                width: 46; height: 44; color: pMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 4
-                                                property int profileIndex: index
-                                                Column {
-                                                    anchors.centerIn: parent; spacing: 0
-                                                    Text { 
-                                                        anchors.horizontalCenter: parent.horizontalCenter
-                                                        text: index === 0 ? "󰌪" : (index === 1 ? "󰗑" : "󰓅")
-                                                        color: sidePanel.qPwrStatus.toLowerCase().includes(pwrProfilesRow.profiles[index]) ? sharedData.colorAccent : "#fff"
-                                                        font.pixelSize: 16
-                                                    }
-                                                    Text {
-                                                        anchors.horizontalCenter: parent.horizontalCenter
-                                                        text: index === 0 ? "Saver" : (index === 1 ? "Bal" : "Perf")
-                                                        color: "#888"; font.pixelSize: 8; font.weight: Font.Medium
-                                                    }
+                                        model: ["power-saver", "balanced", "performance"]
+                                        Rectangle {
+                                            width: parent.width; height: 32
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                            property bool isActive: sharedData.activePowerProfile === modelData
+                                            color: isActive ? (sharedData.colorAccent || "#4a9eff") : (profMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent")
+                                            border.width: isActive ? 0 : 1
+                                            border.color: Qt.rgba(1,1,1,0.05)
+                                            
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            
+                                            Row {
+                                                anchors.centerIn: parent; spacing: 8
+                                                Text { 
+                                                    text: modelData === "mic" ? "󰍬" : (modelData === "performance" ? "󰓅" : (modelData === "power-saver" ? "󰾆" : "󰾅"))
+                                                    color: isActive ? "#000" : "#fff"
+                                                    font.pixelSize: 14
                                                 }
-                                                MouseArea { 
-                                                    id: pMa; anchors.fill: parent; hoverEnabled: true
-                                                    onClicked: {
-                                                        pwrClickAnim.start()
-                                                        sharedData.runCommand(['powerprofilesctl', 'set', pwrProfilesRow.profiles[index]])
-                                                    }
-                                                }
-                                                SequentialAnimation {
-                                                    id: pwrClickAnim
-                                                    NumberAnimation { target: pwrBtn; property: "scale"; to: 0.9; duration: 50 }
-                                                    NumberAnimation { target: pwrBtn; property: "scale"; to: 1.0; duration: 100 }
+                                                Text { 
+                                                    text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                                                    color: isActive ? "#000" : "#fff"
+                                                    font.pixelSize: 11
+                                                    font.weight: Font.Medium
                                                 }
                                             }
+                                            MouseArea { 
+                                                id: profMa; anchors.fill: parent; hoverEnabled: true
+                                                onClicked: sharedData.runCommand(['powerprofilesctl', 'set', modelData])
+                                            }
+                                        }
                                     }
                                 }
                             }
-
+                            
+                            // System Actions
                             Row {
-                                width: parent.width; spacing: 4
+                                width: parent.width; spacing: 8
+                                
                                 Rectangle {
-                                    id: rebootBtn
-                                    width: (parent.width - 4) / 2; height: 28; color: rbMa.containsMouse ? "#d32f2f" : Qt.rgba(1,1,1,0.05); radius: 3
-                                    Text { anchors.centerIn: parent; text: "󰑐 Reboot"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
+                                    width: (parent.width - 8) / 2; height: 32
+                                    color: rbMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
+                                    
+                                    Row {
+                                        anchors.centerIn: parent; spacing: 6
+                                        Text { text: "󰜉"; color: "#fff"; font.pixelSize: 14 }
+                                        Text { text: "Reboot"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
+                                    }
                                     MouseArea { 
                                         id: rbMa; anchors.fill: parent; hoverEnabled: true
-                                        onClicked: {
-                                            rbClickAnim.start()
-                                            sharedData.runCommand(['systemctl', 'reboot'])
-                                        }
-                                    }
-                                    SequentialAnimation {
-                                        id: rbClickAnim
-                                        NumberAnimation { target: rebootBtn; property: "scale"; to: 0.95; duration: 50 }
-                                        NumberAnimation { target: rebootBtn; property: "scale"; to: 1.0; duration: 100 }
+                                        onClicked: sharedData.runCommand(['systemctl', 'reboot'])
                                     }
                                 }
+                                
                                 Rectangle {
-                                    id: powerOffBtn
-                                    width: (parent.width - 4) / 2; height: 28; color: sdMa.containsMouse ? "#f44336" : Qt.rgba(1,1,1,0.05); radius: 3
-                                    Text { anchors.centerIn: parent; text: "󰐥 Power Off"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
+                                    width: (parent.width - 8) / 2; height: 32
+                                    color: sdMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    border.width: 1; border.color: Qt.rgba(1,0,0,0.2)
+                                    
+                                    Row {
+                                        anchors.centerIn: parent; spacing: 6
+                                        Text { text: "󰐥"; color: sdMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 14 }
+                                        Text { text: "OFF"; color: sdMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 11; font.weight: Font.Bold }
+                                    }
                                     MouseArea { 
                                         id: sdMa; anchors.fill: parent; hoverEnabled: true
-                                        onClicked: {
-                                            sdClickAnim.start()
-                                            sharedData.runCommand(['systemctl', 'poweroff'])
-                                        }
-                                    }
-                                    SequentialAnimation {
-                                        id: sdClickAnim
-                                        NumberAnimation { target: powerOffBtn; property: "scale"; to: 0.95; duration: 50 }
-                                        NumberAnimation { target: powerOffBtn; property: "scale"; to: 1.0; duration: 100 }
+                                        onClicked: sharedData.runCommand(['systemctl', 'poweroff'])
                                     }
                                 }
                             }
@@ -1024,39 +971,154 @@ PanelWindow {
                 }
             }
 
-            Item {
-                id: settingsBtnItem
+            QuickToggle {
+                icon: "󰔛"
+                sharedData: sidePanel.sharedData
+                sidePanelRoot: sidePanel
+                panelPosition: sidePanel.panelPosition
+                outputScreen: sidePanel.screen
+                showBackground: false
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
-                z: 1
-                
-                Text { 
-                    text: "󰒓"
-                    font.pixelSize: 14
-                    font.family: "sans-serif"
-                    anchors.centerIn: parent
-                    color: settingsButtonMouseArea.containsMouse ? sidePanel.btnIconHover : sidePanel.btnIcon
-                    
-                    Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                onClicked: {
+                    // For now, toggle 5m timer as default or do nothing?
+                    // Just let hover handle the menu
                 }
-                
-                MouseArea { 
-                    id: settingsButtonMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: { 
-                        settingsClickAnim.start()
-                        if (sharedData && sharedData.runCommand) {
-                            sharedData.runCommand(['sh', '-c', 'fuse 2>/dev/null || $HOME/.local/bin/fuse 2>/dev/null || $HOME/.config/alloy/fuse/target/release/fuse 2>/dev/null &'])
+                popoverContent: Component {
+                    Rectangle {
+                        width: 240
+                        height: 260 // Increased height for Timer UI
+                        color: (sharedData.colorSecondary || "#141414")
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                        
+                        Column { 
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 12
+                            
+                            // Header
+                            Column { 
+                                spacing: 2
+                                width: parent.width
+                                Text { 
+                                    text: "Timer"
+                                    color: (sharedData.colorAccent || "#4a9eff")
+                                    font.pixelSize: 16
+                                    font.weight: Font.ExtraBold
+                                }
+                                Text { 
+                                    text: sidePanel.timerRunning ? sidePanel.formatTime(sidePanel.timerRemaining) : "No active timer"
+                                    color: sidePanel.timerRunning ? "#fff" : "#aaa"
+                                    font.pixelSize: sidePanel.timerRunning ? 14 : 12
+                                    font.weight: sidePanel.timerRunning ? Font.Bold : Font.Medium
+                                    opacity: sidePanel.timerRunning ? 1.0 : 0.7
+                                }
+                                
+                                // Progress Bar
+                                Rectangle {
+                                    width: parent.width; height: 4
+                                    color: Qt.rgba(1,1,1,0.1)
+                                    radius: (sharedData && sharedData.quickshellBorderRadius > 0) ? 2 : 0
+                                    visible: sidePanel.timerRunning
+                                    Rectangle {
+                                        height: parent.height
+                                        radius: (sharedData && sharedData.quickshellBorderRadius > 0) ? 2 : 0
+                                        width: sidePanel.timerDuration > 0 ? (parent.width * (sidePanel.timerRemaining / sidePanel.timerDuration)) : 0
+                                        color: (sharedData.colorAccent || "#4a9eff")
+                                        Behavior on width { NumberAnimation { duration: 1000 } }
+                                    }
+                                }
+                            }
+                            
+                            // Timer Presets
+                            Column {
+                                spacing: 6; width: parent.width
+                                Text { text: "QUICK SET"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1.2 }
+                                
+                                GridLayout {
+                                    columns: 2
+                                    rowSpacing: 6
+                                    columnSpacing: 6
+                                    width: parent.width
+                                    
+                                    Repeater {
+                                        model: [
+                                            { label: "5m", sec: 300 },
+                                            { label: "15m", sec: 900 },
+                                            { label: "30m", sec: 1800 },
+                                            { label: "1h", sec: 3600 }
+                                        ]
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            height: 32
+                                            color: timerBtnMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                            border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
+                                            scale: timerBtnMa.pressed ? 0.95 : (timerBtnMa.containsMouse ? 1.02 : 1.0)
+                                            
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                            
+                                            Text { 
+                                                anchors.centerIn: parent
+                                                text: modelData.label
+                                                color: "#fff"
+                                                font.pixelSize: 11
+                                                font.weight: Font.Medium
+                                            }
+                                            
+                                            MouseArea {
+                                                id: timerBtnMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                onClicked: {
+                                                    sidePanel.timerDuration = modelData.sec
+                                                    sidePanel.timerRemaining = modelData.sec
+                                                    sidePanel.timerRunning = true
+                                                    if (sharedData && sharedData.runCommand) {
+                                                        sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Set', 'Timer for ' + modelData.label + ' started'])
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Stop Button
+                            Rectangle {
+                                width: parent.width
+                                height: 32
+                                color: stopTimerMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
+                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                border.width: 1; border.color: Qt.rgba(1,0,0,0.2)
+                                scale: stopTimerMa.pressed ? 0.95 : (stopTimerMa.containsMouse ? 1.02 : 1.0)
+                                
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                
+                                Row {
+                                    anchors.centerIn: parent; spacing: 6
+                                    Text { text: "󰅙"; color: stopTimerMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 14 }
+                                    Text { text: "Stop / Clear"; color: stopTimerMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 11; font.weight: Font.Bold }
+                                }
+                                
+                                MouseArea {
+                                    id: stopTimerMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        sidePanel.timerRunning = false
+                                        sidePanel.timerRemaining = 0
+                                        if (sharedData && sharedData.runCommand) {
+                                            sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Stopped', 'Active timer cancelled'])
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    } 
-                }
-                SequentialAnimation {
-                    id: settingsClickAnim
-                    NumberAnimation { target: settingsBtnItem; property: "scale"; to: 0.8; duration: 50 }
-                    NumberAnimation { target: settingsBtnItem; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutBack }
+                    }
                 }
             }
         }
@@ -1080,10 +1142,10 @@ PanelWindow {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "qssidepanel-popover"
         
-        implicitWidth: 180
-        implicitHeight: 190
-        width: 180
-        height: 190
+        implicitWidth: 240
+        implicitHeight: 240
+        width: 240
+        height: 240
         color: "transparent"
         
         
@@ -1240,6 +1302,21 @@ PanelWindow {
         } else {
             if (!popoverWindow.isHovered) {
                 hideTimer.restart()
+            }
+        }
+    }
+    Timer {
+        id: activeTimer
+        interval: 1000
+        repeat: true
+        running: sidePanel.timerRunning && sidePanel.timerRemaining > 0
+        onTriggered: {
+            sidePanel.timerRemaining -= 1
+            if (sidePanel.timerRemaining <= 0) {
+                sidePanel.timerRunning = false
+                if (sharedData && sharedData.runCommand) {
+                    sharedData.runCommand(['notify-send', '-i', 'alarm-clock', '-u', 'critical', 'Timer Finished', 'Time is up!'])
+                }
             }
         }
     }

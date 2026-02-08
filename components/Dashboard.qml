@@ -330,172 +330,214 @@ PanelWindow {
                                 width: (parent.width - 12) / 2
                                 height: parent.height
                                 
-                                // Battery % Card - Swiss Style Poster
+                                // Battery % Card - Vertical Pill Style
                                 Rectangle {
                                     anchors.fill: parent
                                     visible: !(sharedData && sharedData.dashboardTileLeft === "network")
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                                    color: "transparent"
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
-                                    Column {
+                                    // Horizontal Battery Indicator (Pill Style)
+                                    Item {
+                                        scale: batMouseArea.containsMouse ? 1.02 : 1.0
+                                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                        MouseArea { id: batMouseArea; anchors.fill: parent; hoverEnabled: true; onClicked: { /* No action */ } }
+
                                         anchors.fill: parent
-                                        anchors.margins: 0
-                                        spacing: 0
+                                        anchors.margins: 12
                                         
-                                        // Small metadata label
-                                        Text {
-                                            text: "SYSTEM / POWER"
-                                            font.pixelSize: 9
-                                            font.weight: Font.Bold
-                                            font.family: "sans-serif"
-                                            font.capitalization: Font.AllUppercase
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
-                                            opacity: 0.6
-                                        }
-                                        
-                                        Item { height: 4; width: 1 }
-
-                                        // Sub-label
-                                        Text {
-                                            text: "BATTERY LEVEL"
-                                            font.pixelSize: 18
-                                            font.weight: Font.Bold
-                                            font.family: "sans-serif"
-                                            font.capitalization: Font.AllUppercase
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
-                                            opacity: 0.9
-                                        }
-
-                                        Item { height: 0; width: 1; Layout.fillHeight: true }
-
-                                        // Hero Number - Large but fitting
-                                        Text {
-                                            text: batteryPercent >= 0 ? batteryPercent : "—"
-                                            font.pixelSize: 52 
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
+                                        // Top Row: Icon + Value Text
+                                        Row {
+                                            anchors.centerIn: parent
+                                            anchors.verticalCenterOffset: -6
+                                            spacing: 6
                                             
                                             Text {
-                                                text: "%"
-                                                font.pixelSize: 18
+                                                text: "⚡"
+                                                font.pixelSize: 22
+                                                color: (batteryPercent > 20) ? ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : "#FF4444" 
+                                                visible: batteryPercent > 0
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                            
+                                            Text {
+                                                text: (batteryPercent >= 0 ? batteryPercent + "%" : "--")
+                                                font.pixelSize: 24
                                                 font.weight: Font.Bold
-                                                anchors.left: parent.right
-                                                anchors.top: parent.top
-                                                anchors.topMargin: 8
-                                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
+                                                font.family: "sans-serif"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                        }
+                                        
+                                        // Bottom Bar: Progress
+                                        Item {
+                                            anchors.bottom: parent.bottom
+                                            width: parent.width
+                                            height: 14 // Thicker pill
+                                            
+                                            // Track
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: height/2
+                                                color: (sharedData && sharedData.colorText) ? Qt.alpha(sharedData.colorText, 0.15) : "#333333"
+                                            }
+                                            
+                                            // Fill
+                                            Rectangle {
+                                                height: parent.height
+                                                width: parent.width * (Math.max(0, Math.min(batteryPercent, 100)) / 100)
+                                                radius: height/2
+                                                
+                                                color: (batteryPercent <= 20) ? "#FF4444" : ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
+                                                
+                                                Behavior on width { NumberAnimation { duration: 500; easing.type: Easing.OutExpo } }
                                             }
                                         }
                                     }
                                 }
-                                                                // Network (Pobieranie i wysyłanie) Card - Swiss Style Poster
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        visible: (sharedData && sharedData.dashboardTileLeft === "network")
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                                        color: "transparent"
+                                                                // Network Card - Vertical Bars Style
+                                Rectangle {
+                                    anchors.fill: parent
+                                    visible: (sharedData && sharedData.dashboardTileLeft === "network")
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
-                                        Column {
-                                            anchors.fill: parent
-                                            anchors.margins: 0 // Flush to edges for poster look
-                                            spacing: 0
+                                    Row {
+                                        scale: netMouseArea.containsMouse ? 1.02 : 1.0
+                                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                        MouseArea { id: netMouseArea; anchors.fill: parent; hoverEnabled: true; onClicked: { /* No action */ } }
+
+                                        anchors.centerIn: parent
+                                        spacing: 12
+                                        height: parent.height - 24
+                                        width: parent.width - 24
+                                        
+                                        // Download Bar
+                                        Item {
+                                            width: 32
+                                            height: parent.height
                                             
-                                            // Small metadata label
-                                            Text {
-                                                text: "NETWORK IO / PRECIS"
-                                                font.pixelSize: 9
-                                                font.weight: Font.Bold
-                                                font.family: "sans-serif"
-                                                font.capitalization: Font.AllUppercase
-                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
-                                                opacity: 0.6
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: width / 2
+                                                color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
+                                                opacity: 0.8
                                             }
 
-                                            Item { height: 10; width: 1 }
-
-                                            // Hero Typography
-                                            Row {
-                                                spacing: 5
-                                                Text {
-                                                    text: "↓"
-                                                    font.pixelSize: 24
-                                                    font.weight: Font.Bold
-                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
-                                                    anchors.baseline: valDown.baseline
-                                                }
-                                                Text {
-                                                    id: valDown
-                                                    text: (networkRxMBs < 0.01 ? "0.0" : networkRxMBs.toFixed(1))
-                                                    font.pixelSize: 28
-                                                    font.family: "sans-serif"
-                                                    font.weight: Font.Black
-                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
-                                                    lineHeight: 0.8
-                                                }
+                                            Rectangle {
+                                                width: parent.width
+                                                // Logarithmic scale for visualisation
+                                                height: parent.height * Math.min(1.0, Math.log10(Math.max(1, networkRxMBs * 10)) / 3) 
+                                                anchors.bottom: parent.bottom
+                                                radius: width / 2
+                                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                                Behavior on height { NumberAnimation { duration: 300 } }
                                             }
-                                            
-                                            Row {
-                                                spacing: 5
-                                                Text {
-                                                    text: "↑"
-                                                    font.pixelSize: 24
-                                                    font.weight: Font.Bold
-                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
-                                                    anchors.baseline: valUp.baseline
-                                                }
-                                                Text {
-                                                    id: valUp
-                                                    text: (networkTxMBs < 0.01 ? "0.0" : networkTxMBs.toFixed(1))
-                                                    font.pixelSize: 28
-                                                    font.family: "sans-serif"
-                                                    font.weight: Font.Black
-                                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
-                                                    lineHeight: 0.8
-                                                }
-                                            }
-                                            
-                                            Item { Layout.fillHeight: true; width: 1 }
                                             
                                             Text {
-                                                text: "MB/S TRANSFER RATE"
-                                                font.pixelSize: 9
-                                                font.weight: Font.Bold
-                                                font.letterSpacing: 1
-                                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
+                                                anchors.bottom: parent.bottom
+                                                anchors.bottomMargin: 8
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: "↓"
+                                                font.bold: true
+                                                color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#000000"
+                                                visible: parent.height * Math.min(1.0, Math.log10(Math.max(1, networkRxMBs * 10)) / 3) > 20
+                                            }
+                                            // Fallback text if bar is too small
+                                            Text {
+                                                anchors.bottom: parent.bottom
+                                                anchors.bottomMargin: 8
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: "↓"
+                                                font.bold: true
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                visible: parent.height * Math.min(1.0, Math.log10(Math.max(1, networkRxMBs * 10)) / 3) <= 20
                                             }
                                         }
-                                    }                          }
+
+                                        // Upload Bar
+                                        Item {
+                                            width: 32
+                                            height: parent.height
+                                            
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: width / 2
+                                                color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
+                                                opacity: 0.8
+                                            }
+
+                                            Rectangle {
+                                                width: parent.width
+                                                height: parent.height * Math.min(1.0, Math.log10(Math.max(1, networkTxMBs * 10)) / 3)
+                                                anchors.bottom: parent.bottom
+                                                radius: width / 2
+                                                // Make upload slightly different? Or same accent? Same accent for consistency.
+                                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                                opacity: 0.7 // Slightly dimmer to distinguish upload
+                                                Behavior on height { NumberAnimation { duration: 300 } }
+                                            }
+
+                                            Text {
+                                                anchors.bottom: parent.bottom
+                                                anchors.bottomMargin: 8
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: "↑"
+                                                font.bold: true
+                                                color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#000000"
+                                                visible: parent.height * Math.min(1.0, Math.log10(Math.max(1, networkTxMBs * 10)) / 3) > 20
+                                            }
+                                            Text {
+                                                anchors.bottom: parent.bottom
+                                                anchors.bottomMargin: 8
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: "↑"
+                                                font.bold: true
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                visible: parent.height * Math.min(1.0, Math.log10(Math.max(1, networkTxMBs * 10)) / 3) <= 20
+                                            }
+                                        }
+                                    }
+                                }                          }
                             
-                            // Swiss Style Quick Actions Card (right)
+                            // Quick Actions Card (right)
                         Rectangle {
                                 width: (parent.width - 12) / 2
                                 height: parent.height
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: "transparent" // Transparent, only border
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                            
+                            scale: quickActionsMouseArea.containsMouse ? 1.02 : 1.0
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                            MouseArea { id: quickActionsMouseArea; anchors.fill: parent; hoverEnabled: true; z: -1; onClicked: { /* No action */ } }
                             
                             
-                                Column {
+                            // Center the grid in the card
+                                Item {
                                     anchors.fill: parent
-                                    anchors.margins: 8
-                                    spacing: 5
+                                    anchors.margins: 4
                                     
                                     Grid {
                                         id: quickActionsGrid
-                                    columns: 2
-                                    spacing: 5
-                                    width: parent.width
-                                        height: parent.height - 16
-                                    
-                                    // Toggle Sidebar Button (Swiss Block)
-                                    Rectangle {
-                                        width: (quickActionsGrid.width - 4) / 2
-                                        height: 33
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                                        clip: true
+                                        columns: 2
+                                        spacing: 5
+                                        anchors.centerIn: parent
+                                        width: parent.width
+                                        height: parent.height
+                                        
+                                        // Toggle Sidebar Button (Swiss Block)
+                                        Rectangle {
+                                            width: (parent.width - 5) / 2
+                                            height: (parent.height - 5) / 2
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+                                            clip: true
 
-                                        // Softer style
-                                        color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
-                                        opacity: toggleSidebarQuickMouseArea.containsMouse ? 0.8 : 1.0
+                                            // Softer style - Visible background
+                                            color: toggleSidebarQuickMouseArea.containsMouse ? 
+                                                   Qt.rgba(1,1,1,0.2) : 
+                                                   Qt.rgba(1,1,1,0.1)
+                                            opacity: 1.0
                                         
                                         Row {
                                             anchors.centerIn: parent
@@ -539,15 +581,16 @@ PanelWindow {
                                     
                                     // Quick Action Button Style (Swiss Block)
                                     Rectangle {
-                                        width: (quickActionsGrid.width - 4) / 2
-                                        height: 33
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                        width: (quickActionsGrid.width - 5) / 2
+                                        height: (quickActionsGrid.height - 5) / 2
+                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
                                         clip: true
                                         
                                         // Softer style
                                         color: ((dndQuickMouseArea.containsMouse) || (sharedData && sharedData.notificationsEnabled === false)) ? 
-                                               ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : // Green on active/hover
-                                               ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a") // Dark default
+                                               ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : 
+                                               Qt.rgba(1,1,1,0.1) // Visible default background
+
 
                                         Row {
                                             anchors.centerIn: parent
@@ -595,12 +638,16 @@ PanelWindow {
                                     
                                     // Lock Button (Swiss Block)
                                     Rectangle {
-                                        width: (quickActionsGrid.width - 4) / 2
-                                        height: 33
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                        width: (quickActionsGrid.width - 5) / 2
+                                        height: (quickActionsGrid.height - 5) / 2
+                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
                                         clip: true
 
-                                        color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                        // Softer style
+                                        color: lockQuickMouseArea.containsMouse ? 
+                                               Qt.rgba(1,1,1,0.2) : 
+                                               Qt.rgba(1,1,1,0.1)
+
                                         opacity: lockQuickMouseArea.containsMouse ? 0.8 : 1.0
                                         
                                         Row {
@@ -647,12 +694,16 @@ PanelWindow {
                                     
                                     // Poweroff Button (Swiss Block)
                                     Rectangle {
-                                        width: (quickActionsGrid.width - 4) / 2
-                                        height: 33
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                        width: (quickActionsGrid.width - 5) / 2
+                                        height: (quickActionsGrid.height - 5) / 2
+                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
                                         clip: true
 
-                                        color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
+                                        // Softer style
+                                        color: poweroffQuickMouseArea.containsMouse ? 
+                                               "#FF4444" : 
+                                               Qt.rgba(1,1,1,0.1)
+
                                         opacity: poweroffQuickMouseArea.containsMouse ? 0.8 : 1.0
                                         
                                         Row {
@@ -703,12 +754,13 @@ PanelWindow {
                         
                         // Date/Calendar or GitHub Activity Card – Swiss Style
                         Rectangle {
+                            id: calendarGithubCard
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             Layout.preferredHeight: 220
                             Layout.minimumHeight: 192
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: "transparent"
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
                             scale: showProgress > 0.01 ? 1.0 : 0.9
@@ -734,6 +786,10 @@ PanelWindow {
                                     NumberAnimation { duration: 600; easing.type: Easing.OutBack }
                                 }
                             }
+
+                            scale: calendarGithubMouseArea.containsMouse ? 1.02 : 1.0
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                            MouseArea { id: calendarGithubMouseArea; anchors.fill: parent; hoverEnabled: true; onClicked: { /* No action */ } }
 
                             Loader {
                                 id: dashboardCalendarGithubLoader
@@ -823,8 +879,8 @@ PanelWindow {
                             Layout.fillHeight: true
                             Layout.preferredHeight: 190
                             Layout.minimumHeight: 165
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: "transparent"
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
                             
                             property string resource: (sharedData && sharedData.dashboardResource1) ? sharedData.dashboardResource1 : "cpu"
                             
@@ -976,8 +1032,12 @@ PanelWindow {
                             Layout.fillHeight: true
                             Layout.preferredHeight: 190
                             Layout.minimumHeight: 165
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: "transparent"
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                            
+                            scale: res2MouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                            MouseArea { id: res2MouseArea; anchors.fill: parent; hoverEnabled: true; z: -1; onClicked: { /* No action */ } }
                             
                             property string resource: (sharedData && sharedData.dashboardResource2) ? sharedData.dashboardResource2 : "ram"
                             
@@ -1129,8 +1189,12 @@ PanelWindow {
                             Layout.fillHeight: true
                             Layout.preferredHeight: 190
                             Layout.minimumHeight: 165
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: "transparent"
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+
+                            scale: mediaMouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                            MouseArea { id: mediaMouseArea; anchors.fill: parent; hoverEnabled: true; z: -1; onClicked: { /* No action */ } }
                             
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
                             scale: showProgress > 0.01 ? 1.0 : 0.9
@@ -1264,10 +1328,9 @@ PanelWindow {
                                         Rectangle {
                                             width: 34
                                             height: 34
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
-                                            opacity: prevAreaCard.pressed ? 0.7 : (prevAreaCard.containsMouse ? 0.9 : 1.0)
-                                            scale: prevAreaCard.pressed ? 0.90 : (prevAreaCard.containsMouse ? 1.05 : 1.0)
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+                                            color: prevAreaCard.containsMouse ? Qt.rgba(1,1,1,0.2) : Qt.rgba(1,1,1,0.1)
+                                            scale: prevAreaCard.pressed ? 0.90 : 1.0
                                             z: prevAreaCard.containsMouse ? 2 : 1
                                             
                                             Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
@@ -1292,10 +1355,9 @@ PanelWindow {
                                         Rectangle {
                                             width: 50
                                             height: 34
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
-                                            opacity: playAreaCard.pressed ? 0.7 : (playAreaCard.containsMouse ? 0.9 : 1.0)
-                                            scale: playAreaCard.pressed ? 0.90 : (playAreaCard.containsMouse ? 1.05 : 1.0)
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+                                            color: mpPlaying ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : (playAreaCard.containsMouse ? Qt.rgba(1,1,1,0.2) : Qt.rgba(1,1,1,0.1))
+                                            scale: playAreaCard.pressed ? 0.90 : 1.0
                                             z: playAreaCard.containsMouse ? 2 : 1
                                             
                                             Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
@@ -1305,7 +1367,7 @@ PanelWindow {
                                                 text: mpPlaying ? "󰏤" : "󰐊"
                                                 font.pixelSize: 14
                                                 anchors.centerIn: parent
-                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                color: mpPlaying ? ((sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff") : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
                                             }
                                             
                                             MouseArea {
@@ -1320,10 +1382,9 @@ PanelWindow {
                                         Rectangle {
                                             width: 34
                                             height: 34
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                                            color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
-                                            opacity: nextAreaCard.pressed ? 0.7 : (nextAreaCard.containsMouse ? 0.9 : 1.0)
-                                            scale: nextAreaCard.pressed ? 0.90 : (nextAreaCard.containsMouse ? 1.05 : 1.0)
+                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+                                            color: nextAreaCard.containsMouse ? Qt.rgba(1,1,1,0.2) : Qt.rgba(1,1,1,0.1)
+                                            scale: nextAreaCard.pressed ? 0.90 : 1.0
                                             z: nextAreaCard.containsMouse ? 2 : 1
                                             
                                             Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }

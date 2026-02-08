@@ -12,49 +12,130 @@ Item {
     property bool active: false
     property var sharedData: null
     property string panelPosition: "left"
-    property var screen: null
+    property var outputScreen: null
     
-    // Popover content - can be any Item
+    // Large Mode for Dashboard
+    property bool isLarge: false
+    
+    // Popover content (for sidebar)
     property Component popoverContent: null
     
     // Click handler signal
     signal clicked()
     
-    implicitWidth: 26
-    implicitHeight: 26
+    implicitWidth: isLarge ? 160 : 36
+    implicitHeight: isLarge ? 80 : 36
     
-    property bool isHorizontal: panelPosition === "top" || panelPosition === "bottom"
     property bool showBackground: true
     
-    property color btnBg: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
-    property color btnBgHover: (sharedData && sharedData.colorAccent) ? Qt.alpha(sharedData.colorAccent, 0.2) : "rgba(74, 158, 255, 0.2)"
-    property color btnIcon: Qt.rgba(0.7, 0.7, 0.75, 1)
-    property color btnIconHover: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+    // Colors (Material 3)
+    property color btnBg: (sharedData && sharedData.colorSurfaceContainerHigh) ? sharedData.colorSurfaceContainerHigh : "#2B2930"
+    property color btnBgActive: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#D0BCFF"
+    property color btnBgHover: (sharedData && sharedData.colorSurfaceContainerHighest) ? sharedData.colorSurfaceContainerHighest : "#48464C"
+    
+    property color contentColor: (active && isLarge) ? 
+                                 ((sharedData && sharedData.colorOnPrimary) ? sharedData.colorOnPrimary : "#381E72") : 
+                                 ((sharedData && sharedData.colorOnSurface) ? sharedData.colorOnSurface : "#E6E1E5")
     
     Rectangle {
         id: bgRect
         anchors.fill: parent
-        radius: (root.sharedData && root.sharedData.quickshellBorderRadius) ? root.sharedData.quickshellBorderRadius : 0
-        color: mouseArea.containsMouse ? root.btnBgHover : root.btnBg
+        radius: (root.sharedData && root.sharedData.quickshellBorderRadius) ? root.sharedData.quickshellBorderRadius : (isLarge ? 28 : 18)
+        color: {
+            if (root.active && root.isLarge) return root.btnBgActive
+            if (mouseArea.containsMouse) return root.btnBgHover
+            return root.btnBg
+        }
         visible: root.showBackground
+        
         Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
     }
     
+    // Small sidebar mode
     Text {
+        visible: !root.isLarge
         anchors.centerIn: parent
         text: root.icon
-        font.pixelSize: 14
-        font.family: "sans-serif"
-        color: mouseArea.containsMouse ? root.btnIconHover : root.btnIcon
-        z: 1
-        Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        font.pixelSize: 18
+        font.family: "Material Design Icons"
+        color: root.contentColor
     }
     
+    // Large Dashboard mode
+    RowLayout {
+        visible: root.isLarge
+        anchors.fill: parent
+        anchors.margins: 16
+        spacing: 12
+        
+        // Icon Circle
+        Rectangle {
+            Layout.preferredWidth: 34
+            Layout.preferredHeight: 34
+            radius: 17
+            color: "transparent" // Icon sits directly on tile in M3, or use a container if needed
+            
+            Text {
+                anchors.centerIn: parent
+                text: root.icon
+                font.pixelSize: 24
+                font.family: "Material Design Icons"
+                color: root.contentColor
+            }
+        }
+        
+        // Text Info
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
+            
+            Text {
+                text: root.label
+                font.pixelSize: 14
+                font.weight: Font.Bold
+                font.family: "sans-serif"
+                color: root.contentColor
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+            
+            Text {
+                text: root.statusText || (root.active ? "On" : "Off")
+                font.pixelSize: 12
+                font.family: "sans-serif"
+                color: root.contentColor
+                opacity: 0.8
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+        }
+    }
+    
+    property var sidePanelRoot: null
+
+    // ... (existing properties)
+
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+        
+        onEntered: {
+            if (root.sidePanelRoot && root.popoverContent) {
+                root.sidePanelRoot.isAnyToggleHovered = true
+                root.sidePanelRoot.showPopover(root.popoverContent, 0, 0)
+            }
+        }
+        
+        onExited: {
+            if (root.sidePanelRoot) {
+                root.sidePanelRoot.isAnyToggleHovered = false
+                // Trigger check to hide if not hovering popover
+                root.sidePanelRoot.showPopover(null, 0, 0) 
+            }
+        }
+
         onClicked: {
             clickAnim.start()
             root.clicked()
@@ -63,34 +144,7 @@ Item {
     
     SequentialAnimation {
         id: clickAnim
-        NumberAnimation { target: root; property: "scale"; to: 0.9; duration: 50; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "scale"; to: 0.95; duration: 50; easing.type: Easing.OutQuad }
         NumberAnimation { target: root; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutBack }
-    }
-    
-    // Watch mouse state
-    property bool isHovered: mouseArea.containsMouse
-    
-    onIsHoveredChanged: {
-        if (sidePanel) {
-            if (isHovered) {
-                sidePanel.isAnyToggleHovered = true
-                updateAbsolutePosition()
-                sidePanel.showPopover(root.popoverContent, absoluteX, absoluteY)
-            } else {
-                sidePanel.isAnyToggleHovered = false
-                sidePanel.showPopover(null)
-            }
-        }
-    }
-    
-    property real absoluteX: 0
-    property real absoluteY: 0
-    
-    function updateAbsolutePosition() {
-        if (!sidePanel) return
-        // Map to the screen/root coordinates to pass to the separate window
-        var pos = root.mapToItem(null, 0, 0)
-        absoluteX = pos.x
-        absoluteY = pos.y
     }
 }
