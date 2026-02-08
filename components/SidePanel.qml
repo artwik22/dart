@@ -26,6 +26,8 @@ PanelWindow {
     property string qNetNearby: ""
     property string qBtDeviceNames: ""
     property string qBtPaired: ""
+    property string qBtConnectingMac: ""
+
     
     property var sidePanelRoot: sidePanel
     property bool isHorizontal: panelPosition === "top" || panelPosition === "bottom"
@@ -497,10 +499,25 @@ PanelWindow {
                         if (out !== undefined) root.qBtDeviceNames = out.trim()
                     })
                     sidePanelRoot.runAndRead('bluetoothctl devices | head -n 10 | while read -r line; do mac=$(echo $line | cut -d" " -f2); name=$(echo $line | cut -d" " -f3-); bluetoothctl info $mac | grep -q "Connected: yes" || echo "$mac|$name"; done | head -n 3 | tr "\\n" ";"', function(out) {
-                        if (out !== undefined) root.qBtPaired = out.trim()
+                        if (out !== undefined) {
+                            var paired = out.trim()
+                            root.qBtPaired = paired
+                            // If the connecting MAC is no longer in the paired list (because it's connected), clear it
+                            if (root.qBtConnectingMac !== "" && paired.indexOf(root.qBtConnectingMac) === -1) {
+                                root.qBtConnectingMac = ""
+                                btConnectTimeout.stop()
+                            }
+                        }
                     })
                 }
             }
+        }
+
+        Timer {
+            id: btConnectTimeout
+            interval: 15000
+            repeat: false
+            onTriggered: sidePanel.qBtConnectingMac = ""
         }
     }
 
@@ -595,21 +612,57 @@ PanelWindow {
 
                             GridLayout {
                                 columns: 2; rowSpacing: 4; columnSpacing: 4; width: parent.width
-                                Rectangle {
-                                    Layout.fillWidth: true; height: 30; color: netMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
-                                    Text { anchors.centerIn: parent; text: "󰖩 Toggle"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                    MouseArea { id: netMa1; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['sh', '-c', 'nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on']) }
-                                }
-                                Rectangle {
-                                    Layout.fillWidth: true; height: 30; color: netMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
-                                    Text { anchors.centerIn: parent; text: "󰱔 Scan"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                    MouseArea { id: netMa2; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['sh', '-c', 'nmcli dev wifi rescan']) }
-                                }
-                                Rectangle {
-                                    Layout.columnSpan: 2; Layout.fillWidth: true; height: 30; color: netMa3.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
-                                    Text { anchors.centerIn: parent; text: "󰒓 Settings"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                    MouseArea { id: netMa3; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['nm-connection-editor']) }
-                                }
+                                    Rectangle {
+                                        id: netToggleBtn
+                                        Layout.fillWidth: true; height: 30; color: netMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
+                                        Text { anchors.centerIn: parent; text: "󰖩 Toggle"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
+                                        MouseArea { 
+                                            id: netMa1; anchors.fill: parent; hoverEnabled: true
+                                            onClicked: {
+                                                netClickAnim1.start()
+                                                sharedData.runCommand(['sh', '-c', 'nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on'])
+                                            }
+                                        }
+                                        SequentialAnimation {
+                                            id: netClickAnim1
+                                            NumberAnimation { target: netToggleBtn; property: "scale"; to: 0.95; duration: 50 }
+                                            NumberAnimation { target: netToggleBtn; property: "scale"; to: 1.0; duration: 100 }
+                                        }
+                                    }
+                                    Rectangle {
+                                        id: netScanBtn
+                                        Layout.fillWidth: true; height: 30; color: netMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
+                                        Text { anchors.centerIn: parent; text: "󰱔 Scan"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
+                                        MouseArea { 
+                                            id: netMa2; anchors.fill: parent; hoverEnabled: true
+                                            onClicked: {
+                                                netClickAnim2.start()
+                                                sharedData.runCommand(['sh', '-c', 'nmcli dev wifi rescan'])
+                                            }
+                                        }
+                                        SequentialAnimation {
+                                            id: netClickAnim2
+                                            NumberAnimation { target: netScanBtn; property: "scale"; to: 0.95; duration: 50 }
+                                            NumberAnimation { target: netScanBtn; property: "scale"; to: 1.0; duration: 100 }
+                                        }
+                                    }
+                                    Rectangle {
+                                        id: netSettingsBtn
+                                        Layout.columnSpan: 2; Layout.fillWidth: true; height: 30; color: netMa3.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
+                                        Text { anchors.centerIn: parent; text: "󰒓 Settings"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
+                                        MouseArea { 
+                                            id: netMa3; anchors.fill: parent; hoverEnabled: true
+                                            onClicked: {
+                                                netClickAnim3.start()
+                                                sharedData.runCommand(['nm-connection-editor'])
+                                            }
+                                        }
+                                        SequentialAnimation {
+                                            id: netClickAnim3
+                                            NumberAnimation { target: netSettingsBtn; property: "scale"; to: 0.95; duration: 50 }
+                                            NumberAnimation { target: netSettingsBtn; property: "scale"; to: 1.0; duration: 100 }
+                                        }
+                                    }
                             }
                         }
                     }
@@ -633,22 +686,32 @@ PanelWindow {
                 }
                 popoverContent: Component {
                     Rectangle {
+                        id: btPopover
                         width: 180
                         height: 190
                         color: (sharedData.colorBackground || "#0d0d0d")
                         radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                        
+                        // Use popoverWindow's progress for entrance animation instead of explicit opacity: 0
+                        scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
+                        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                        
                         Column { 
                             anchors.fill: parent
                             anchors.margins: 10
                             spacing: 12
+                            
+                            // Header
                             Column { 
                                 spacing: 3
                                 width: parent.width
+                                
                                 Text { 
                                     text: "󰂯 Bluetooth"
                                     color: (sharedData.colorAccent || "#4a9eff")
                                     font.pixelSize: 15
                                     font.weight: Font.ExtraBold
+                                    Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutQuad } }
                                 }
                                 Text { 
                                     text: sidePanel.qBtStatus + (sidePanel.qBtDevices > 0 ? " (" + sidePanel.qBtDevices + " Connected)" : "")
@@ -656,6 +719,7 @@ PanelWindow {
                                 }
                             }
                             
+                            // Connected devices
                             Column {
                                 spacing: 4; width: parent.width
                                 visible: sidePanel.qBtDeviceNames.length > 0
@@ -664,11 +728,23 @@ PanelWindow {
                                     width: parent.width; spacing: 4
                                     Repeater {
                                         model: sidePanel.qBtDeviceNames.split(";").filter(s => s.length > 0).slice(0, 2)
-                                        Text { text: "• " + modelData; color: "#eee"; font.pixelSize: 12; font.weight: Font.Medium; elide: Text.ElideRight; width: parent.width }
+                                        Text { 
+                                            text: "• " + modelData
+                                            color: "#eee"
+                                            font.pixelSize: 12
+                                            font.weight: Font.Medium
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                            
+                                            // Subtle entrance fade
+                                            opacity: typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0
+                                            Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuad } }
+                                        }
                                     }
                                 }
                             }
                             
+                            // Paired devices with connect buttons
                             Column {
                                 spacing: 2; width: parent.width
                                 visible: sidePanel.qBtPaired.length > 0
@@ -680,36 +756,135 @@ PanelWindow {
                                         Rectangle {
                                             width: parent.width; height: 18; color: "transparent"
                                             property var devInfo: modelData.split("|")
+                                            
+                                            // Subtle slide-up using transform to avoid breaking Column layout
+                                            transform: Translate {
+                                                y: (1.0 - (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0)) * 5
+                                                Behavior on y { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+                                            }
+                                            
                                             Text { 
                                                 anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                                                text: "• " + (devInfo[1] || "Unknown"); color: "#aaa"; font.pixelSize: 10; elide: Text.ElideRight; width: parent.width - 60 
+                                                text: "• " + (devInfo[1] || "Unknown")
+                                                color: "#aaa"
+                                                font.pixelSize: 10
+                                                elide: Text.ElideRight
+                                                width: parent.width - 60
                                             }
                                             Rectangle {
+                                                id: btConnBtn
                                                 anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                                                width: 54; height: 18; radius: 3; color: btConnMa.containsMouse ? (sharedData.colorAccent || "#4a9eff") : "#1a1a1a"
-                                                Text { anchors.centerIn: parent; text: "Connect"; color: btConnMa.containsMouse ? "#000" : "#fff"; font.pixelSize: 9; font.weight: Font.Bold }
-                                                MouseArea { id: btConnMa; anchors.fill: parent; hoverEnabled: true; onClicked: if (devInfo.length > 0) sharedData.runCommand(['bluetoothctl', 'connect', devInfo[0]]) }
+                                                width: 64; height: 18; radius: 3
+                                                property bool isConnecting: sidePanel.qBtConnectingMac === devInfo[0]
+                                                color: isConnecting ? "#333" : (btConnMa.containsMouse ? (sharedData.colorAccent || "#4a9eff") : "#1a1a1a")
+                                                scale: btConnMa.containsMouse && !isConnecting ? 1.05 : 1.0
+                                                
+                                                Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                                
+                                                Text { 
+                                                    anchors.centerIn: parent
+                                                    text: btConnBtn.isConnecting ? "Connecting..." : "Connect"
+                                                    color: btConnBtn.isConnecting ? "#888" : (btConnMa.containsMouse ? "#000" : "#fff")
+                                                    font.pixelSize: 8
+                                                    font.weight: Font.Bold
+                                                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                                }
+                                                MouseArea { 
+                                                    id: btConnMa
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    enabled: !btConnBtn.isConnecting
+                                                    onClicked: {
+                                                        if (devInfo.length > 0 && sharedData && sharedData.runCommand) {
+                                                            // Visual feedback
+                                                            clickFeedback.start()
+                                                            sidePanel.qBtConnectingMac = devInfo[0]
+                                                            btConnectTimeout.restart()
+                                                            sharedData.runCommand(['sh', '-c', 'bluetoothctl connect ' + devInfo[0]])
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                SequentialAnimation {
+                                                    id: clickFeedback
+                                                    NumberAnimation { target: btConnBtn; property: "scale"; to: 0.95; duration: 80 }
+                                                    NumberAnimation { target: btConnBtn; property: "scale"; to: 1.05; duration: 80 }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                             
+                            // Action buttons
                             GridLayout {
                                 columns: 2; rowSpacing: 4; columnSpacing: 4; width: parent.width
+                                
                                 Rectangle {
-                                    Layout.fillWidth: true; height: 30; color: btMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
+                                    id: btToggleBtn
+                                    Layout.fillWidth: true; height: 30
+                                    color: btMa1.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    radius: 3
+                                    scale: btMa1.containsMouse ? 1.02 : 1.0
+                                    
+                                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                    
                                     Text { 
                                         anchors.centerIn: parent
                                         text: "󰂯 Toggle"
-                                        color: sidePanel.qBtStatus === "On" ? sharedData.colorAccent : "#fff"; font.pixelSize: 10; font.weight: Font.Medium
+                                        color: sidePanel.qBtStatus === "On" ? sharedData.colorAccent : "#fff"
+                                        font.pixelSize: 10
+                                        font.weight: Font.Medium
+                                        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
                                     }
-                                    MouseArea { id: btMa1; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['sh', '-c', (sidePanel.qBtStatus === "On" ? 'bluetoothctl power off' : 'bluetoothctl power on')]) }
+                                    MouseArea { 
+                                        id: btMa1
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            btClickAnim1.start()
+                                            sharedData.runCommand(['sh', '-c', (sidePanel.qBtStatus === "On" ? 'bluetoothctl power off' : 'bluetoothctl power on')])
+                                        }
+                                    }
+                                    SequentialAnimation {
+                                        id: btClickAnim1
+                                        NumberAnimation { target: btToggleBtn; property: "scale"; to: 0.95; duration: 50 }
+                                        NumberAnimation { target: btToggleBtn; property: "scale"; to: 1.05; duration: 100 }
+                                    }
                                 }
                                 Rectangle {
-                                    Layout.fillWidth: true; height: 30; color: btMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 3
-                                    Text { anchors.centerIn: parent; text: "󰒓 Manager"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                    MouseArea { id: btMa2; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['blueman-manager']) }
+                                    id: btManagerBtn
+                                    Layout.fillWidth: true; height: 30
+                                    color: btMa2.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
+                                    radius: 3
+                                    scale: btMa2.containsMouse ? 1.02 : 1.0
+                                    
+                                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                                    
+                                    Text { 
+                                        anchors.centerIn: parent
+                                        text: "󰒓 Manager"
+                                        color: "#fff"
+                                        font.pixelSize: 10
+                                        font.weight: Font.Medium
+                                    }
+                                    MouseArea { 
+                                        id: btMa2
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            btClickAnim2.start()
+                                            sharedData.runCommand(['blueman-manager'])
+                                        }
+                                    }
+                                    SequentialAnimation {
+                                        id: btClickAnim2
+                                        NumberAnimation { target: btManagerBtn; property: "scale"; to: 0.95; duration: 50 }
+                                        NumberAnimation { target: btManagerBtn; property: "scale"; to: 1.05; duration: 100 }
+                                    }
                                 }
                             }
                         }
@@ -772,25 +947,37 @@ PanelWindow {
                                     property var profiles: ["power-saver", "balanced", "performance"]
                                     Repeater {
                                         model: 3
-                                        Rectangle {
-                                            width: 46; height: 44; color: pMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 4
-                                            property int profileIndex: index
-                                            Column {
-                                                anchors.centerIn: parent; spacing: 0
-                                                Text { 
-                                                    anchors.horizontalCenter: parent.horizontalCenter
-                                                    text: index === 0 ? "󰌪" : (index === 1 ? "󰗑" : "󰓅")
-                                                    color: sidePanel.qPwrStatus.toLowerCase().includes(pwrProfilesRow.profiles[index]) ? sharedData.colorAccent : "#fff"
-                                                    font.pixelSize: 16
+                                            Rectangle {
+                                                id: pwrBtn
+                                                width: 46; height: 44; color: pMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05); radius: 4
+                                                property int profileIndex: index
+                                                Column {
+                                                    anchors.centerIn: parent; spacing: 0
+                                                    Text { 
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        text: index === 0 ? "󰌪" : (index === 1 ? "󰗑" : "󰓅")
+                                                        color: sidePanel.qPwrStatus.toLowerCase().includes(pwrProfilesRow.profiles[index]) ? sharedData.colorAccent : "#fff"
+                                                        font.pixelSize: 16
+                                                    }
+                                                    Text {
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        text: index === 0 ? "Saver" : (index === 1 ? "Bal" : "Perf")
+                                                        color: "#888"; font.pixelSize: 8; font.weight: Font.Medium
+                                                    }
                                                 }
-                                                Text {
-                                                    anchors.horizontalCenter: parent.horizontalCenter
-                                                    text: index === 0 ? "Saver" : (index === 1 ? "Bal" : "Perf")
-                                                    color: "#888"; font.pixelSize: 8; font.weight: Font.Medium
+                                                MouseArea { 
+                                                    id: pMa; anchors.fill: parent; hoverEnabled: true
+                                                    onClicked: {
+                                                        pwrClickAnim.start()
+                                                        sharedData.runCommand(['powerprofilesctl', 'set', pwrProfilesRow.profiles[index]])
+                                                    }
+                                                }
+                                                SequentialAnimation {
+                                                    id: pwrClickAnim
+                                                    NumberAnimation { target: pwrBtn; property: "scale"; to: 0.9; duration: 50 }
+                                                    NumberAnimation { target: pwrBtn; property: "scale"; to: 1.0; duration: 100 }
                                                 }
                                             }
-                                            MouseArea { id: pMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['powerprofilesctl', 'set', pwrProfilesRow.profiles[index]]) }
-                                        }
                                     }
                                 }
                             }
@@ -798,14 +985,38 @@ PanelWindow {
                             Row {
                                 width: parent.width; spacing: 4
                                 Rectangle {
+                                    id: rebootBtn
                                     width: (parent.width - 4) / 2; height: 28; color: rbMa.containsMouse ? "#d32f2f" : Qt.rgba(1,1,1,0.05); radius: 3
                                     Text { anchors.centerIn: parent; text: "󰑐 Reboot"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                    MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['systemctl', 'reboot']) }
+                                    MouseArea { 
+                                        id: rbMa; anchors.fill: parent; hoverEnabled: true
+                                        onClicked: {
+                                            rbClickAnim.start()
+                                            sharedData.runCommand(['systemctl', 'reboot'])
+                                        }
+                                    }
+                                    SequentialAnimation {
+                                        id: rbClickAnim
+                                        NumberAnimation { target: rebootBtn; property: "scale"; to: 0.95; duration: 50 }
+                                        NumberAnimation { target: rebootBtn; property: "scale"; to: 1.0; duration: 100 }
+                                    }
                                 }
                                 Rectangle {
+                                    id: powerOffBtn
                                     width: (parent.width - 4) / 2; height: 28; color: sdMa.containsMouse ? "#f44336" : Qt.rgba(1,1,1,0.05); radius: 3
                                     Text { anchors.centerIn: parent; text: "󰐥 Power Off"; color: "#fff"; font.pixelSize: 10; font.weight: Font.Medium }
-                                    MouseArea { id: sdMa; anchors.fill: parent; hoverEnabled: true; onClicked: sharedData.runCommand(['systemctl', 'poweroff']) }
+                                    MouseArea { 
+                                        id: sdMa; anchors.fill: parent; hoverEnabled: true
+                                        onClicked: {
+                                            sdClickAnim.start()
+                                            sharedData.runCommand(['systemctl', 'poweroff'])
+                                        }
+                                    }
+                                    SequentialAnimation {
+                                        id: sdClickAnim
+                                        NumberAnimation { target: powerOffBtn; property: "scale"; to: 0.95; duration: 50 }
+                                        NumberAnimation { target: powerOffBtn; property: "scale"; to: 1.0; duration: 100 }
+                                    }
                                 }
                             }
                         }
@@ -814,6 +1025,7 @@ PanelWindow {
             }
 
             Item {
+                id: settingsBtnItem
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
@@ -835,10 +1047,16 @@ PanelWindow {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: { 
+                        settingsClickAnim.start()
                         if (sharedData && sharedData.runCommand) {
                             sharedData.runCommand(['sh', '-c', 'fuse 2>/dev/null || $HOME/.local/bin/fuse 2>/dev/null || $HOME/.config/alloy/fuse/target/release/fuse 2>/dev/null &'])
                         }
                     } 
+                }
+                SequentialAnimation {
+                    id: settingsClickAnim
+                    NumberAnimation { target: settingsBtnItem; property: "scale"; to: 0.8; duration: 50 }
+                    NumberAnimation { target: settingsBtnItem; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutBack }
                 }
             }
         }

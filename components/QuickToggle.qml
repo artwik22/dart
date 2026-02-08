@@ -55,7 +55,16 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: {
+            clickAnim.start()
+            root.clicked()
+        }
+    }
+    
+    SequentialAnimation {
+        id: clickAnim
+        NumberAnimation { target: root; property: "scale"; to: 0.9; duration: 50; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutBack }
     }
     
     // Watch mouse state
