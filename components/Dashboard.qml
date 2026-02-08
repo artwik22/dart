@@ -2193,7 +2193,7 @@ PanelWindow {
 
     Timer {
         id: ramTimer
-        interval: 500
+        interval: 1000
         repeat: true
         running: (sharedData && sharedData.menuVisible)
         function readRam() {
@@ -2225,7 +2225,7 @@ PanelWindow {
 
     Timer {
         id: cpuTimer
-        interval: 500
+        interval: 1000
         repeat: true
         running: (sharedData && sharedData.menuVisible)
 
@@ -2266,7 +2266,7 @@ PanelWindow {
 
     Timer {
         id: gpuTimer
-        interval: 500
+        interval: 1000
         repeat: true
         running: (sharedData && sharedData.menuVisible)
         onTriggered: readGpu()
