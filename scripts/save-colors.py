@@ -88,6 +88,8 @@ if "quickshellBorderRadius" in existing_data:
     colors["quickshellBorderRadius"] = existing_data["quickshellBorderRadius"]
 if "notificationSound" in existing_data:
     colors["notificationSound"] = existing_data["notificationSound"]
+if "weatherLocation" in existing_data:
+    colors["weatherLocation"] = existing_data["weatherLocation"]
 
 # Override with provided values if they exist
 # Argument 10: notificationsEnabled
@@ -204,6 +206,10 @@ if len(sys.argv) > 32 and sys.argv[32]:
 # Argument 33: notificationSound
 if len(sys.argv) > 33 and sys.argv[33]:
     colors["notificationSound"] = sys.argv[33]
+
+# Argument 34: weatherLocation
+if len(sys.argv) > 34 and sys.argv[34]:
+    colors["weatherLocation"] = sys.argv[34]
 
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)

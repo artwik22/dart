@@ -4,6 +4,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
+import Quickshell.Services.SystemTray
 import "."
 
 PanelWindow {
@@ -528,6 +529,69 @@ PanelWindow {
             interval: 15000
             repeat: false
             onTriggered: sidePanel.qBtConnectingMac = ""
+        }
+    }
+
+    // System Tray Delegate
+    Component {
+        id: trayItemDelegate
+        Rectangle {
+            width: 24
+            height: 24
+            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+            color: trayMa.containsMouse ? sidePanel.btnBgHover : "transparent"
+            
+            Image {
+                anchors.fill: parent
+                anchors.margins: 4
+                source: modelData.icon
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+            }
+            
+            MouseArea {
+                id: trayMa
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.RightButton) {
+                        modelData.contextMenu()
+                    } else {
+                        modelData.activate()
+                    }
+                }
+            }
+        }
+    }
+
+    // Vertical System Tray
+    Column {
+        id: sidePanelTrayVertical
+        anchors.bottom: actionsGroup.top
+        anchors.bottomMargin: 8
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 4
+        visible: !isHorizontal && SystemTray.items.count > 0
+        
+        Repeater {
+            model: SystemTray.items
+            delegate: trayItemDelegate
+        }
+    }
+
+    // Horizontal System Tray
+    Row {
+        id: sidePanelTrayHorizontal
+        anchors.right: actionsGroup.left
+        anchors.rightMargin: 8
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 4
+        visible: isHorizontal && SystemTray.items.count > 0
+        
+        Repeater {
+            model: SystemTray.items
+            delegate: trayItemDelegate
         }
     }
 

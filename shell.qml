@@ -49,6 +49,7 @@ ShellRoot {
         property string notificationRounding: "standard" // "none", "standard", "pill"
         property int quickshellBorderRadius: 0 // Border radius for QuickShell elements (0 = disabled)
         property string notificationSound: "message.oga" // "message.oga", "dialog-information.oga", etc.
+        property string weatherLocation: "London"      // Weather location for wttr.in
     }
     
     // Color config file path - dynamically determined
@@ -277,6 +278,9 @@ ShellRoot {
                         }
                         if (json.notificationSound && String(json.notificationSound).length > 0) {
                             sharedData.notificationSound = String(json.notificationSound)
+                        }
+                        if (json.weatherLocation && String(json.weatherLocation).length > 0) {
+                            sharedData.weatherLocation = String(json.weatherLocation)
                         }
                     } catch (e) {
                     }

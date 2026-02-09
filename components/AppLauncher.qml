@@ -41,6 +41,14 @@ PanelWindow {
         xhr.send()
     }
     
+    function formatTime(sec) {
+        if (isNaN(sec) || sec < 0) return "0:00"
+        var m = Math.floor(sec / 60)
+        var s = sec % 60
+        return m + ":" + (s < 10 ? "0" + s : s)
+    }
+    
+
     function readScriptDir() {
         var xhr = new XMLHttpRequest()
         xhr.open("GET", "file:///tmp/quickshell_script_dir")
@@ -128,7 +136,6 @@ PanelWindow {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 var home = xhr.responseText.trim()
                 if (home && home.length > 0) {
-                    // Try ~/.config/alloy/colors.json first
                     var alloyPath = home + "/.config/alloy/colors.json"
                     var checkXhr = new XMLHttpRequest()
                     checkXhr.open("GET", "file://" + alloyPath)
@@ -139,14 +146,11 @@ PanelWindow {
                             } else {
                                 colorConfigPath = home + "/.config/sharpshell/colors.json"
                             }
-                            notesDir = ""
                         }
                     }
                     checkXhr.send()
                 } else {
-                    // Fallback to defaults
                     colorConfigPath = "/tmp/sharpshell/colors.json"
-                    notesDir = ""
                 }
             }
         }
@@ -406,7 +410,6 @@ PanelWindow {
     
     // Color config file path - dynamically determined
     property string colorConfigPath: ""
-    property var packages: []
     property string packageSearchText: ""
     
     // Filtered applications list
@@ -426,6 +429,7 @@ PanelWindow {
     ListModel {
         id: filteredInstalledPackages
     }
+    
     
     
     
@@ -1365,14 +1369,6 @@ PanelWindow {
                     }
                     event.accepted = true
                     return
-                } else if (currentMode === 3 && currentNotesMode !== -1) {
-                    // W edytorze notes - wróć do menu notes
-                    currentNotesMode = -1
-                    selectedIndex = 0
-                } else if (currentMode === 3 && currentNotesMode === -1) {
-                    // W menu notes - wróć do wyboru trybu
-                    currentMode = -1
-                    selectedIndex = 2  // Wróć do pozycji Notes w menu
                 } else if (currentMode === 1 && currentPackageMode === 0) {
                     // Wróć do wyboru opcji Packages
                     currentPackageMode = -1
@@ -1669,7 +1665,6 @@ PanelWindow {
             model: ListModel {
                 ListElement { name: "Launcher"; description: "Launch applications"; mode: 0; icon: "󰈙" }
                 ListElement { name: "Packages"; description: "Manage packages"; mode: 1; icon: "󰏖" }
-                ListElement { name: "Fuse"; description: "Open settings application"; mode: 2; icon: "󰒓" }
             }
             
             delegate: Rectangle {
