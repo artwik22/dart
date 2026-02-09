@@ -145,6 +145,21 @@ PanelWindow {
                 height: 50
                 color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
                 
+                // Sliding Indicator
+                Rectangle {
+                    id: slidingIndicator
+                    height: 2
+                    width: parent.width / 3
+                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
+                    anchors.bottom: parent.bottom
+                    x: dashboardRoot.currentTab * width
+                    z: 10
+                    
+                    Behavior on x {
+                        NumberAnimation { duration: 400; easing.type: Easing.OutExpo }
+                    }
+                }
+
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 0
@@ -173,11 +188,12 @@ PanelWindow {
                                 anchors.fill: parent
                                 anchors.margins: 0
                                 color: tabRect.isActive ? 
-                                    ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
+                                    Qt.rgba(0,0,0,0) : // Keep it clean, indicator handles active
                                     (tabRect.isHovered ? 
-                                        ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
+                                        Qt.rgba(1,1,1,0.05) : 
                                         "transparent")
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                
+                                Behavior on color { ColorAnimation { duration: 200 } }
                             }
                             
                             Row {
@@ -187,55 +203,34 @@ PanelWindow {
                                 Text {
                                     text: modelData.icon
                                     font.pixelSize: 15
+                                    scale: tabRect.isActive ? 1.15 : 1.0
                                     color: tabRect.isActive ? 
-                                        ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : // Accent text on active
-                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#000000")
-                                    opacity: 1.0
+                                        ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : 
+                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
+                                    opacity: tabRect.isActive ? 1.0 : 0.6
                                     anchors.verticalCenter: parent.verticalCenter
                                     
-                                    Behavior on color {
-                                        ColorAnimation {
-                                            duration: 200
-                                            easing.type: Easing.OutQuart
-                                        }
-                                    }
-                                    
-                                    Behavior on font.pixelSize {
-                                        NumberAnimation {
-                                            duration: 150
-                                            easing.type: Easing.OutQuart
-                                        }
-                                    }
+                                    Behavior on color { ColorAnimation { duration: 250 } }
+                                    Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                                    Behavior on opacity { NumberAnimation { duration: 250 } }
                                 }
                                 
                                 Text {
                                     text: modelData.label
-                                    font.pixelSize: 12
+                                    font.pixelSize: 11
                                     font.family: "sans-serif"
-                                    font.weight: tabRect.isActive ? Font.Bold : Font.Normal
+                                    font.weight: tabRect.isActive ? Font.Bold : Font.Medium
+                                    font.letterSpacing: 0.5
                                     color: tabRect.isActive ? 
-                                        ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : // Accent text on active
-                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#000000")
-                                    opacity: 1.0
+                                        ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : 
+                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
+                                    opacity: tabRect.isActive ? 1.0 : 0.6
                                     anchors.verticalCenter: parent.verticalCenter
                                     
-                                    Behavior on color {
-                                        ColorAnimation {
-                                            duration: 200
-                                            easing.type: Easing.OutQuart
-                                        }
-                                    }
-                                    
-                                    Behavior on font.weight {
-                                        PropertyAnimation {
-                                            duration: 200
-                                            easing.type: Easing.OutQuart
-                                        }
-                                    }
+                                    Behavior on color { ColorAnimation { duration: 250 } }
+                                    Behavior on opacity { NumberAnimation { duration: 250 } }
                                 }
                             }
-                            
-
                             
                             MouseArea {
                                 id: tabMouseArea
@@ -247,7 +242,6 @@ PanelWindow {
                         }
                     }
                 }
-                
             }
 
             // ============ CONTENT AREA ============
