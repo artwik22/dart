@@ -1286,7 +1286,8 @@ PanelWindow {
                                         height: {
                                             if (cavaValues && cavaValues.length > index) {
                                                 var val = parseInt(cavaValues[index]);
-                                                return isNaN(val) ? 0 : (val / 100 * parent.height);
+                                                var h = isNaN(val) ? 0 : (val / 100 * parent.height);
+                                                return Math.max(2, h);
                                             }
                                             return 0;
                                         }
@@ -1386,9 +1387,9 @@ PanelWindow {
                                                 Item { Layout.fillWidth: true }
                                                 
                                                 Rectangle {
-                                                    width: 36
-                                                    height: 36
-                                                    radius: 18
+                                                    width: 38
+                                                    height: 38
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 10) : 10
                                                     color: prevMa.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
                                                     
                                                     Text {
@@ -1402,9 +1403,9 @@ PanelWindow {
                                                 }
                                                 
                                                 Rectangle {
-                                                    width: 44
-                                                    height: 44
-                                                    radius: 22
+                                                    width: 48
+                                                    height: 48
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 12) : 12
                                                     color: playMa.containsMouse ? (sharedData.colorAccent || "#4a9eff") : Qt.rgba(1,1,1,0.12)
                                                     scale: playMa.pressed ? 0.9 : 1.0
                                                     Behavior on scale { NumberAnimation { duration: 100 } }
@@ -1421,9 +1422,9 @@ PanelWindow {
                                                 }
                                                 
                                                 Rectangle {
-                                                    width: 36
-                                                    height: 36
-                                                    radius: 18
+                                                    width: 38
+                                                    height: 38
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 10) : 10
                                                     color: nextMa.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
                                                     
                                                     Text {
