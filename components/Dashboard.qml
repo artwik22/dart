@@ -1237,7 +1237,7 @@ PanelWindow {
                             id: mediaPlayerCard
                             Layout.fillWidth: true
                             Layout.preferredHeight: 140
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 4
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
@@ -1267,7 +1267,42 @@ PanelWindow {
 
                             MouseArea { id: mediaMouseArea; anchors.fill: parent; hoverEnabled: true }
 
-                            // Subtle adaptive accent glow
+                            // Audio visualizer bars (cava)
+                            Row {
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                anchors.bottomMargin: -2
+                                spacing: 2
+                                opacity: mpPlaying ? 0.15 : 0
+                                visible: opacity > 0
+                                z: 0
+                                
+                                Behavior on opacity { NumberAnimation { duration: 1000 } }
+                                
+                                Repeater {
+                                    model: 36
+                                    Rectangle {
+                                        width: (parent.width - (35 * 2)) / 36
+                                        height: {
+                                            if (cavaValues && cavaValues.length > index) {
+                                                var val = parseInt(cavaValues[index]);
+                                                return isNaN(val) ? 0 : (val / 100 * parent.height);
+                                            }
+                                            return 0;
+                                        }
+                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        radius: 1
+                                        anchors.bottom: parent.bottom
+                                        
+                                        Behavior on height {
+                                            NumberAnimation { duration: 100; easing.type: Easing.OutQuint }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Removed adaptive accent glow to keep background color consistent
+                            /*
                             Rectangle {
                                 anchors.fill: parent
                                 radius: parent.radius
@@ -1275,6 +1310,7 @@ PanelWindow {
                                 opacity: mpPlaying ? 0.05 : 0
                                 Behavior on opacity { NumberAnimation { duration: 1000 } }
                             }
+                            */
 
                             ColumnLayout {
                                 anchors.fill: parent
@@ -1291,7 +1327,7 @@ PanelWindow {
                                             Layout.preferredWidth: 100
                                             Layout.preferredHeight: 100
                                             radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 12) : 8
-                                            color: "#050505"
+                                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
                                             clip: true
                                             
                                             Image {
