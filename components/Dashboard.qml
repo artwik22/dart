@@ -76,13 +76,15 @@ PanelWindow {
     property bool isHorizontal: panelPos === "top" || panelPos === "bottom"
     
     // Configurable anchors based on panelPos
-    anchors.right: panelPos === "left" ? false : true 
-    anchors.left: panelPos === "right" ? false : true
-    anchors.top: panelPos === "bottom" ? false : true
-    anchors.bottom: panelPos === "top" ? false : true
+    // Anchor to the primary edge AND perpendicular edges to stretch (with margins)
+    anchors.top: panelPos === "top" || !isHorizontal
+    anchors.bottom: panelPos === "bottom" || !isHorizontal
+    anchors.left: panelPos === "left" || isHorizontal
+    anchors.right: panelPos === "right" || isHorizontal
     
-    implicitWidth: !isHorizontal ? 449 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].width : 1920
-    implicitHeight: isHorizontal ? 449 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].height : 1440
+    // Floating Dashboard, width fixed 450, length stretched by anchors+margins
+    implicitWidth: !isHorizontal ? 450 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].width : 1920
+    implicitHeight: isHorizontal ? 450 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].height : 1080
     
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qsdashboard"
@@ -103,11 +105,15 @@ PanelWindow {
     }
     visible: true
     color: "transparent"
+    
+    // Floating margins (distance from edge)
+    // Primary axis (e.g. Right): Animate for slide-in (-width to 15)
+    // Perpendicular axes (e.g. Top/Bottom): Fixed 15
     margins {
-        top: panelPos === "top" ? -implicitHeight * (1.0 - showProgress) : 0
-        bottom: panelPos === "bottom" ? -implicitHeight * (1.0 - showProgress) : 0
-        right: panelPos === "right" ? -implicitWidth * (1.0 - showProgress) : 0
-        left: panelPos === "left" ? -implicitWidth * (1.0 - showProgress) : 0
+        top: panelPos === "top" ? (-implicitHeight * (1.0 - showProgress) + 15 * showProgress) : 15
+        bottom: panelPos === "bottom" ? (-implicitHeight * (1.0 - showProgress) + 15 * showProgress) : 15
+        right: panelPos === "right" ? (-implicitWidth * (1.0 - showProgress) + 15 * showProgress) : 15
+        left: panelPos === "left" ? (-implicitWidth * (1.0 - showProgress) + 15 * showProgress) : 15
     }
 
     Item {
@@ -130,14 +136,14 @@ PanelWindow {
         Rectangle {
             id: dashboardBackground
             anchors.fill: parent
-            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 14
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff"
-        }
-
-        Column {
-            id: dashboardColumn
-            anchors.fill: parent
-            spacing: 0
+            clip: true // Clip children to rounded corners
+            
+            Column {
+                id: dashboardColumn
+                anchors.fill: parent
+                spacing: 0
 
             // ============ TOP NAVIGATION BAR ============
             Rectangle {
@@ -145,6 +151,15 @@ PanelWindow {
                 width: parent.width
                 height: 50
                 color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
+                radius: dashboardBackground.radius
+
+                // Patch to make bottom corners square
+                Rectangle {
+                    width: parent.width
+                    height: parent.radius
+                    color: parent.color
+                    anchors.bottom: parent.bottom
+                }
                 
                 // Sliding Indicator
                 Rectangle {
@@ -1944,7 +1959,8 @@ PanelWindow {
                 }
             }
         }
-    }
+} // End Rectangle
+    } // End Item (dashboardContainer)
 
     // ============ PROPERTIES ============
     Behavior on cpuUsageValue { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
@@ -2867,7 +2883,7 @@ PanelWindow {
         }
         
         dashboardClipboardHistoryModel.insert(0, { text: trimmed })
-        lastClipboardContent = trimmed
     }
 }
+
 
