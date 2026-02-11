@@ -366,9 +366,9 @@ PanelWindow {
                                             spacing: 6
                                             
                                             Text {
-                                                text: "⚡"
+                                                text: isCharging ? "⚡" : ""
                                                 font.pixelSize: 22
-                                                color: (batteryPercent > 20) ? ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : "#FF4444" 
+                                                color: (batteryPercent > 20 || isCharging) ? ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff") : "#FF4444" 
                                                 visible: batteryPercent > 0
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
@@ -1990,6 +1990,7 @@ PanelWindow {
     
     // Battery
     property int batteryPercent: -1
+    property bool isCharging: false
     
     // Weather
     property string weatherTemp: "--"
@@ -2066,7 +2067,7 @@ PanelWindow {
     }
     
     function updateBattery() {
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1 > /tmp/quickshell_battery || echo -1 > /tmp/quickshell_battery'], readBattery)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null; cat /sys/class/power_supply/BAT*/status 2>/dev/null) | head -2 > /tmp/quickshell_battery || echo "-1\nUnknown" > /tmp/quickshell_battery'], readBattery)
     }
     
     function readBattery() {
@@ -2074,9 +2075,17 @@ PanelWindow {
         xhr.open("GET", "file:///tmp/quickshell_battery")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                var s = xhr.responseText.trim()
-                var p = parseInt(s, 10)
+                var text = xhr.responseText.trim()
+                var lines = text.split('\n')
+                var p = parseInt(lines[0], 10)
                 dashboardRoot.batteryPercent = (!isNaN(p) && p >= 0 && p <= 100) ? p : -1
+                
+                if (lines.length > 1) {
+                    var status = lines[1].trim()
+                    dashboardRoot.isCharging = (status === "Charging")
+                } else {
+                    dashboardRoot.isCharging = false
+                }
             }
         }
         xhr.send()
