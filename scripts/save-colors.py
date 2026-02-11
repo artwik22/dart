@@ -211,6 +211,10 @@ if len(sys.argv) > 33 and sys.argv[33]:
 if len(sys.argv) > 34 and sys.argv[34]:
     colors["weatherLocation"] = sys.argv[34]
 
+# Argument 35: floatingDashboard (true/false)
+if len(sys.argv) > 35 and sys.argv[35]:
+    colors["floatingDashboard"] = sys.argv[35] == "true"
+
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)
 

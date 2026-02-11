@@ -7,6 +7,7 @@
   "colorPreset": "Professional Modern",
   "sidebarVisible": true,
   "sidebarPosition": "left",
+  "floatingDashboard": true,
   "presets": {
     "Professional Modern": {
       "background": "#0a0a0a",

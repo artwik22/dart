@@ -75,6 +75,8 @@ PanelWindow {
     property string panelPos: (sharedData && sharedData.dashboardPosition) ? sharedData.dashboardPosition : "right"
     property bool isHorizontal: panelPos === "top" || panelPos === "bottom"
     
+    property bool isFloating: (sharedData && sharedData.floatingDashboard !== undefined) ? sharedData.floatingDashboard : true
+
     // Configurable anchors based on panelPos
     // Anchor to the primary edge AND perpendicular edges to stretch (with margins)
     anchors.top: panelPos === "top" || !isHorizontal
@@ -108,12 +110,12 @@ PanelWindow {
     
     // Floating margins (distance from edge)
     // Primary axis (e.g. Right): Animate for slide-in (-width to 15)
-    // Perpendicular axes (e.g. Top/Bottom): Fixed 15
+    // Perpendicular axes (e.g. Top/Bottom): Fixed 15 OR 0 if classic
     margins {
-        top: panelPos === "top" ? (-implicitHeight * (1.0 - showProgress) + 15 * showProgress) : 15
-        bottom: panelPos === "bottom" ? (-implicitHeight * (1.0 - showProgress) + 15 * showProgress) : 15
-        right: panelPos === "right" ? (-implicitWidth * (1.0 - showProgress) + 15 * showProgress) : 15
-        left: panelPos === "left" ? (-implicitWidth * (1.0 - showProgress) + 15 * showProgress) : 15
+        top: panelPos === "top" ? (-implicitHeight * (1.0 - showProgress) + (isFloating ? 15 : 0) * showProgress) : (isFloating ? 15 : 0)
+        bottom: panelPos === "bottom" ? (-implicitHeight * (1.0 - showProgress) + (isFloating ? 15 : 0) * showProgress) : (isFloating ? 15 : 0)
+        right: panelPos === "right" ? (-implicitWidth * (1.0 - showProgress) + (isFloating ? 15 : 0) * showProgress) : (isFloating ? 15 : 0)
+        left: panelPos === "left" ? (-implicitWidth * (1.0 - showProgress) + (isFloating ? 15 : 0) * showProgress) : (isFloating ? 15 : 0)
     }
 
     Item {
@@ -136,7 +138,7 @@ PanelWindow {
         Rectangle {
             id: dashboardBackground
             anchors.fill: parent
-            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 14
+            radius: isFloating ? ((sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 14) : 0
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff"
             clip: true // Clip children to rounded corners
             

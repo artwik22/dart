@@ -50,6 +50,7 @@ ShellRoot {
         property int quickshellBorderRadius: 0 // Border radius for QuickShell elements (0 = disabled)
         property string notificationSound: "message.oga" // "message.oga", "dialog-information.oga", etc.
         property string weatherLocation: "London"      // Weather location for wttr.in
+        property bool floatingDashboard: true          // Dashboard style: true (floating) | false (classic)
     }
     
     // Color config file path - dynamically determined
@@ -281,6 +282,9 @@ ShellRoot {
                         }
                         if (json.weatherLocation && String(json.weatherLocation).length > 0) {
                             sharedData.weatherLocation = String(json.weatherLocation)
+                        }
+                        if (json.floatingDashboard !== undefined) {
+                            sharedData.floatingDashboard = json.floatingDashboard === true || json.floatingDashboard === "true"
                         }
                     } catch (e) {
                     }
@@ -514,6 +518,13 @@ ShellRoot {
                                     var qbr = parseInt(json.quickshellBorderRadius)
                                     if (!isNaN(qbr) && qbr !== sharedData.quickshellBorderRadius) {
                                         sharedData.quickshellBorderRadius = qbr
+                                        changed = true
+                                    }
+                                }
+                                if (json.floatingDashboard !== undefined) {
+                                    var fd = json.floatingDashboard === true || json.floatingDashboard === "true"
+                                    if (fd !== sharedData.floatingDashboard) {
+                                        sharedData.floatingDashboard = fd
                                         changed = true
                                     }
                                 }
