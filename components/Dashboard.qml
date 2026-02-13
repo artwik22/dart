@@ -33,6 +33,11 @@ PanelWindow {
     property int cpuTempValue: 0
     property int gpuTempValue: 0
     
+    // Persistent Network State for accurate bps calculation
+    property double lastNetRx: 0
+    property double lastNetTx: 0
+    property double lastNetTime: 0
+    
     // Helper to push to history
     function pushHistory(arr, val) {
         if (!arr) arr = []
@@ -66,14 +71,24 @@ PanelWindow {
     function getResourceValueText(res) {
         if (res === "ram") return ramUsageValue + "%"
         if (res === "gpu") return gpuUsageValue + "%"
-        if (res === "network") return (networkRxMBs + networkTxMBs).toFixed(1) + " MB/s"
+        if (res === "network") {
+            var total = networkRxMBs + networkTxMBs
+            if (total < 0.1) return (total * 1024).toFixed(0) + " KB/s"
+            return total.toFixed(1) + " MB/s"
+        }
         return cpuUsageValue + "%"
     }
     
     function getResourceSubText(res) {
         if (res === "ram") return (ramTotalGB > 0 ? ramTotalGB + " GB Total" : "")
         if (res === "gpu") return (gpuTempValue > 0 ? gpuTempValue + "°C" : "")
-        if (res === "network") return "↓ " + networkRxMBs.toFixed(1) + " ↑ " + networkTxMBs.toFixed(1)
+        if (res === "network") {
+            function fmt(val) {
+                if (val < 0.1) return (val * 1024).toFixed(0) + "K"
+                return val.toFixed(1) + "M"
+            }
+            return "↓ " + fmt(networkRxMBs) + " ↑ " + fmt(networkTxMBs)
+        }
         return (cpuTempValue > 0 ? cpuTempValue + "°C" : "")
     }
 
@@ -2048,20 +2063,40 @@ PanelWindow {
                                     anchors.fill: parent; anchors.margins: 12; spacing: 0
                                     Text { text: "CPU"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
                                     RowLayout {
-                                        Text { text: cpuUsageValue + "%"; font.pixelSize: 28; font.weight: Font.Black; color: (sharedData && sharedData.colorText) || "#ffffff" }
+                                        Text { 
+                                            text: cpuUsageValue + "%"
+                                            font.pixelSize: 28; font.weight: Font.Black
+                                            color: (sharedData && sharedData.colorText) || "#ffffff" 
+                                        }
                                         Item { Layout.fillWidth: true }
-                                        Text { text: cpuTempValue + "°C"; font.pixelSize: 14; font.weight: Font.Bold; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                        Text { 
+                                            text: cpuTempValue + "°C"
+                                            font.pixelSize: 14; font.weight: Font.Bold
+                                            color: (sharedData && sharedData.colorAccent) || "#00ff41" 
+                                        }
                                     }
                                     Item { Layout.fillHeight: true }
                                     Canvas {
                                         id: cpuChart
-                                        Layout.fillWidth: true; Layout.preferredHeight: 25
+                                        Layout.fillWidth: true; Layout.preferredHeight: 30
                                         onPaint: {
                                             var ctx = getContext("2d"); ctx.reset();
                                             var hist = dashboardRoot.getResourceHistory("cpu");
                                             if (!hist || hist.length < 2) return;
                                             var w = width; var h = height; var step = w / (hist.length - 1);
                                             var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            
+                                            // Area Fill
+                                            var grad = ctx.createLinearGradient(0, 0, 0, h);
+                                            grad.addColorStop(0, Qt.alpha(color, 0.2));
+                                            grad.addColorStop(1, "transparent");
+                                            ctx.fillStyle = grad;
+                                            ctx.beginPath();
+                                            ctx.moveTo(0, h);
+                                            for(var i=0; i<hist.length; i++) ctx.lineTo(i*step, h - (hist[i]/100)*h);
+                                            ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
+                                            
+                                            // Stroke Line
                                             ctx.beginPath();
                                             for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
                                             ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
@@ -2081,20 +2116,40 @@ PanelWindow {
                                     anchors.fill: parent; anchors.margins: 12; spacing: 0
                                     Text { text: "RAM"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
                                     RowLayout {
-                                        Text { text: ramUsageValue + "%"; font.pixelSize: 28; font.weight: Font.Black; color: (sharedData && sharedData.colorText) || "#ffffff" }
+                                        Text { 
+                                            text: ramUsageValue + "%"
+                                            font.pixelSize: 28; font.weight: Font.Black
+                                            color: (sharedData && sharedData.colorText) || "#ffffff" 
+                                        }
                                         Item { Layout.fillWidth: true }
-                                        Text { text: ramTotalGB + "G"; font.pixelSize: 14; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                        Text { 
+                                            text: ramTotalGB + "G"
+                                            font.pixelSize: 14; font.weight: Font.Bold
+                                            color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) 
+                                        }
                                     }
                                     Item { Layout.fillHeight: true }
                                     Canvas {
                                         id: ramChart
-                                        Layout.fillWidth: true; Layout.preferredHeight: 25
+                                        Layout.fillWidth: true; Layout.preferredHeight: 30
                                         onPaint: {
                                             var ctx = getContext("2d"); ctx.reset();
                                             var hist = dashboardRoot.getResourceHistory("ram");
                                             if (!hist || hist.length < 2) return;
                                             var w = width; var h = height; var step = w / (hist.length - 1);
                                             var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            
+                                            // Area Fill
+                                            var grad = ctx.createLinearGradient(0, 0, 0, h);
+                                            grad.addColorStop(0, Qt.alpha(color, 0.2));
+                                            grad.addColorStop(1, "transparent");
+                                            ctx.fillStyle = grad;
+                                            ctx.beginPath();
+                                            ctx.moveTo(0, h);
+                                            for(var i=0; i<hist.length; i++) ctx.lineTo(i*step, h - (hist[i]/100)*h);
+                                            ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
+                                            
+                                            // Stroke Line
                                             ctx.beginPath();
                                             for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
                                             ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
@@ -2114,20 +2169,40 @@ PanelWindow {
                                     anchors.fill: parent; anchors.margins: 12; spacing: 0
                                     Text { text: "GPU"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
                                     RowLayout {
-                                        Text { text: gpuUsageValue + "%"; font.pixelSize: 28; font.weight: Font.Black; color: (sharedData && sharedData.colorText) || "#ffffff" }
+                                        Text { 
+                                            text: gpuUsageValue + "%"
+                                            font.pixelSize: 28; font.weight: Font.Black
+                                            color: (sharedData && sharedData.colorText) || "#ffffff" 
+                                        }
                                         Item { Layout.fillWidth: true }
-                                        Text { text: gpuTempValue + "°C"; font.pixelSize: 14; font.weight: Font.Bold; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                        Text { 
+                                            text: gpuTempValue + "°C"
+                                            font.pixelSize: 14; font.weight: Font.Bold
+                                            color: (sharedData && sharedData.colorAccent) || "#00ff41" 
+                                        }
                                     }
                                     Item { Layout.fillHeight: true }
                                     Canvas {
                                         id: gpuChart
-                                        Layout.fillWidth: true; Layout.preferredHeight: 25
+                                        Layout.fillWidth: true; Layout.preferredHeight: 30
                                         onPaint: {
                                             var ctx = getContext("2d"); ctx.reset();
                                             var hist = dashboardRoot.getResourceHistory("gpu");
                                             if (!hist || hist.length < 2) return;
                                             var w = width; var h = height; var step = w / (hist.length - 1);
                                             var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            
+                                            // Area Fill
+                                            var grad = ctx.createLinearGradient(0, 0, 0, h);
+                                            grad.addColorStop(0, Qt.alpha(color, 0.2));
+                                            grad.addColorStop(1, "transparent");
+                                            ctx.fillStyle = grad;
+                                            ctx.beginPath();
+                                            ctx.moveTo(0, h);
+                                            for(var i=0; i<hist.length; i++) ctx.lineTo(i*step, h - (hist[i]/100)*h);
+                                            ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
+                                            
+                                            // Stroke Line
                                             ctx.beginPath();
                                             for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
                                             ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
@@ -2180,8 +2255,22 @@ PanelWindow {
                                     Text { text: "NET"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
                                     RowLayout {
                                         spacing: 8
-                                        Text { text: "↓ " + networkRxMBs.toFixed(1); font.pixelSize: 18; font.weight: Font.Black; color: (sharedData && sharedData.colorText) || "#ffffff" }
-                                        Text { text: "↑ " + networkTxMBs.toFixed(1); font.pixelSize: 18; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                        Text { 
+                                            text: {
+                                                if (networkRxMBs < 0.1) return "↓ " + (networkRxMBs * 1024).toFixed(0) + " KB/s"
+                                                return "↓ " + networkRxMBs.toFixed(1) + " MB/s"
+                                            }
+                                            font.pixelSize: 18; font.weight: Font.Black
+                                            color: (sharedData && sharedData.colorText) || "#ffffff" 
+                                        }
+                                        Text { 
+                                            text: {
+                                                if (networkTxMBs < 0.1) return "↑ " + (networkTxMBs * 1024).toFixed(0) + " KB/s"
+                                                return "↑ " + networkTxMBs.toFixed(1) + " MB/s"
+                                            }
+                                            font.pixelSize: 18; font.weight: Font.Black
+                                            color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) 
+                                        }
                                     }
                                 }
                                 Item { Layout.fillWidth: true; Layout.fillHeight: true; 
@@ -2193,9 +2282,22 @@ PanelWindow {
                                             var hist = dashboardRoot.getResourceHistory("network");
                                             if (!hist || hist.length < 2) return;
                                             var w = width; var h = height; var step = w / (hist.length - 1);
+                                            var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            
+                                            // Area Fill
+                                            var grad = ctx.createLinearGradient(0, 0, 0, h);
+                                            grad.addColorStop(0, Qt.alpha(color, 0.2));
+                                            grad.addColorStop(1, "transparent");
+                                            ctx.fillStyle = grad;
+                                            ctx.beginPath();
+                                            ctx.moveTo(0, h);
+                                            for(var i=0; i<hist.length; i++) ctx.lineTo(i*step, h - (Math.min(hist[i], 20)/20)*h);
+                                            ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
+                                            
+                                            // Stroke Line
                                             ctx.beginPath();
                                             for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (Math.min(hist[j], 20)/20)*h);
-                                            ctx.strokeStyle = (sharedData && sharedData.colorAccent) || "#00ff41"; ctx.lineWidth = 2; ctx.stroke();
+                                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
                                         }
                                         Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) netChart.requestPaint() } }
                                     }
@@ -2211,16 +2313,28 @@ PanelWindow {
 
                             ColumnLayout {
                                 anchors.fill: parent; anchors.margins: 12; spacing: 8
-                                Text { text: "PROCESSES"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Text { text: "PROCESSES"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    Item { Layout.fillWidth: true }
+                                    Text { text: "MEM"; font.pixelSize: 8; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.2) }
+                                    Text { text: "CPU"; font.pixelSize: 8; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.2); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight }
+                                }
                                 ListView {
                                     Layout.fillWidth: true; Layout.fillHeight: true;
                                     model: topProcessesModel; interactive: false; clip: true; spacing: 2
                                     delegate: Rectangle {
                                         width: parent.width; height: 24; color: Qt.rgba(1,1,1,0.03)
                                         RowLayout {
-                                            anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8
+                                            anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 8
                                             Text { text: modelData.name.toUpperCase(); font.pixelSize: 10; font.weight: Font.Bold; color: (sharedData && sharedData.colorText) || "#ffffff"; elide: Text.ElideRight; Layout.fillWidth: true }
-                                            Text { text: modelData.cpu + "%"; font.pixelSize: 10; font.weight: Font.Black; color: parseFloat(modelData.cpu) > 20 ? ((sharedData && sharedData.colorAccent) || "#00ff41") : "#ffffff" }
+                                            Text { text: modelData.mem + "%"; font.pixelSize: 10; font.weight: Font.Medium; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                            Text { 
+                                                text: modelData.cpu + "%"
+                                                font.pixelSize: 10; font.weight: Font.Black
+                                                color: parseFloat(modelData.cpu) > 20 ? ((sharedData && sharedData.colorAccent) || "#00ff41") : "#ffffff"
+                                                Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight
+                                            }
                                         }
                                     }
                                 }
@@ -2268,6 +2382,7 @@ PanelWindow {
     // Performance tab models
     property var diskUsageModel: []
     property var topProcessesModel: []
+    property string windowManager: "Unknown"
     
     // Cava visualizer properties
     property var cavaValues: []
@@ -2362,27 +2477,46 @@ PanelWindow {
     
     function updateNetwork() {
         if (sharedData && sharedData.runCommand) {
-            var script = "(A=$(tail -n +3 /proc/net/dev 2>/dev/null | awk '{r+=$2;t+=$10} END {print r+0,t+0}'); sleep 1; B=$(tail -n +3 /proc/net/dev 2>/dev/null | awk '{r+=$2;t+=$10} END {print r+0,t+0}'); echo \"$A $B\") > /tmp/quickshell_net_speed"
-            sharedData.runCommand(['sh','-c', script], readNetwork)
+            // Simplified: just cat the file, delta calculation happens in readNetwork
+            sharedData.runCommand(['sh','-c', 'cat /proc/net/dev > /tmp/quickshell_net_dev'], readNetwork)
         }
     }
     function readNetwork() {
         var xhr = new XMLHttpRequest()
-        xhr.open("GET", "file:///tmp/quickshell_net_speed")
+        xhr.open("GET", "file:///tmp/quickshell_net_dev")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 var s = (xhr.responseText || "").trim()
-                var parts = s.split(/\s+/)
-                if (parts.length >= 4) {
-                    var rx0 = parseFloat(parts[0]) || 0, tx0 = parseFloat(parts[1]) || 0
-                    var rx1 = parseFloat(parts[2]) || 0, tx1 = parseFloat(parts[3]) || 0
-                    networkRxMBs = Math.max(0, (rx1 - rx0) / 1048576)
-                    networkTxMBs = Math.max(0, (tx1 - tx0) / 1048576)
-                    
-                    // Update History
-                    networkHistory = pushHistory(networkHistory, networkRxMBs + networkTxMBs) // Total bandwidth for chart
-                    dashboardRoot.perfUpdated()
+                var lines = s.split("\n")
+                var totalRx = 0
+                var totalTx = 0
+                
+                for (var i = 2; i < lines.length; i++) {
+                    var line = lines[i].trim()
+                    if (!line) continue
+                    var parts = line.split(/\s+/)
+                    if (parts.length >= 10) {
+                        totalRx += parseFloat(parts[1])
+                        totalTx += parseFloat(parts[9])
+                    }
                 }
+                
+                var now = Date.now()
+                if (lastNetTime > 0) {
+                    var dt = (now - lastNetTime) / 1000 // seconds
+                    if (dt > 0) {
+                        networkRxMBs = Math.max(0, (totalRx - lastNetRx) / 1048576 / dt)
+                        networkTxMBs = Math.max(0, (totalTx - lastNetTx) / 1048576 / dt)
+                        
+                        // Update History
+                        networkHistory = pushHistory(networkHistory, networkRxMBs + networkTxMBs)
+                        dashboardRoot.perfUpdated()
+                    }
+                }
+                
+                lastNetRx = totalRx
+                lastNetTx = totalTx
+                lastNetTime = now
             }
         }
         xhr.send()
@@ -2732,8 +2866,20 @@ PanelWindow {
     }
     
     function readGpu() {
-        // Read GPU usage using nvidia-smi (primary) or radeontop (fallback)
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d " " > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \'{print int($2)}\' > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage'], readGpuData)
+        // Read GPU usage using nvidia-smi (NVIDIA), radeontop (AMD), or intel_gpu_top (Intel)
+        // Fallback: frequency based estimation for Intel GPUs via sysfs (works without root/packages)
+        if (sharedData && sharedData.runCommand) {
+            var intelFreqCmd = '(C=$(cat /sys/class/drm/card1/gt_cur_freq_mhz 2>/dev/null || cat /sys/class/drm/card0/gt_cur_freq_mhz 2>/dev/null); ' +
+                               'M=$(cat /sys/class/drm/card1/gt_max_freq_mhz 2>/dev/null || cat /sys/class/drm/card0/gt_max_freq_mhz 2>/dev/null); ' +
+                               'if [ -n "$C" ] && [ -n "$M" ] && [ "$M" -gt 0 ]; then echo $((C * 100 / M)); fi)'
+
+            var cmd = 'nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d " " > /tmp/quickshell_gpu_usage || ' +
+                      '(timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \'{print int($2)}\' > /tmp/quickshell_gpu_usage) || ' +
+                      '(timeout 1 intel_gpu_top -J -s 1 2>/dev/null | grep \'"busy":\' | head -1 | awk -F: \'{print int($2)}\' > /tmp/quickshell_gpu_usage) || ' +
+                      '(' + intelFreqCmd + ' > /tmp/quickshell_gpu_usage) || ' +
+                      'echo 0 > /tmp/quickshell_gpu_usage'
+            sharedData.runCommand(['sh','-c', cmd], readGpuData)
+        }
     }
     
     function readGpuData() {
@@ -2869,7 +3015,12 @@ PanelWindow {
     }
     
     function updateCpuTemp() {
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(sensors 2>/dev/null | grep -i "cpu" | grep -oE "[0-9]+\\.[0-9]+" | head -1 | cut -d. -f1 > /tmp/quickshell_cpu_temp) || (cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -1 | awk \'{print int($1/1000)}\' > /tmp/quickshell_cpu_temp) || echo 0 > /tmp/quickshell_cpu_temp'], readCpuTemp)
+        if (sharedData && sharedData.runCommand) {
+            // Broader grep for CPU temps: Package, Core, Tctl, Tdie, or just CPU
+            // Fallback: Find the maximum temperature in any thermal zone (usually CPU)
+            var cmd = '(sensors 2>/dev/null | grep -iE "Package|Core 0|Tctl|Tdie|CPU" | grep -oP "[0-9]+(\\.[0-9]+)?(?=°C)" | head -1 | cut -d. -f1 > /tmp/quickshell_cpu_temp) || (cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -nr | head -1 | awk \'{print int($1/1000)}\' > /tmp/quickshell_cpu_temp) || echo 0 > /tmp/quickshell_cpu_temp'
+            sharedData.runCommand(['sh','-c', cmd], readCpuTemp)
+        }
     }
     
     function readCpuTemp() {
@@ -2886,7 +3037,11 @@ PanelWindow {
     }
     
     function updateGpuTemp() {
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 > /tmp/quickshell_gpu_temp) || (sensors 2>/dev/null | grep -i "gpu\\|radeon\\|amdgpu" | grep -oE "[0-9]+\\.[0-9]+" | head -1 | cut -d. -f1 > /tmp/quickshell_gpu_temp) || echo 0 > /tmp/quickshell_gpu_temp'], readGpuTemp)
+        if (sharedData && sharedData.runCommand) {
+            // nvidia-smi is best for NVIDIA, sensors handles AMD/Intel. grep for GPU, edge, junction, or k10temp
+            var cmd = '(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 > /tmp/quickshell_gpu_temp) || (sensors 2>/dev/null | grep -iE "gpu|edge|junction|amdgpu" | grep -oP "[0-9]+(\\.[0-9]+)?(?=°C)" | head -1 | cut -d. -f1 > /tmp/quickshell_gpu_temp) || echo 0 > /tmp/quickshell_gpu_temp'
+            sharedData.runCommand(['sh','-c', cmd], readGpuTemp)
+        }
     }
     
     function readGpuTemp() {
@@ -2896,7 +3051,14 @@ PanelWindow {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 var text = (xhr.responseText || "").trim()
                 var temp = parseInt(text)
-                if (!isNaN(temp)) gpuTempValue = temp
+                if (!isNaN(temp) && temp > 0) {
+                    gpuTempValue = temp
+                } else if (cpuTempValue > 0) {
+                    // Integrated GPU fallback: Use CPU temp if GPU-specific temp is unavailable
+                    gpuTempValue = cpuTempValue
+                } else {
+                    gpuTempValue = 0
+                }
             }
         }
         xhr.send()
