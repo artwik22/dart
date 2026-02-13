@@ -18,6 +18,10 @@ PanelWindow {
     property var gpuHistory: []
     property var networkHistory: []
     property string distroName: "Linux"
+    property string hostname: "unknown"
+    property string kernelVersion: "unknown"
+    property string uptimeString: "0m"
+    property string osPrettyName: "Linux"
     
     // Resource Current Values (Implicitly defined by usage in timers, but declaring for clarity/safety)
     property int cpuUsageValue: 0
@@ -32,6 +36,7 @@ PanelWindow {
     // Helper to push to history
     function pushHistory(arr, val) {
         if (!arr) arr = []
+        if (isNaN(val) || val === undefined || val === null) return arr
         arr.push(val)
         if (arr.length > 60) arr.shift()
         return arr
@@ -85,7 +90,7 @@ PanelWindow {
     anchors.right: panelPos === "right" || isHorizontal
     
     // Floating Dashboard, width fixed 450, length stretched by anchors+margins
-    implicitWidth: !isHorizontal ? 450 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].width : 1920
+    implicitWidth: !isHorizontal ? 500 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].width : 1920
     implicitHeight: isHorizontal ? 450 : (Quickshell.screens.length > 0 && Quickshell.screens[0]) ? Quickshell.screens[0].height : 1080
     
     WlrLayershell.layer: WlrLayer.Overlay
@@ -134,139 +139,131 @@ PanelWindow {
             }
         }
         
-        // Swiss Design dashboard background - Strict, flat, bordered
-        Rectangle {
-            id: dashboardBackground
-            anchors.fill: parent
-            radius: isFloating ? ((sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 14) : 0
-            color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff"
+
+            
+            // Main Dashboard Panel
+            Rectangle {
+                id: dashboardBackground
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                width: 450
+                
+                radius: isFloating ? ((sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 14) : 0
+                color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff"
             clip: true // Clip children to rounded corners
             
-            Column {
-                id: dashboardColumn
-                anchors.fill: parent
-                spacing: 0
 
-            // ============ TOP NAVIGATION BAR ============
+
+
+            // Bottom Navigation Bar (Integrated)
             Rectangle {
-                id: navBar
-                width: parent.width
-                height: 50
-                color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-                radius: dashboardBackground.radius
-
-                // Patch to make bottom corners square
-                Rectangle {
-                    width: parent.width
-                    height: parent.radius
-                    color: parent.color
-                    anchors.bottom: parent.bottom
-                }
+                id: bottomNavBar
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 50 // Fixed height for navbar
                 
-                // Sliding Indicator
+                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                
+                // Top border for separation
                 Rectangle {
-                    id: slidingIndicator
-                    height: 2
-                    width: parent.width / 3
-                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
-                    anchors.bottom: parent.bottom
-                    x: dashboardRoot.currentTab * width
-                    z: 10
-                    
-                    Behavior on x {
-                        NumberAnimation { duration: 400; easing.type: Easing.OutExpo }
-                    }
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 1
+                    color: Qt.rgba(1,1,1,0.05)
                 }
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 0
-                    anchors.rightMargin: 0
-                    spacing: 0
+                Item {
+                    anchors.centerIn: parent
+                    width: (4 * 40) + (3 * 40) // 4 items * 40px + 3 spacings * 40px = 280px
+                    height: 40
                     
-                    Repeater {
-                        id: navRepeater
-                        model: [
-                            { icon: "󰕮", label: "Dashboard" },
-                            { icon: "󰨸", label: "Clipboard" },
-                            { icon: "󰂚", label: "Notifications" }
-                        ]
+                    // Sliding Active Indicator Pill
+                    Rectangle {
+                        width: 40
+                        height: 40
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? (sharedData.quickshellBorderRadius > 8 ? 8 : sharedData.quickshellBorderRadius) : 8 // Consistent smaller radius for pill
+                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
+                        opacity: 0.15
                         
-                        Rectangle {
-                            id: tabRect
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: parent.height
-                            color: "transparent"
+                        // Calculate position based on currentTab index * (itemWidth + spacing)
+                        x: currentTab * 80 
+                        
+                        Behavior on x { 
+                            NumberAnimation { 
+                                duration: 300
+                                easing.type: Easing.OutBack 
+                            } 
+                        }
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 40 // Spacing between icons
+                        
+                        Repeater {
+                            model: [
+                                { icon: "󰕮", tooltip: "Dashboard" },
+                                { icon: "󰨸", tooltip: "Clipboard" },
+                                { icon: "󰂚", tooltip: "Notifications" },
+                                { icon: "󰓅", tooltip: "Performance" }
+                            ]
                             
-                            property bool isActive: currentTab === index
-                            property bool isHovered: tabMouseArea.containsMouse
-                            
-                            // Background color on hover/active
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: 0
-                                color: tabRect.isActive ? 
-                                    Qt.rgba(0,0,0,0) : // Keep it clean, indicator handles active
-                                    (tabRect.isHovered ? 
-                                        Qt.rgba(1,1,1,0.05) : 
-                                        "transparent")
+                            Item {
+                                width: 40
+                                height: 40
                                 
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                            }
-                            
-                            Row {
-                                anchors.centerIn: parent
-                                spacing: 10
-                                
+                                property bool isActive: currentTab === index
+                                property bool isHovered: navBarTabMouseArea.containsMouse
+
                                 Text {
+                                    anchors.centerIn: parent
                                     text: modelData.icon
-                                    font.pixelSize: 15
-                                    scale: tabRect.isActive ? 1.15 : 1.0
-                                    color: tabRect.isActive ? 
+                                    font.pixelSize: 24
+                                    color: parent.isActive ? 
                                         ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : 
                                         ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                    opacity: tabRect.isActive ? 1.0 : 0.6
-                                    anchors.verticalCenter: parent.verticalCenter
+                                    opacity: parent.isActive ? 1.0 : (parent.isHovered ? 0.8 : 0.5)
                                     
-                                    Behavior on color { ColorAnimation { duration: 250 } }
-                                    Behavior on scale { NumberAnimation { duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.5 } }
-                                    Behavior on opacity { NumberAnimation { duration: 250 } }
+                                    Behavior on color { ColorAnimation { duration: 200 } }
+                                    Behavior on opacity { NumberAnimation { duration: 200 } }
+                                    
+                                    // Subtle scale pulse on active
+                                    scale: parent.isActive ? 1.1 : (parent.isHovered ? 1.05 : 1.0)
+                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                                 }
                                 
-                                Text {
-                                    text: modelData.label
-                                    font.pixelSize: 11
-                                    font.family: "sans-serif"
-                                    font.weight: tabRect.isActive ? Font.Bold : Font.Medium
-                                    font.letterSpacing: 0.5
-                                    color: tabRect.isActive ? 
-                                        ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : 
-                                        ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
-                                    opacity: tabRect.isActive ? 1.0 : 0.6
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    
-                                    Behavior on color { ColorAnimation { duration: 250 } }
-                                    Behavior on opacity { NumberAnimation { duration: 250 } }
+                                MouseArea {
+                                    id: navBarTabMouseArea
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
+                                    onClicked: currentTab = index
                                 }
-                            }
-                            
-                            MouseArea {
-                                id: tabMouseArea
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                hoverEnabled: true
-                                onClicked: currentTab = index
                             }
                         }
                     }
                 }
             }
 
+            Column {
+                id: dashboardColumn
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: bottomNavBar.top
+                spacing: 0
+
+
+
             // ============ CONTENT AREA ============
             Item {
                 id: contentArea
                 width: parent.width
-                height: parent.height - navBar.height
+
+                height: parent.height
                 clip: true
 
                 // ============ TAB 0: DASHBOARD ============
@@ -1959,10 +1956,282 @@ PanelWindow {
                         }
                     }
                 }
-            }
-        }
-} // End Rectangle
-    } // End Item (dashboardContainer)
+
+                // ============ TAB 3: PERFORMANCE ============
+                Item {
+                    id: performanceTab
+                    anchors.fill: parent
+                    visible: currentTab === 3
+                    opacity: currentTab === 3 ? 1.0 : 0.0
+                    x: currentTab === 3 ? 0 : (currentTab < 3 ? -parent.width * 0.3 : parent.width * 0.3)
+                    scale: currentTab === 3 ? 1.0 : 0.95
+                    
+                    Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                    Behavior on x { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                    Behavior on scale { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+
+                    onVisibleChanged: {
+                        if (visible) {
+                            updateDiskUsage()
+                            updateTopProcesses()
+                            updateSystemInfo()
+                            updateNetwork()
+                            updateCpuTemp()
+                            updateGpuTemp()
+                        }
+                    }
+                    
+                    z: 5
+
+                    ColumnLayout {
+                        id: performanceTabContent
+                        anchors.fill: parent
+                        anchors.margins: 24
+                        spacing: 16
+
+                        // --- SWISS HEADER ---
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            
+                            Text {
+                                text: "PERFORMANCE"
+                                font.pixelSize: 32
+                                font.weight: Font.Black
+                                font.family: "Inter, Roboto, sans-serif"
+                                color: (sharedData && sharedData.colorText) || "#ffffff"
+                                font.letterSpacing: -1
+                            }
+                            
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 2
+                                color: (sharedData && sharedData.colorAccent) || "#00ff41"
+                                Layout.topMargin: 4
+                            }
+                            
+                            RowLayout {
+                                Layout.topMargin: 8
+                                spacing: 12
+                                Text {
+                                    text: "System: " + osPrettyName
+                                    font.pixelSize: 12
+                                    font.weight: Font.Bold
+                                    color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6)
+                                }
+                                Item { Layout.fillWidth: true }
+                                Text {
+                                    text: "Up: " + uptimeString
+                                    font.pixelSize: 12
+                                    font.weight: Font.Medium
+                                    color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4)
+                                }
+                            }
+                        }
+
+                        // --- MAIN METRICS GRID (CPU, RAM, GPU, DISK) ---
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            columnSpacing: 12
+                            rowSpacing: 12
+
+                            // CPU Metric Card
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 100
+                                radius: 0
+                                color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+
+                                ColumnLayout {
+                                    anchors.fill: parent; anchors.margins: 12; spacing: 0
+                                    Text { text: "CPU"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    RowLayout {
+                                        Text { text: cpuUsageValue + "%"; font.pixelSize: 28; font.weight: Font.Black; color: (sharedData && sharedData.colorText) || "#ffffff" }
+                                        Item { Layout.fillWidth: true }
+                                        Text { text: cpuTempValue + "°C"; font.pixelSize: 14; font.weight: Font.Bold; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                    }
+                                    Item { Layout.fillHeight: true }
+                                    Canvas {
+                                        id: cpuChart
+                                        Layout.fillWidth: true; Layout.preferredHeight: 25
+                                        onPaint: {
+                                            var ctx = getContext("2d"); ctx.reset();
+                                            var hist = dashboardRoot.getResourceHistory("cpu");
+                                            if (!hist || hist.length < 2) return;
+                                            var w = width; var h = height; var step = w / (hist.length - 1);
+                                            var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            ctx.beginPath();
+                                            for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
+                                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                                        }
+                                        Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) cpuChart.requestPaint() } }
+                                    }
+                                }
+                            }
+
+                            // RAM Metric Card
+                            Rectangle {
+                                Layout.fillWidth: true; Layout.preferredHeight: 100
+                                radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+
+                                ColumnLayout {
+                                    anchors.fill: parent; anchors.margins: 12; spacing: 0
+                                    Text { text: "RAM"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    RowLayout {
+                                        Text { text: ramUsageValue + "%"; font.pixelSize: 28; font.weight: Font.Black; color: (sharedData && sharedData.colorText) || "#ffffff" }
+                                        Item { Layout.fillWidth: true }
+                                        Text { text: ramTotalGB + "G"; font.pixelSize: 14; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    }
+                                    Item { Layout.fillHeight: true }
+                                    Canvas {
+                                        id: ramChart
+                                        Layout.fillWidth: true; Layout.preferredHeight: 25
+                                        onPaint: {
+                                            var ctx = getContext("2d"); ctx.reset();
+                                            var hist = dashboardRoot.getResourceHistory("ram");
+                                            if (!hist || hist.length < 2) return;
+                                            var w = width; var h = height; var step = w / (hist.length - 1);
+                                            var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            ctx.beginPath();
+                                            for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
+                                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                                        }
+                                        Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) ramChart.requestPaint() } }
+                                    }
+                                }
+                            }
+
+                            // GPU Metric Card (NEW)
+                            Rectangle {
+                                Layout.fillWidth: true; Layout.preferredHeight: 100
+                                radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+
+                                ColumnLayout {
+                                    anchors.fill: parent; anchors.margins: 12; spacing: 0
+                                    Text { text: "GPU"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    RowLayout {
+                                        Text { text: gpuUsageValue + "%"; font.pixelSize: 28; font.weight: Font.Black; color: (sharedData && sharedData.colorText) || "#ffffff" }
+                                        Item { Layout.fillWidth: true }
+                                        Text { text: gpuTempValue + "°C"; font.pixelSize: 14; font.weight: Font.Bold; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                    }
+                                    Item { Layout.fillHeight: true }
+                                    Canvas {
+                                        id: gpuChart
+                                        Layout.fillWidth: true; Layout.preferredHeight: 25
+                                        onPaint: {
+                                            var ctx = getContext("2d"); ctx.reset();
+                                            var hist = dashboardRoot.getResourceHistory("gpu");
+                                            if (!hist || hist.length < 2) return;
+                                            var w = width; var h = height; var step = w / (hist.length - 1);
+                                            var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            ctx.beginPath();
+                                            for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
+                                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                                        }
+                                        Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) gpuChart.requestPaint() } }
+                                    }
+                                }
+                            }
+
+                            // DISK Metric Card
+                            Rectangle {
+                                Layout.fillWidth: true; Layout.preferredHeight: 100
+                                radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+
+                                ColumnLayout {
+                                    anchors.fill: parent; anchors.margins: 12; spacing: 8
+                                    Text { text: "DISK"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    Column {
+                                        Layout.fillWidth: true; spacing: 4
+                                        Repeater {
+                                            model: diskUsageModel
+                                            delegate: Column {
+                                                width: parent.width; spacing: 1; visible: index < 2
+                                                RowLayout {
+                                                    Text { text: modelData.mount.toUpperCase(); font.pixelSize: 9; font.weight: Font.Bold; color: (sharedData && sharedData.colorText) || "#ffffff"; Layout.fillWidth: true }
+                                                    Text { text: modelData.usage + "%"; font.pixelSize: 9; font.weight: Font.Black; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                                }
+                                                Rectangle {
+                                                    width: parent.width; height: 4; color: Qt.rgba(1,1,1,0.05);
+                                                    Rectangle { height: parent.height; width: parent.width * (modelData.usage / 100); color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Item { Layout.fillHeight: true }
+                                }
+                            }
+                        }
+
+                        // --- NETWORK CARD (Full width) ---
+                        Rectangle {
+                            Layout.fillWidth: true; Layout.preferredHeight: 60
+                            radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                            border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+
+                            RowLayout {
+                                anchors.fill: parent; anchors.margins: 12; spacing: 16
+                                Column {
+                                    Text { text: "NET"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    RowLayout {
+                                        spacing: 8
+                                        Text { text: "↓ " + networkRxMBs.toFixed(1); font.pixelSize: 18; font.weight: Font.Black; color: (sharedData && sharedData.colorText) || "#ffffff" }
+                                        Text { text: "↑ " + networkTxMBs.toFixed(1); font.pixelSize: 18; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    }
+                                }
+                                Item { Layout.fillWidth: true; Layout.fillHeight: true; 
+                                    Canvas {
+                                        id: netChart
+                                        anchors.fill: parent; anchors.topMargin: 4; anchors.bottomMargin: 4
+                                        onPaint: {
+                                            var ctx = getContext("2d"); ctx.reset();
+                                            var hist = dashboardRoot.getResourceHistory("network");
+                                            if (!hist || hist.length < 2) return;
+                                            var w = width; var h = height; var step = w / (hist.length - 1);
+                                            ctx.beginPath();
+                                            for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (Math.min(hist[j], 20)/20)*h);
+                                            ctx.strokeStyle = (sharedData && sharedData.colorAccent) || "#00ff41"; ctx.lineWidth = 2; ctx.stroke();
+                                        }
+                                        Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) netChart.requestPaint() } }
+                                    }
+                                }
+                            }
+                        }
+
+                        // --- PROCESSES ---
+                        Rectangle {
+                            Layout.fillWidth: true; Layout.fillHeight: true;
+                            radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                            border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+
+                            ColumnLayout {
+                                anchors.fill: parent; anchors.margins: 12; spacing: 8
+                                Text { text: "PROCESSES"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                ListView {
+                                    Layout.fillWidth: true; Layout.fillHeight: true;
+                                    model: topProcessesModel; interactive: false; clip: true; spacing: 2
+                                    delegate: Rectangle {
+                                        width: parent.width; height: 24; color: Qt.rgba(1,1,1,0.03)
+                                        RowLayout {
+                                            anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8
+                                            Text { text: modelData.name.toUpperCase(); font.pixelSize: 10; font.weight: Font.Bold; color: (sharedData && sharedData.colorText) || "#ffffff"; elide: Text.ElideRight; Layout.fillWidth: true }
+                                            Text { text: modelData.cpu + "%"; font.pixelSize: 10; font.weight: Font.Black; color: parseFloat(modelData.cpu) > 20 ? ((sharedData && sharedData.colorAccent) || "#00ff41") : "#ffffff" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } // performanceTabContent
+                } // performanceTab
+            } // contentArea
+        } // dashboardColumn
+    } // dashboardBackground
+    } // dashboardContainer
 
     // ============ PROPERTIES ============
     Behavior on cpuUsageValue { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
@@ -1985,7 +2254,7 @@ PanelWindow {
     // Calendar days model
     property var calendarDays: []
     
-    // Uptime (display string, set by updateUptime())
+    // Uptime
     property string uptimeDisplayText: "󰥔: --"
     
     // Battery
@@ -2120,7 +2389,7 @@ PanelWindow {
     }
     
     function updateWindowManager() {
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(echo $XDG_CURRENT_DESKTOP 2>/dev/null | cut -d: -f1 || echo $DESKTOP_SESSION 2>/dev/null || ps -e | grep -E "(hyprland|sway|i3|kwin|mutter|xfwm4|openbox|dwm)" | head -1 | awk "{print \$4}" | tr -d \'"\'"\' || echo "Unknown") > /tmp/quickshell_wm'], readWindowManager)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(echo $XDG_CURRENT_DESKTOP 2>/dev/null | cut -d: -f1 || echo $DESKTOP_SESSION 2>/dev/null || ps -e | grep -E "(hyprland|sway|i3|kwin|mutter|xfwm4|openbox|dwm)" | head -1 | awk \'{print $4}\' | tr -d \'"\' || echo "Unknown") > /tmp/quickshell_wm'], readWindowManager)
     }
     
     function readWindowManager() {
@@ -2203,6 +2472,7 @@ PanelWindow {
                         uptimeStr = "0m"
                     }
                     uptimeDisplayText = "󰥔: " + uptimeStr
+                    uptimeString = uptimeStr
                 }
             }
         }
@@ -2463,7 +2733,7 @@ PanelWindow {
     
     function readGpu() {
         // Read GPU usage using nvidia-smi (primary) or radeontop (fallback)
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d " " > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk "{print int($2)}" > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage'], readGpuData)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d " " > /tmp/quickshell_gpu_usage || (timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \'{print int($2)}\' > /tmp/quickshell_gpu_usage) || echo 0 > /tmp/quickshell_gpu_usage'], readGpuData)
     }
     
     function readGpuData() {
@@ -2471,7 +2741,7 @@ PanelWindow {
         xhr.open("GET", "file:///tmp/quickshell_gpu_usage")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                var text = xhr.responseText.trim()
+                var text = (xhr.responseText || "").trim()
                 // Remove any non-numeric characters except digits
                 text = text.replace(/[^0-9]/g, '')
                 var usage = parseInt(text)
@@ -2518,15 +2788,15 @@ PanelWindow {
         id: networkTimer
         interval: 3000
         repeat: true
-        running: (sharedData && sharedData.menuVisible) && (sharedData && sharedData.dashboardTileLeft === "network")
+        running: (sharedData && sharedData.menuVisible) && ((sharedData && sharedData.dashboardTileLeft === "network") || (currentTab === 3))
         onTriggered: updateNetwork()
-        Component.onCompleted: if ((sharedData && sharedData.menuVisible) && (sharedData && sharedData.dashboardTileLeft === "network")) updateNetwork()
+        Component.onCompleted: if ((sharedData && sharedData.menuVisible) && ((sharedData && sharedData.dashboardTileLeft === "network") || (currentTab === 3))) updateNetwork()
     }
     
     
     // ============ PERFORMANCE TAB FUNCTIONS ============
     function updateDiskUsage() {
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','df -h | grep -E "^/dev" | awk "{print $6 \"|\" $2 \"|\" $3 \"|\" $5}" | head -5 > /tmp/quickshell_disk_usage 2>/dev/null || echo > /tmp/quickshell_disk_usage'], readDiskUsage)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','df -h | grep -E "^/dev" | awk \'{print $6 "|" $2 "|" $3 "|" $5}\' | head -5 > /tmp/quickshell_disk_usage 2>/dev/null || echo > /tmp/quickshell_disk_usage'], readDiskUsage)
     }
     
     function readDiskUsage() {
@@ -2534,7 +2804,9 @@ PanelWindow {
         xhr.open("GET", "file:///tmp/quickshell_disk_usage")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                var lines = xhr.responseText.split("\n")
+                var text = (xhr.responseText || "").trim()
+                if (!text) return
+                var lines = text.split("\n")
                 var disks = []
                 for (var i = 0; i < lines.length; i++) {
                     if (lines[i].trim()) {
@@ -2558,7 +2830,7 @@ PanelWindow {
     }
     
     function updateTopProcesses() {
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','ps aux --sort=-%cpu 2>/dev/null | tail -n +2 | head -8 | awk "{print $11 \"|\" $3 \"|\" $4}" > /tmp/quickshell_top_processes 2>/dev/null || echo > /tmp/quickshell_top_processes'], readTopProcesses)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','ps aux --sort=-%cpu 2>/dev/null | tail -n +2 | head -8 | awk \'{print $11 "|" $3 "|" $4}\' > /tmp/quickshell_top_processes 2>/dev/null || echo > /tmp/quickshell_top_processes'], readTopProcesses)
     }
     
     function readTopProcesses() {
@@ -2566,7 +2838,9 @@ PanelWindow {
         xhr.open("GET", "file:///tmp/quickshell_top_processes")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                var lines = xhr.responseText.split("\n")
+                var text = (xhr.responseText || "").trim()
+                if (!text) return
+                var lines = text.split("\n")
                 var processes = []
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i].trim()
@@ -2595,7 +2869,7 @@ PanelWindow {
     }
     
     function updateCpuTemp() {
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(sensors 2>/dev/null | grep -i "cpu" | grep -oE "[0-9]+\\.[0-9]+" | head -1 | cut -d. -f1 > /tmp/quickshell_cpu_temp) || (cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -1 | awk "{print int($1/1000)}" > /tmp/quickshell_cpu_temp) || echo 0 > /tmp/quickshell_cpu_temp'], readCpuTemp)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','(sensors 2>/dev/null | grep -i "cpu" | grep -oE "[0-9]+\\.[0-9]+" | head -1 | cut -d. -f1 > /tmp/quickshell_cpu_temp) || (cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | head -1 | awk \'{print int($1/1000)}\' > /tmp/quickshell_cpu_temp) || echo 0 > /tmp/quickshell_cpu_temp'], readCpuTemp)
     }
     
     function readCpuTemp() {
@@ -2603,7 +2877,8 @@ PanelWindow {
         xhr.open("GET", "file:///tmp/quickshell_cpu_temp")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                var temp = parseInt(xhr.responseText.trim())
+                var text = (xhr.responseText || "").trim()
+                var temp = parseInt(text)
                 if (!isNaN(temp)) cpuTempValue = temp
             }
         }
@@ -2619,7 +2894,8 @@ PanelWindow {
         xhr.open("GET", "file:///tmp/quickshell_gpu_temp")
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                var temp = parseInt(xhr.responseText.trim())
+                var text = (xhr.responseText || "").trim()
+                var temp = parseInt(text)
                 if (!isNaN(temp)) gpuTempValue = temp
             }
         }
@@ -2837,7 +3113,7 @@ PanelWindow {
     
     function logoutSystem() {
         // Try loginctl first, fallback to pkill
-        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'loginctl terminate-session $(loginctl list-sessions | grep $(whoami) | awk "{print $1}" | head -1) 2>/dev/null || pkill -KILL -u $(whoami)'])
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'loginctl terminate-session $(loginctl list-sessions | grep $(whoami) | awk \'{print $1}\' | head -1) 2>/dev/null || pkill -KILL -u $(whoami)'])
     }
     
     // ============ NOTIFICATION FUNCTIONS ============
@@ -2894,6 +3170,16 @@ PanelWindow {
         }
         
         dashboardClipboardHistoryModel.insert(0, { text: trimmed })
+    }
+
+    // ============ SYSTEM INFO FUNCTIONS ============
+    function updateSystemInfo() {
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['hostname'], function(out) { if (out) hostname = out.trim() })
+            sharedData.runCommand(['sh', '-c', 'cat /etc/os-release | grep PRETTY_NAME | cut -d\'"\' -f2'], function(out) { if (out) osPrettyName = out.trim() })
+            sharedData.runCommand(['uname', '-r'], function(out) { if (out) kernelVersion = out.trim() })
+            updateUptime()
+        }
     }
 }
 
