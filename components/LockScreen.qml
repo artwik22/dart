@@ -167,15 +167,16 @@ PanelWindow {
             }
         }
 
-        // --- Interaction Section (Right) ---
-        Item {
-            width: 400
-            height: 300
-            anchors.right: parent.right
-            anchors.rightMargin: 120
-            anchors.verticalCenter: parent.verticalCenter
+                // --- Interaction Section (Right) ---
+                Item {
+                    width: 400
+                    height: 300
+                    anchors.right: parent.right
+                    anchors.rightMargin: 120
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: !(sharedData && sharedData.lockScreenNonBlocking)
 
-            Column {
+                    Column {
                 anchors.fill: parent
                 spacing: 48
                 
@@ -297,6 +298,41 @@ PanelWindow {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // --- Non-blocking dismiss logic ---
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        propagateComposedEvents: true
+        
+        // Grace period to avoid accidental dismiss right after opening
+        Timer {
+            id: dismissGraceTimer
+            interval: 800
+            running: lockScreenRoot.visible && sharedData.lockScreenNonBlocking
+        }
+
+        onPositionChanged: {
+            if (lockScreenRoot.visible && sharedData.lockScreenNonBlocking && !dismissGraceTimer.running) {
+                sharedData.lockScreenVisible = false
+            }
+        }
+        onClicked: {
+            if (lockScreenRoot.visible && sharedData.lockScreenNonBlocking && !dismissGraceTimer.running) {
+                sharedData.lockScreenVisible = false
+            }
+        }
+    }
+
+    Item {
+        focus: lockScreenRoot.visible && sharedData.lockScreenNonBlocking
+        Keys.onPressed: (event) => {
+            if (lockScreenRoot.visible && sharedData.lockScreenNonBlocking && !dismissGraceTimer.running) {
+                sharedData.lockScreenVisible = false
+                event.accepted = true
             }
         }
     }

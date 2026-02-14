@@ -22,6 +22,7 @@ ShellRoot {
         property bool clipboardVisible: false
         property bool settingsVisible: false
         property bool lockScreenVisible: false  // Własny lock screen (zamiast swaylock/loginctl)
+        property bool lockScreenNonBlocking: false // Jeśli true, ruszysz myszką i znika
         property bool sidebarVisible: true  // Sidebar visibility toggle
         property bool sidebarHiddenByFullscreen: false  // Gdy okno jest fullscreen – sidebar się chowa (Hyprland event "fullscreen")
         property string sidebarPosition: "left"  // Sidebar position: "left" or "top"
@@ -377,6 +378,14 @@ ShellRoot {
                     sharedData.sidebarVisible = false
                 } else if (cmd === "showSidebar") {
                     sharedData.sidebarVisible = true
+                } else if (cmd === "showLockScreenNonBlocking") {
+                    sharedData.lockScreenNonBlocking = true
+                    sharedData.lockScreenVisible = true
+                } else if (cmd === "showLockScreen") {
+                    sharedData.lockScreenNonBlocking = false
+                    sharedData.lockScreenVisible = true
+                } else if (cmd === "hideLockScreen") {
+                    sharedData.lockScreenVisible = false
                 }
                 processHelperClear.runCommand(['sh', '-c', ': > /tmp/quickshell_command'], function() {
                     root.commandHandlerBusy = false
