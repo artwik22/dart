@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -10,6 +11,7 @@ PanelWindow {
     required property var screen
     required property var sharedData
     property string projectPath: ""
+    property string wallpaperPath: ""
 
     anchors {
         left: true
@@ -28,28 +30,34 @@ PanelWindow {
     visible: sharedData && sharedData.lockScreenVisible
     color: "transparent"
 
-    margins {
-        left: 0
-        top: 0
-        right: 0
-        bottom: 0
+    property bool verifying: false
+    property string currentHours: "00"
+    property string currentMinutes: "00"
+    property string currentDate: ""
+
+    // --- Clock Logic ---
+    Timer {
+        id: clockTimer
+        interval: 1000
+        running: lockScreenRoot.visible
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            var date = new Date()
+            currentHours = Qt.formatTime(date, "HH")
+            currentMinutes = Qt.formatTime(date, "mm")
+            currentDate = Qt.formatDate(date, "dddd, MMMM d").toUpperCase()
+        }
     }
 
-    property bool verifying: false
-
+    // --- Authentication Logic ---
     Component {
         id: verifyProcessComponent
         Process {
             property string pwd: ""
-            // Using sh -c with pipe is robust for passing input
             command: ["sh", "-c", "echo \"$1\" | sudo -S -k -p '' true", "--", pwd]
             
-            onStarted: {
-                console.log("[LockScreen] Verification process started")
-            }
-            
             onExited: function(exitCode) {
-                console.log("[LockScreen] Verification process exited with code:", exitCode)
                 lockScreenRoot.onVerifyExited(exitCode)
                 destroy()
             }
@@ -63,7 +71,6 @@ PanelWindow {
         errorLabel.text = ""
         verifyTimeout.start()
         
-        console.log("[LockScreen] Creating new verification process...")
         var proc = verifyProcessComponent.createObject(lockScreenRoot, { pwd: pwd })
         proc.running = true
     }
@@ -74,10 +81,9 @@ PanelWindow {
         repeat: false
         onTriggered: {
             if (lockScreenRoot.verifying) {
-                console.log("[LockScreen] Verification timeout reached")
                 lockScreenRoot.verifying = false
                 passwordField.text = ""
-                errorLabel.text = "Timeout - Try again"
+                errorLabel.text = "TIMEOUT"
             }
         }
     }
@@ -87,27 +93,35 @@ PanelWindow {
         verifying = false
         
         if (exitCode === 0) {
-            console.log("[LockScreen] SUCCESS: Unlocking")
             passwordField.text = ""
             if (sharedData) sharedData.lockScreenVisible = false
-            errorLabel.text = ""
         } else {
-            console.log("[LockScreen] FAILURE: Incorrect password or system error")
             passwordField.text = ""
-            errorLabel.text = "Try again"
+            errorLabel.text = "INCORRECT"
         }
     }
 
-    // Dark semi-transparent background
+    // --- UI Layout (Swiss Minimalist) ---
+    
     Rectangle {
         anchors.fill: parent
-        color: "#f0101010"
-        opacity: 0.98
+        color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#050505"
+        
+        Image {
+            id: wallpaper
+            anchors.fill: parent
+            source: lockScreenRoot.wallpaperPath ? (lockScreenRoot.wallpaperPath.startsWith("/") ? "file://" + lockScreenRoot.wallpaperPath : lockScreenRoot.wallpaperPath) : ""
+            fillMode: Image.PreserveAspectCrop
+            opacity: 0.45
+            visible: lockScreenRoot.wallpaperPath !== ""
+        }
     }
 
     Item {
+        id: canvas
         anchors.fill: parent
-        focus: lockScreenRoot.visible
+        opacity: lockScreenRoot.visible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
 
         Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
@@ -116,97 +130,173 @@ PanelWindow {
             }
         }
 
-        Column {
-            anchors.centerIn: parent
-            spacing: 24
-            width: Math.min(360, parent.width * 0.85)
+        // --- Clock Section (Asymmetric Left) ---
+        Item {
+            id: clockArea
+            width: parent.width * 0.4
+            height: parent.height
+            anchors.left: parent.left
+            anchors.leftMargin: 100
 
-            Text {
-                text: "󰌾"
-                font.pixelSize: 64
-                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
+            Column {
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: -40
+                
+                opacity: lockScreenRoot.visible ? 1 : 0
+                x: lockScreenRoot.visible ? 0 : -50
+                Behavior on opacity { NumberAnimation { duration: 1000; easing.type: Easing.OutQuart } }
+                Behavior on x { NumberAnimation { duration: 1200; easing.type: Easing.OutBack } }
 
-            Text {
-                text: "Locked"
-                font.pixelSize: 22
-                font.family: "sans-serif"
-                font.weight: Font.Medium
-                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            Rectangle {
-                width: parent.width - 0
-                height: 48
-                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
-                border.width: 1
-                border.color: errorLabel.text ? "#c05050" : (Qt.inputMethod.keyboardVisible ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : "transparent")
-
-                TextInput {
-                    id: passwordField
-                    anchors.fill: parent
-                    anchors.margins: 14
-                    font.pixelSize: 16
-                    font.family: "sans-serif"
-                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                    verticalAlignment: TextInput.AlignVCenter
-                    echoMode: TextInput.Password
-                    clip: true
-                    focus: lockScreenRoot.visible
-
-                    onAccepted: lockScreenRoot.verifyPassword()
-
-                    KeyNavigation.tab: unlockButton
-                }
                 Text {
-                    anchors.fill: passwordField
-                    anchors.margins: 0
-                    text: "Password..."
-                    font.pixelSize: 16
-                    font.family: "sans-serif"
-                    color: "#808080"
-                    verticalAlignment: Text.AlignVCenter
-                    visible: passwordField.text.length === 0
+                    text: currentHours
+                    font.pixelSize: 220
+                    font.weight: Font.Black
+                    font.family: "Inter, sans-serif"
+                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                    font.letterSpacing: -10
+                }
+
+                Text {
+                    text: currentMinutes
+                    font.pixelSize: 220
+                    font.weight: Font.Light
+                    font.family: "Inter, sans-serif"
+                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                    font.letterSpacing: -10
                 }
             }
+        }
 
-            Text {
-                id: errorLabel
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                font.pixelSize: 13
-                font.family: "sans-serif"
-                color: "#e06060"
-                wrapMode: Text.WordWrap
-                visible: text.length > 0
-            }
+        // --- Interaction Section (Right) ---
+        Item {
+            width: 400
+            height: 300
+            anchors.right: parent.right
+            anchors.rightMargin: 120
+            anchors.verticalCenter: parent.verticalCenter
 
-            Button {
-                id: unlockButton
-                width: parent.width
-                height: 44
-                enabled: !verifying && passwordField.text.length > 0
-                focusPolicy: Qt.StrongFocus
-
-                contentItem: Text {
-                    text: verifying ? "Checking..." : "Unlock"
-                    font.pixelSize: 15
-                    font.family: "sans-serif"
-                    color: (parent.pressed || !parent.enabled) ? "#888" : "#fff"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+            Column {
+                anchors.fill: parent
+                spacing: 48
+                
+                opacity: lockScreenRoot.visible ? 1 : 0
+                x: lockScreenRoot.visible ? 0 : 50
+                Behavior on opacity { 
+                    SequentialAnimation {
+                        PauseAnimation { duration: 200 }
+                        NumberAnimation { duration: 1000; easing.type: Easing.OutQuart } 
+                    }
+                }
+                Behavior on x { 
+                    SequentialAnimation {
+                        PauseAnimation { duration: 200 }
+                        NumberAnimation { duration: 1200; easing.type: Easing.OutBack } 
+                    }
                 }
 
-                background: Rectangle {
-                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    color: parent.pressed ? "#2a3a4a" : (parent.enabled && (parent.hovered || parent.activeFocus) ? ((lockScreenRoot.sharedData && lockScreenRoot.sharedData.colorAccent) ? lockScreenRoot.sharedData.colorAccent : "#4a9eff") : "#2a2a2a")
+                Column {
+                    spacing: 4
+                    Text {
+                        text: currentDate
+                        font.pixelSize: 14
+                        font.weight: Font.Black
+                        font.letterSpacing: 2
+                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                        opacity: 0.6
+                    }
                 }
 
-                onClicked: lockScreenRoot.verifyPassword()
-                KeyNavigation.tab: passwordField
+                // Minimal Input Line
+                Item {
+                    width: parent.width
+                    height: 60
+
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        width: parent.width
+                        height: 2
+                        color: passwordField.activeFocus ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : "#33ffffff"
+                        Behavior on color { ColorAnimation { duration: 300 } }
+                        
+                        Rectangle {
+                            width: verifying ? parent.width : 0
+                            height: parent.height
+                            color: "white"
+                            anchors.left: parent.left
+                            Behavior on width { NumberAnimation { duration: 8000; easing.type: Easing.OutLinear } }
+                        }
+                    }
+
+                    TextInput {
+                        id: passwordField
+                        anchors.fill: parent
+                        anchors.bottomMargin: 8
+                        font.pixelSize: 24
+                        font.family: "Inter, sans-serif"
+                        font.weight: Font.Medium
+                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                        verticalAlignment: TextInput.AlignVCenter
+                        echoMode: TextInput.Password
+                        clip: true
+                        focus: lockScreenRoot.visible
+                        onAccepted: lockScreenRoot.verifyPassword()
+                        
+                        selectionColor: (sharedData && sharedData.colorAccent) ? Qt.alpha(sharedData.colorAccent, 0.4) : "#334a9eff"
+                    }
+
+                    Text {
+                        anchors.fill: passwordField
+                        text: "ENTER PASSPHRASE"
+                        font.pixelSize: 14
+                        font.weight: Font.Bold
+                        font.letterSpacing: 2
+                        color: "#44ffffff"
+                        verticalAlignment: Text.AlignVCenter
+                        visible: passwordField.text.length === 0
+                    }
+                }
+
+                Row {
+                    spacing: 24
+                    width: parent.width
+
+                    Text {
+                        id: errorLabel
+                        text: ""
+                        font.pixelSize: 12
+                        font.weight: Font.Bold
+                        font.letterSpacing: 1
+                        color: "#ff3b3b"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        id: unlockButton
+                        width: 80
+                        height: 40
+                        enabled: !verifying && passwordField.text.length > 0
+                        onClicked: lockScreenRoot.verifyPassword()
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        contentItem: Text {
+                            text: verifying ? "..." : "󰁔"
+                            font.pixelSize: 28
+                            color: parent.enabled ? "#ffffff" : "#44ffffff"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        background: Rectangle {
+                            color: "transparent"
+                            border.width: 1
+                            border.color: parent.activeFocus || parent.hovered ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : "#22ffffff"
+                            radius: 20
+                            Behavior on border.color { ColorAnimation { duration: 200 } }
+                        }
+                    }
+                }
             }
         }
     }

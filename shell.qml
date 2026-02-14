@@ -616,6 +616,7 @@ ShellRoot {
                 screen: modelData
                 sharedData: root.sharedData
                 projectPath: root.projectPath
+                wallpaperPath: root.currentWallpaperPath
             }
         }
     }
