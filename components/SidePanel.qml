@@ -456,7 +456,7 @@ PanelWindow {
 
         Timer {
             id: statusRefreshTimer
-            interval: 2000
+            interval: 6000
             running: panelActive
             repeat: true
             triggeredOnStart: true

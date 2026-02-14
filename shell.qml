@@ -346,7 +346,7 @@ ShellRoot {
     // żeby następny poll nie zobaczył tego samego polecenia (brak migotania, bez okien „duplikat”).
     Timer {
         id: commandCheckTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 600 : 40
+        interval: (sharedData && sharedData.lowPerformanceMode) ? 800 : 160
         running: true
         repeat: true
         
@@ -401,7 +401,7 @@ ShellRoot {
     // Timer do monitorowania zmiany tapety
     Timer {
         id: wallpaperCheckTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 1500 : 1000
+        interval: (sharedData && sharedData.lowPerformanceMode) ? 6000 : 4000
         running: true
         repeat: true
         
@@ -427,7 +427,7 @@ ShellRoot {
     // Fuse zapisuje w pliku: pierwszą linię = ścieżka do colors.json, potem "reload_TIMESTAMP"
     Timer {
         id: fuseNotifyTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 800 : 500
+        interval: (sharedData && sharedData.lowPerformanceMode) ? 2000 : 1200
         running: true
         repeat: true
         onTriggered: {
@@ -453,7 +453,7 @@ ShellRoot {
     // Timer do monitorowania zmiany kolorów i ustawień (colors.json + ponownie sygnał)
     Timer {
         id: colorCheckTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 4000 : 2500
+        interval: (sharedData && sharedData.lowPerformanceMode) ? 10000 : 6000
         running: true
         repeat: true
         
@@ -620,12 +620,15 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
         delegate: Component {
-            LockScreen {
-                required property var modelData
-                screen: modelData
-                sharedData: root.sharedData
-                projectPath: root.projectPath
-                wallpaperPath: root.currentWallpaperPath
+            Loader {
+                active: root.sharedData.lockScreenVisible
+                sourceComponent: LockScreen {
+                    required property var modelData
+                    screen: modelData
+                    sharedData: root.sharedData
+                    projectPath: root.projectPath
+                    wallpaperPath: root.currentWallpaperPath
+                }
             }
         }
     }
@@ -639,12 +642,16 @@ ShellRoot {
     }
 
     // AppLauncher - launcher aplikacji (rofi-like)
-    // Używamy pierwszego ekranu do wyśrodkowania
-    AppLauncher {
-        id: appLauncherInstance
-        sharedData: root.sharedData
-        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
-        projectPath: root.projectPath
+    // Używamy Loadera, aby ładować tylko gdy potrzebny (oszczędność RAM)
+    Loader {
+        id: appLauncherLoader
+        active: root.sharedData.launcherVisible
+        sourceComponent: AppLauncher {
+            id: appLauncherInstance
+            sharedData: root.sharedData
+            screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+            projectPath: root.projectPath
+        }
     }
 
     // VolumeSlider - slider głośności na prawej krawędzi
@@ -656,10 +663,14 @@ ShellRoot {
     }
 
     // ClipboardManager - menedżer schowka (jeden na pierwszym ekranie)
-    ClipboardManager {
-        id: clipboardManagerInstance
-        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
-        sharedData: root.sharedData
+    Loader {
+        id: clipboardManagerLoader
+        active: root.sharedData.clipboardVisible
+        sourceComponent: ClipboardManager {
+            id: clipboardManagerInstance
+            screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+            sharedData: root.sharedData
+        }
     }
 
     // NotificationDisplay – jeden na pierwszym ekranie, przy prawej krawędzi

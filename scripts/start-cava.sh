@@ -1,7 +1,7 @@
 #!/bin/bash
 # Start cava visualizer with real-time output
 
-pkill -9 cava 2>/dev/null
+pkill -x cava 2>/dev/null
 sleep 0.1
 
 mkdir -p ~/.config/cava

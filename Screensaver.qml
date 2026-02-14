@@ -62,10 +62,24 @@ PanelWindow {
     }
     
     function loadColors() {
+        var pathXhr = new XMLHttpRequest()
+        pathXhr.open("GET", "file:///tmp/quickshell_colors_path")
+        pathXhr.onreadystatechange = function() {
+            if (pathXhr.readyState === XMLHttpRequest.DONE && (pathXhr.status === 200 || pathXhr.status === 0)) {
+                var configPath = pathXhr.responseText.trim()
+                if (configPath.length > 0) {
+                    loadColorsFromFile(configPath)
+                }
+            }
+        }
+        pathXhr.send()
+    }
+
+    function loadColorsFromFile(path) {
         var xhr = new XMLHttpRequest()
-        xhr.open("GET", "file://" + "/home/igora/.config/alloy/colors.json")
+        xhr.open("GET", "file://" + path)
         xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            if (xhr.readyState === XMLHttpRequest.DONE && (xhr.status === 200 || xhr.status === 0)) {
                 try {
                     var json = JSON.parse(xhr.responseText)
                     if (json.background) root.colorBackground = json.background

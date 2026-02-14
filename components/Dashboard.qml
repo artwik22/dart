@@ -37,6 +37,7 @@ PanelWindow {
     property double lastNetRx: 0
     property double lastNetTx: 0
     property double lastNetTime: 0
+    property string gpuBrand: "" // Cached GPU brand: nvidia, amd, intel, or sysfs
     
     // Helper to push to history
     function pushHistory(arr, val) {
@@ -2866,19 +2867,38 @@ PanelWindow {
     }
     
     function readGpu() {
-        // Read GPU usage using nvidia-smi (NVIDIA), radeontop (AMD), or intel_gpu_top (Intel)
-        // Fallback: frequency based estimation for Intel GPUs via sysfs (works without root/packages)
-        if (sharedData && sharedData.runCommand) {
-            var intelFreqCmd = '(C=$(cat /sys/class/drm/card1/gt_cur_freq_mhz 2>/dev/null || cat /sys/class/drm/card0/gt_cur_freq_mhz 2>/dev/null); ' +
-                               'M=$(cat /sys/class/drm/card1/gt_max_freq_mhz 2>/dev/null || cat /sys/class/drm/card0/gt_max_freq_mhz 2>/dev/null); ' +
-                               'if [ -n "$C" ] && [ -n "$M" ] && [ "$M" -gt 0 ]; then echo $((C * 100 / M)); fi)'
+        if (!sharedData || !sharedData.runCommand) return
 
-            var cmd = 'nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d " " > /tmp/quickshell_gpu_usage || ' +
-                      '(timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \'{print int($2)}\' > /tmp/quickshell_gpu_usage) || ' +
-                      '(timeout 1 intel_gpu_top -J -s 1 2>/dev/null | grep \'"busy":\' | head -1 | awk -F: \'{print int($2)}\' > /tmp/quickshell_gpu_usage) || ' +
-                      '(' + intelFreqCmd + ' > /tmp/quickshell_gpu_usage) || ' +
-                      'echo 0 > /tmp/quickshell_gpu_usage'
-            sharedData.runCommand(['sh','-c', cmd], readGpuData)
+        var intelFreqCmd = '(C=$(cat /sys/class/drm/card1/gt_cur_freq_mhz 2>/dev/null || cat /sys/class/drm/card0/gt_cur_freq_mhz 2>/dev/null); ' +
+                           'M=$(cat /sys/class/drm/card1/gt_max_freq_mhz 2>/dev/null || cat /sys/class/drm/card0/gt_max_freq_mhz 2>/dev/null); ' +
+                           'if [ -n "$C" ] && [ -n "$M" ] && [ "$M" -gt 0 ]; then echo $((C * 100 / M)); fi)'
+
+        if (gpuBrand === "nvidia") {
+            sharedData.runCommand(['sh', '-c', 'nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d " " > /tmp/quickshell_gpu_usage'], readGpuData)
+        } else if (gpuBrand === "amd") {
+            sharedData.runCommand(['sh', '-c', 'timeout 1 radeontop -l 1 -d - 2>/dev/null | tail -1 | awk \'{print int($2)}\' > /tmp/quickshell_gpu_usage'], readGpuData)
+        } else if (gpuBrand === "intel") {
+            sharedData.runCommand(['sh', '-c', 'timeout 1 intel_gpu_top -J -s 1 2>/dev/null | grep \'"busy":\' | head -1 | awk -F: \'{print int($2)}\' > /tmp/quickshell_gpu_usage'], readGpuData)
+        } else if (gpuBrand === "sysfs") {
+            sharedData.runCommand(['sh', '-c', intelFreqCmd + ' > /tmp/quickshell_gpu_usage'], readGpuData)
+        } else {
+            // First time detection
+            var cmd = 'if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then echo "nvidia"; ' +
+                      'elif command -v radeontop >/dev/null 2>&1; then echo "amd"; ' +
+                      'elif command -v intel_gpu_top >/dev/null 2>&1; then echo "intel"; ' +
+                      'elif [ -d /sys/class/drm/card0/gt_cur_freq_mhz ] || [ -d /sys/class/drm/card1/gt_cur_freq_mhz ]; then echo "sysfs"; ' +
+                      'else echo "none"; fi > /tmp/quickshell_gpu_brand'
+            sharedData.runCommand(['sh', '-c', cmd], function() {
+                var xhr = new XMLHttpRequest()
+                xhr.open("GET", "file:///tmp/quickshell_gpu_brand")
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        gpuBrand = xhr.responseText.trim()
+                        readGpu() // Run again with detected brand
+                    }
+                }
+                xhr.send()
+            })
         }
     }
     
@@ -3104,7 +3124,19 @@ PanelWindow {
     // ============ CAVA VISUALIZER FUNCTIONS ============
     function startCava() {
         if (sharedData && sharedData.lowPerformanceMode) return
+        // Only start if dashboard is visible or about to be visible
+        if (!(sharedData && sharedData.menuVisible)) return
+        
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh','-c','which cava > /dev/null 2>&1 && echo 1 > /tmp/quickshell_cava_available || echo 0 > /tmp/quickshell_cava_available'], checkCavaAvailable)
+    }
+
+    function stopCava() {
+        if (cavaRunning) {
+            cavaRunning = false
+            if (sharedData && sharedData.runCommand) {
+                sharedData.runCommand(['sh', '-c', 'pkill -f "cava -p" || true'])
+            }
+        }
     }
     
     function checkCavaAvailable() {
@@ -3203,26 +3235,29 @@ PanelWindow {
     }
     
     // Timer do sprawdzania czy cava działa
+    // Timer do sprawdzania czy cava działa - only when visible
     Timer {
         id: cavaCheckTimer
         interval: 5000  // Co 5 sekund
         repeat: true
-        running: true
+        running: (sharedData && sharedData.menuVisible)
         onTriggered: {
             if (cavaRunning) {
-                var xhr = new XMLHttpRequest()
-                xhr.open("GET", "file:///tmp/quickshell_cava")
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === XMLHttpRequest.DONE) {
-                        if (xhr.status !== 200 && xhr.status !== 0) {
-                            cavaRunning = false
-                            startCava()
-                        }
-                    }
-                }
-                xhr.send()
+                // Check if process is actually running
             } else {
                 startCava()
+            }
+        }
+    }
+
+    Connections {
+        target: sharedData
+        enabled: !!sharedData
+        function onMenuVisibleChanged() {
+            if (sharedData.menuVisible) {
+                startCava()
+            } else {
+                stopCava()
             }
         }
     }
