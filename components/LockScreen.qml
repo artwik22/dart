@@ -35,31 +35,49 @@ PanelWindow {
         bottom: 0
     }
 
-    property string passwordPending: ""
     property bool verifying: false
+
+    Component {
+        id: verifyProcessComponent
+        Process {
+            property string pwd: ""
+            // Using sh -c with pipe is robust for passing input
+            command: ["sh", "-c", "echo \"$1\" | sudo -S -k -p '' true", "--", pwd]
+            
+            onStarted: {
+                console.log("[LockScreen] Verification process started")
+            }
+            
+            onExited: function(exitCode) {
+                console.log("[LockScreen] Verification process exited with code:", exitCode)
+                lockScreenRoot.onVerifyExited(exitCode)
+                destroy()
+            }
+        }
+    }
 
     function verifyPassword() {
         if (verifying || !passwordField.text) return
-        passwordPending = passwordField.text
+        var pwd = passwordField.text
         verifying = true
         errorLabel.text = ""
         verifyTimeout.start()
-        // sudo -S -k: -S read password from stdin, -k reset cache so password is always required
-        verifyProcess.command = ["sh", "-c", "sudo -S -k true 2>/dev/null"]
-        verifyProcess.stdinEnabled = true
-        verifyProcess.running = true
+        
+        console.log("[LockScreen] Creating new verification process...")
+        var proc = verifyProcessComponent.createObject(lockScreenRoot, { pwd: pwd })
+        proc.running = true
     }
 
     Timer {
         id: verifyTimeout
-        interval: 6000
+        interval: 10000 
         repeat: false
         onTriggered: {
             if (lockScreenRoot.verifying) {
+                console.log("[LockScreen] Verification timeout reached")
                 lockScreenRoot.verifying = false
                 passwordField.text = ""
-                lockScreenRoot.passwordPending = ""
-                errorLabel.text = "Try again"
+                errorLabel.text = "Timeout - Try again"
             }
         }
     }
@@ -67,21 +85,24 @@ PanelWindow {
     function onVerifyExited(exitCode) {
         verifyTimeout.stop()
         verifying = false
-        passwordField.text = ""
-        passwordPending = ""
+        
         if (exitCode === 0) {
+            console.log("[LockScreen] SUCCESS: Unlocking")
+            passwordField.text = ""
             if (sharedData) sharedData.lockScreenVisible = false
             errorLabel.text = ""
         } else {
+            console.log("[LockScreen] FAILURE: Incorrect password or system error")
+            passwordField.text = ""
             errorLabel.text = "Try again"
         }
     }
 
-    // Ciemne półprzezroczyste tło
+    // Dark semi-transparent background
     Rectangle {
         anchors.fill: parent
-        color: "#e0101010"
-        opacity: 0.97
+        color: "#f0101010"
+        opacity: 0.98
     }
 
     Item {
@@ -187,22 +208,6 @@ PanelWindow {
                 onClicked: lockScreenRoot.verifyPassword()
                 KeyNavigation.tab: passwordField
             }
-        }
-    }
-
-    Process {
-        id: verifyProcess
-        stdinEnabled: false
-        running: false
-
-        onStarted: {
-            if (passwordPending.length > 0) {
-                verifyProcess.write(passwordPending + "\n")
-            }
-        }
-
-        onExited: function(exitCode, exitStatus) {
-            lockScreenRoot.onVerifyExited(exitCode)
         }
     }
 }
