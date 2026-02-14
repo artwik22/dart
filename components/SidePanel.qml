@@ -341,7 +341,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             width: 3
                             height: workspaceItem.isActive ? 64 : (workspaceItem.hasWindows ? 32 : 16)
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                             color: workspaceItem.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItem.hasWindows ? "#fff" : "#666")
                             opacity: workspaceItem.isActive ? 1.0 : (workspaceItem.hasWindows ? 0.8 : 0.4)
                             Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
@@ -397,7 +397,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             height: 3
                             width: workspaceItemTop.isActive ? 64 : (workspaceItemTop.hasWindows ? 32 : 16)
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                             color: workspaceItemTop.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItemTop.hasWindows ? "#fff" : "#666")
                             opacity: workspaceItemTop.isActive ? 1.0 : (workspaceItemTop.hasWindows ? 0.8 : 0.4)
                             Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
@@ -534,7 +534,7 @@ PanelWindow {
         Rectangle {
             width: 24
             height: 24
-            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
             color: trayMa.containsMouse ? sidePanel.btnBgHover : "transparent"
             
             Image {
@@ -608,7 +608,7 @@ PanelWindow {
         
         color: (sharedData && sharedData.colorPrimary) ? Qt.lighter(sharedData.colorPrimary, 1.2) : "#252525"
         border.width: 0
-        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
         visible: panelActive
         z: 100001
 
@@ -640,7 +640,7 @@ PanelWindow {
                         width: 240
                         height: 240
                         color: (sharedData.colorSecondary || "#141414")
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                         
                         Column { 
                             anchors.fill: parent
@@ -683,7 +683,7 @@ PanelWindow {
                                         model: sidePanel.qNetNearby.split(";").filter(s => s.length > 0 && s !== sidePanel.qNetSSID).slice(0, 3)
                                         Rectangle {
                                             width: parent.width; height: 24
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
                                             color: netItemMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.03)
                                             Row {
                                                 anchors.fill: parent; anchors.leftMargin: 4; anchors.rightMargin: 4
@@ -705,7 +705,7 @@ PanelWindow {
                                 Rectangle {
                                     Layout.fillWidth: true; height: 32
                                     color: netToggleMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                     border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                     
                                     Row {
@@ -725,7 +725,7 @@ PanelWindow {
                                 Rectangle {
                                     Layout.fillWidth: true; height: 32
                                     color: netScanMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                     border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                     
                                     Row {
@@ -743,7 +743,7 @@ PanelWindow {
                                 Rectangle {
                                     Layout.columnSpan: 2; Layout.fillWidth: true; height: 32
                                     color: netSetMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                     border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                     
                                     Row {
@@ -784,7 +784,7 @@ PanelWindow {
                         width: 240
                         height: 240
                         color: (sharedData.colorSecondary || "#141414")
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 16
+                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
                         
                         scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
                         Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
@@ -831,7 +831,7 @@ PanelWindow {
                                         model: sidePanel.qBtDeviceNames.split(";").filter(s => s.length > 0).slice(0, 2)
                                         Rectangle {
                                             width: parent.width; height: 24
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
                                             color: Qt.rgba(1,1,1,0.05) // Highlight connected
                                             Row {
                                                 anchors.fill: parent; anchors.leftMargin: 4; anchors.rightMargin: 4
@@ -855,7 +855,7 @@ PanelWindow {
                                         model: sidePanel.qBtPaired.split(";").filter(s => s.length > 0)
                                         Rectangle {
                                             width: parent.width; height: 32
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? Math.min(sharedData.quickshellBorderRadius, 8) : 4
                                             color: pairMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.03)
                                             
                                             property string mac: modelData.indexOf("|") !== -1 ? modelData.split("|")[0] : ""
@@ -898,7 +898,7 @@ PanelWindow {
                             Rectangle {
                                 width: parent.width; height: 32
                                 color: btMgrMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                 border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                 
                                 Row {
@@ -943,7 +943,7 @@ PanelWindow {
                         width: 240
                         height: 240
                         color: (sharedData.colorSecondary || "#141414")
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 16
+                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
                         
                         scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
                         Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
@@ -983,7 +983,7 @@ PanelWindow {
                                         model: ["power-saver", "balanced", "performance"]
                                         Rectangle {
                                             width: parent.width; height: 32
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                             property bool isActive: sharedData.activePowerProfile === modelData
                                             color: isActive ? (sharedData.colorAccent || "#4a9eff") : (profMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent")
                                             border.width: isActive ? 0 : 1
@@ -1021,7 +1021,7 @@ PanelWindow {
                                 Rectangle {
                                     width: (parent.width - 8) / 2; height: 32
                                     color: rbMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                     border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                     
                                     Row {
@@ -1038,7 +1038,7 @@ PanelWindow {
                                 Rectangle {
                                     width: (parent.width - 8) / 2; height: 32
                                     color: sdMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                     border.width: 1; border.color: Qt.rgba(1,0,0,0.2)
                                     
                                     Row {
@@ -1076,7 +1076,7 @@ PanelWindow {
                         width: 240
                         height: 260 // Increased height for Timer UI
                         color: (sharedData.colorSecondary || "#141414")
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                         
                         Column { 
                             anchors.fill: parent
@@ -1139,7 +1139,7 @@ PanelWindow {
                                             Layout.fillWidth: true
                                             height: 32
                                             color: timerBtnMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                             border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
                                             scale: timerBtnMa.pressed ? 0.95 : (timerBtnMa.containsMouse ? 1.02 : 1.0)
                                             
@@ -1177,7 +1177,7 @@ PanelWindow {
                                 width: parent.width
                                 height: 32
                                 color: stopTimerMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 10
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                 border.width: 1; border.color: Qt.rgba(1,0,0,0.2)
                                 scale: stopTimerMa.pressed ? 0.95 : (stopTimerMa.containsMouse ? 1.02 : 1.0)
                                 

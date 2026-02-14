@@ -1823,25 +1823,25 @@ PanelWindow {
                                                 Rectangle {
                                                     width: parent.width
                                                     height: 12
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                     color: colorPresets[modelData] ? colorPresets[modelData].background : "#000000"
                                                 }
                                                 Rectangle {
                                                     width: parent.width
                                                     height: 12
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                     color: colorPresets[modelData] ? colorPresets[modelData].primary : "#000000"
                                                 }
                                                 Rectangle {
                                                     width: parent.width
                                                     height: 12
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                     color: colorPresets[modelData] ? colorPresets[modelData].secondary : "#000000"
                                                 }
                                                 Rectangle {
                                                     width: parent.width
                                                     height: 12
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                     color: colorPresets[modelData] ? colorPresets[modelData].text : "#ffffff"
                                                 }
                                             }
@@ -1915,7 +1915,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customBackground || colorBackground
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorText
                                             opacity: 0.8
@@ -1947,7 +1947,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -1966,7 +1966,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customPrimary || colorPrimary
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorText
                                             opacity: 0.8
@@ -1998,7 +1998,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -2017,7 +2017,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customSecondary || colorSecondary
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorText
                                             opacity: 0.8
@@ -2049,7 +2049,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -2068,7 +2068,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customText || colorText
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorPrimary
                                             opacity: 0.8
@@ -2100,7 +2100,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -2119,7 +2119,7 @@ PanelWindow {
                                             width: 40
                                             height: 40
                                             color: customAccent || colorAccent
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                             border.width: 1
                                             border.color: colorText
                                             opacity: 0.8
@@ -2151,7 +2151,7 @@ PanelWindow {
                                                     color: "transparent"
                                                     border.width: parent.activeFocus ? 2 : 1
                                                     border.color: parent.activeFocus ? colorAccent : colorSecondary
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                 }
 
                                                 onTextChanged: {
@@ -2167,7 +2167,7 @@ PanelWindow {
                                     width: parent.width
                                     height: 45
                                     color: applyButtonMouseArea.containsMouse ? colorAccent : colorSecondary
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                     anchors.horizontalCenter: parent.horizontalCenter
 
                                     Text {
@@ -2453,7 +2453,7 @@ PanelWindow {
                             width: parent.width
                             height: 60
                             color: colorPrimary
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
 
                             Row {
                                 anchors.fill: parent
@@ -2493,7 +2493,7 @@ PanelWindow {
                                     width: 40
                                     height: 20
                                     color: (sharedData && sharedData.sidebarVisible) ? colorAccent : colorSecondary
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                     anchors.verticalCenter: parent.verticalCenter
 
                                     Rectangle {

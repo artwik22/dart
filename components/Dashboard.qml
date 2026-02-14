@@ -165,7 +165,7 @@ PanelWindow {
                 anchors.right: parent.right
                 width: 450
                 
-                radius: isFloating ? ((sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 14) : 0
+                radius: isFloating ? ((sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 14) : 0
                 color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff"
             clip: true // Clip children to rounded corners
             
@@ -180,7 +180,18 @@ PanelWindow {
                 anchors.bottom: parent.bottom
                 height: 50 // Fixed height for navbar
                 
+                // Inherit radius from parent for bottom corners
+                radius: parent.radius 
                 color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                
+                // Fill top corners to make them sharp
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: parent.height / 2
+                    color: parent.color
+                }
                 
                 // Top border for separation
                 Rectangle {
@@ -200,7 +211,7 @@ PanelWindow {
                     Rectangle {
                         width: 40
                         height: 40
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? (sharedData.quickshellBorderRadius > 8 ? 8 : sharedData.quickshellBorderRadius) : 8 // Consistent smaller radius for pill
+                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? (sharedData.quickshellBorderRadius > 8 ? 8 : sharedData.quickshellBorderRadius) : 8 // Consistent smaller radius for pill
                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
                         opacity: 0.15
                         
@@ -360,7 +371,7 @@ PanelWindow {
                                 Rectangle {
                                     anchors.fill: parent
                                     visible: !(sharedData && sharedData.dashboardTileLeft === "network")
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                                     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
                                     // Horizontal Battery Indicator (Pill Style)
@@ -427,7 +438,7 @@ PanelWindow {
                                 Rectangle {
                                     anchors.fill: parent
                                     visible: (sharedData && sharedData.dashboardTileLeft === "network")
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                                     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
                                     Item {
@@ -538,7 +549,7 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: (parent.width - 8) / 2
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                                 color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
                                 
                                 scale: quickActionsMouseArea.containsMouse ? 1.02 : 1.0
@@ -558,7 +569,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
                                         clip: true
 
                                             // Softer style - Visible background
@@ -592,7 +603,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
                                         clip: true
                                         
                                         // Softer style
@@ -628,7 +639,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
                                         clip: true
 
                                         // Softer style
@@ -665,7 +676,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 6
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
                                         clip: true
 
                                         // Softer style
@@ -732,7 +743,7 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: (parent.width - 8) / 2
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 12
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
                                 color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
                                 
                                 scale: weatherMouseArea.containsMouse ? 1.02 : 1.0
@@ -780,7 +791,7 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: (parent.width - 8) / 2
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 12
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
                                 color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
                                 
                                 property string currentTime: Qt.formatDateTime(new Date(), "HH:mm")
@@ -841,7 +852,7 @@ PanelWindow {
                             Layout.fillHeight: true
                             Layout.preferredHeight: 180
                             Layout.minimumHeight: 150
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
@@ -923,7 +934,7 @@ PanelWindow {
                                             Rectangle {
                                                 width: 22
                                                 height: 22
-                                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                                 color: modelData.isToday ?
                                                            ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") :
                                                            "transparent"
@@ -959,7 +970,7 @@ PanelWindow {
                             Layout.fillHeight: true
                             Layout.preferredHeight: 150
                             Layout.minimumHeight: 130
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
                             
                             property string resource: (sharedData && sharedData.dashboardResource1) ? sharedData.dashboardResource1 : "cpu"
@@ -1112,7 +1123,7 @@ PanelWindow {
                             Layout.fillHeight: true
                             Layout.preferredHeight: 150
                             Layout.minimumHeight: 130
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
                             
                             scale: res2MouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
@@ -1267,7 +1278,7 @@ PanelWindow {
                             id: mediaPlayerCard
                             Layout.fillWidth: true
                             Layout.preferredHeight: 140
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 28
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
@@ -1357,7 +1368,7 @@ PanelWindow {
                                         Rectangle {
                                             Layout.preferredWidth: 100
                                             Layout.preferredHeight: 100
-                                            radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 12) : 8
+                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? Math.min(sharedData.quickshellBorderRadius, 12) : 8
                                             color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
                                             clip: true
                                             
@@ -1419,7 +1430,7 @@ PanelWindow {
                                                 Rectangle {
                                                     width: 38
                                                     height: 38
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 10) : 10
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? Math.min(sharedData.quickshellBorderRadius, 10) : 10
                                                     color: prevMa.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
                                                     
                                                     Text {
@@ -1435,7 +1446,7 @@ PanelWindow {
                                                 Rectangle {
                                                     width: 48
                                                     height: 48
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 12) : 12
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? Math.min(sharedData.quickshellBorderRadius, 12) : 12
                                                     color: playMa.containsMouse ? (sharedData.colorAccent || "#4a9eff") : Qt.rgba(1,1,1,0.12)
                                                     scale: playMa.pressed ? 0.9 : 1.0
                                                     Behavior on scale { NumberAnimation { duration: 100 } }
@@ -1454,7 +1465,7 @@ PanelWindow {
                                                 Rectangle {
                                                     width: 38
                                                     height: 38
-                                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? Math.min(sharedData.quickshellBorderRadius, 10) : 10
+                                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? Math.min(sharedData.quickshellBorderRadius, 10) : 10
                                                     color: nextMa.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
                                                     
                                                     Text {
@@ -1569,7 +1580,7 @@ PanelWindow {
                             Rectangle {
                                 width: 25
                                 height: 25
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                 color: clearClipboardButtonMouseArea.containsMouse ? 
                                     ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414")
@@ -1633,7 +1644,7 @@ PanelWindow {
                                 delegate: Rectangle {
                                     width: clipboardListView.width
                                     height: Math.max(32, contentTextClipboard.implicitHeight + 13)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                     // Material Design card color
                                     color: itemClipboardMouseArea.containsMouse ? 
                                         ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414") : 
@@ -1751,7 +1762,7 @@ PanelWindow {
                             Rectangle {
                                 Layout.preferredWidth: 80
                                 Layout.preferredHeight: 25
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                 color: clearAllMouseArea.containsMouse ? 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
                                     ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a")
@@ -1813,7 +1824,7 @@ PanelWindow {
                             delegate: Rectangle {
                                 width: notificationHistoryList.width
                                 height: notifContent.height + 19
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                 // Material Design card color
                                 color: notifItemMouseArea.containsMouse ? 
                                     ((sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#252525") : 
@@ -1916,7 +1927,7 @@ PanelWindow {
                                     Rectangle {
                                         width: 32
                                         height: 32
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                         color: copyBtnMouseArea.containsMouse ? 
                                             ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
                                             "transparent"
@@ -1944,7 +1955,7 @@ PanelWindow {
                                     Rectangle {
                                         width: 32
                                         height: 32
-                                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                         color: deleteBtnMouseArea.containsMouse ? "#ff4444" : "transparent"
                                         
                                         Text {
