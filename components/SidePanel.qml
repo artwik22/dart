@@ -142,9 +142,9 @@ PanelWindow {
         Column {
             id: sidePanelClockColumn
             anchors.top: parent.top
-            anchors.topMargin: 6
+            anchors.topMargin: 12
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 4
+            spacing: -6 // Very tight spacing for monolithic look
             visible: !isHorizontal
             opacity: (visible && panelActive) ? 1.0 : 0.0
             scale: panelActive ? 1.0 : 0.85
@@ -180,9 +180,10 @@ PanelWindow {
             Text { 
                 id: sidePanelHoursDisplay
                 text: "00"
-                font.pixelSize: 26
-                font.family: "sans-serif"
+                font.pixelSize: 24
+                font.family: "Outfit, Inter, sans-serif"
                 font.weight: Font.Black
+                font.letterSpacing: -1.5
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 horizontalAlignment: Text.AlignHCenter
                 Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutQuart } } 
@@ -190,12 +191,13 @@ PanelWindow {
             Text { 
                 id: sidePanelMinutesDisplay
                 text: "00"
-                font.pixelSize: 26
-                font.family: "sans-serif"
-                font.weight: Font.Black
-                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                font.pixelSize: 24
+                font.family: "Outfit, Inter, sans-serif"
+                font.weight: Font.ExtraLight
+                font.letterSpacing: -1.5
+                color: "#ffffff"
                 horizontalAlignment: Text.AlignHCenter
-                Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutQuart } } 
+                opacity: 0.9
             }
         }
         
@@ -204,7 +206,7 @@ PanelWindow {
             anchors.left: parent.left
             anchors.leftMargin: 12
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 4
+            spacing: 2
             visible: isHorizontal
             opacity: (visible && panelActive) ? 1.0 : 0.0
             scale: panelActive ? 1.0 : 0.85
@@ -240,30 +242,24 @@ PanelWindow {
             Text { 
                 id: sidePanelHoursDisplayTop
                 text: "00"
-                font.pixelSize: 24
-                font.family: "sans-serif"
+                font.pixelSize: 22
+                font.family: "Outfit, Inter, sans-serif"
                 font.weight: Font.Black
+                font.letterSpacing: -1
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 verticalAlignment: Text.AlignVCenter
                 Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutQuart } } 
-            }
-            Text { 
-                text: ":"
-                font.pixelSize: 24
-                font.family: "sans-serif"
-                font.weight: Font.Black
-                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                verticalAlignment: Text.AlignVCenter 
             }
             Text { 
                 id: sidePanelMinutesDisplayTop
                 text: "00"
-                font.pixelSize: 24
-                font.family: "sans-serif"
-                font.weight: Font.Black
-                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                font.pixelSize: 22
+                font.family: "Outfit, Inter, sans-serif"
+                font.weight: Font.ExtraLight
+                font.letterSpacing: -1
+                color: "#ffffff"
                 verticalAlignment: Text.AlignVCenter
-                Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutQuart } } 
+                opacity: 0.9
             }
         }
         
