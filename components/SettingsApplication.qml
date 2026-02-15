@@ -2348,8 +2348,10 @@ PanelWindow {
                                             fillMode: Image.PreserveAspectCrop
                                             asynchronous: true
                                             cache: false // Disable cache to see new wallpapers immediately
-                                            sourceSize.width: 400
-                                            sourceSize.height: 225  // 16:9 ratio
+                                            smooth: true
+                                            mipmap: true
+                                            sourceSize.width: 800
+                                            sourceSize.height: 450  // 16:9 ratio
 
                                             // Loading indicator
                                             Rectangle {

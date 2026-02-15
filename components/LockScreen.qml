@@ -112,6 +112,9 @@ PanelWindow {
             anchors.fill: parent
             source: lockScreenRoot.wallpaperPath ? (lockScreenRoot.wallpaperPath.startsWith("/") ? "file://" + lockScreenRoot.wallpaperPath : lockScreenRoot.wallpaperPath) : ""
             fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            smooth: true
+            mipmap: true
             opacity: 0.45
             visible: lockScreenRoot.wallpaperPath !== ""
         }

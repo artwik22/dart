@@ -43,8 +43,8 @@ PanelWindow {
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         cache: true
-        sourceSize.width: parent.width
-        sourceSize.height: parent.height
+        smooth: true
+        mipmap: true
         
         onStatusChanged: {
             if (status === Image.Error) {
