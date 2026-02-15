@@ -645,7 +645,8 @@ ShellRoot {
     // Używamy Loadera, aby ładować tylko gdy potrzebny (oszczędność RAM)
     Loader {
         id: appLauncherLoader
-        active: root.sharedData.launcherVisible
+        // Keep active to allow animations (AppLauncher manages its own visibility/off-screen state)
+        active: true
         sourceComponent: AppLauncher {
             id: appLauncherInstance
             sharedData: root.sharedData

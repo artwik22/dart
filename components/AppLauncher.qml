@@ -378,15 +378,18 @@ PanelWindow {
         value: (sharedData && sharedData.launcherVisible) ? 1.0 : 0.0
     }
     Behavior on launcherShowProgress {
-        NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: 500; easing.type: Easing.OutExpo }
     }
 
-    visible: launcherShowProgress > 0.01
+    visible: true
     color: "transparent"
     property int launcherSlideAmount: 400
     // Fix: Use margins.bottom for window positioning (0 = flush with edge)
     // Animation will be handled by the margins to move the window surface
-    margins.bottom: -implicitHeight * (1.0 - launcherShowProgress)
+    // When progress is 0, margin is -implicitHeight (hidden below screen)
+    // When progress is 1, margin is 0 (visible on screen)
+    // Ensure we add a small buffer (e.g. 50px) to make sure it's fully off-screen if shadows exist
+    margins.bottom: -implicitHeight * (1.0 - launcherShowProgress) - (launcherShowProgress < 0.01 ? 50 : 0)
     
     // Applications list
     property var apps: []
@@ -1326,10 +1329,11 @@ PanelWindow {
     Item {
         id: launcherContainer
         anchors.fill: parent
-        opacity: launcherShowProgress
+        // Slide animation only - no fade/scale
+        opacity: 1.0 
         enabled: launcherShowProgress > 0.02
         focus: launcherShowProgress > 0.02
-        scale: 0.95 + 0.05 * launcherShowProgress
+        // scale: 1.0 // Removed scale animation
         transformOrigin: Item.Bottom
         
         // Window movement handles the slide animation
