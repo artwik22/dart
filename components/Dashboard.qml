@@ -2067,9 +2067,8 @@ PanelWindow {
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 100
-                                radius: 0
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
                                 color: (sharedData && sharedData.colorSecondary) || "#141414"
-                                border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
 
                                 ColumnLayout {
                                     anchors.fill: parent; anchors.margins: 12; spacing: 0
@@ -2121,8 +2120,7 @@ PanelWindow {
                             // RAM Metric Card
                             Rectangle {
                                 Layout.fillWidth: true; Layout.preferredHeight: 100
-                                radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
-                                border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
 
                                 ColumnLayout {
                                     anchors.fill: parent; anchors.margins: 12; spacing: 0
@@ -2174,8 +2172,7 @@ PanelWindow {
                             // GPU Metric Card (NEW)
                             Rectangle {
                                 Layout.fillWidth: true; Layout.preferredHeight: 100
-                                radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
-                                border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
 
                                 ColumnLayout {
                                     anchors.fill: parent; anchors.margins: 12; spacing: 0
@@ -2227,8 +2224,7 @@ PanelWindow {
                             // DISK Metric Card
                             Rectangle {
                                 Layout.fillWidth: true; Layout.preferredHeight: 100
-                                radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
-                                border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
 
                                 ColumnLayout {
                                     anchors.fill: parent; anchors.margins: 12; spacing: 8
@@ -2258,8 +2254,7 @@ PanelWindow {
                         // --- NETWORK CARD (Full width) ---
                         Rectangle {
                             Layout.fillWidth: true; Layout.preferredHeight: 60
-                            radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
-                            border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
 
                             RowLayout {
                                 anchors.fill: parent; anchors.margins: 12; spacing: 16
@@ -2320,8 +2315,7 @@ PanelWindow {
                         // --- PROCESSES ---
                         Rectangle {
                             Layout.fillWidth: true; Layout.fillHeight: true;
-                            radius: 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
-                            border.width: 1; border.color: Qt.rgba(1,1,1,0.1)
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
 
                             ColumnLayout {
                                 anchors.fill: parent; anchors.margins: 12; spacing: 8
