@@ -229,13 +229,13 @@ if len(sys.argv) > 38 and sys.argv[38]:
 
 
 
-# Argument 40: lockscreenCalendarEnabled (true/false)
-if len(sys.argv) > 40 and sys.argv[40]:
-    colors["lockscreenCalendarEnabled"] = sys.argv[40] == "true"
+# Argument 39: lockscreenCalendarEnabled (true/false)
+if len(sys.argv) > 39 and sys.argv[39]:
+    colors["lockscreenCalendarEnabled"] = sys.argv[39] == "true"
 
-# Argument 41: lockscreenNetworkEnabled (true/false)
-if len(sys.argv) > 41 and sys.argv[41]:
-    colors["lockscreenNetworkEnabled"] = sys.argv[41] == "true"
+# Argument 40: lockscreenNetworkEnabled (true/false)
+if len(sys.argv) > 40 and sys.argv[40]:
+    colors["lockscreenNetworkEnabled"] = sys.argv[40] == "true"
 
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)

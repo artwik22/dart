@@ -52,6 +52,12 @@ ShellRoot {
         property string notificationSound: "message.oga" // "message.oga", "dialog-information.oga", etc.
         property string weatherLocation: "London"      // Weather location for wttr.in
         property bool floatingDashboard: true          // Dashboard style: true (floating) | false (classic)
+        // Lockscreen Widget Toggles
+        property bool lockscreenMediaEnabled: true
+        property bool lockscreenWeatherEnabled: true
+        property bool lockscreenBatteryEnabled: true
+        property bool lockscreenCalendarEnabled: true
+        property bool lockscreenNetworkEnabled: false
     }
     
     // Color config file path - dynamically determined
@@ -287,6 +293,14 @@ ShellRoot {
                         if (json.floatingDashboard !== undefined) {
                             sharedData.floatingDashboard = json.floatingDashboard === true || json.floatingDashboard === "true"
                         }
+
+                        // Load Lockscreen Settings
+                        if (json.lockscreenMediaEnabled !== undefined) sharedData.lockscreenMediaEnabled = json.lockscreenMediaEnabled === true || json.lockscreenMediaEnabled === "true"
+                        if (json.lockscreenWeatherEnabled !== undefined) sharedData.lockscreenWeatherEnabled = json.lockscreenWeatherEnabled === true || json.lockscreenWeatherEnabled === "true"
+                        if (json.lockscreenBatteryEnabled !== undefined) sharedData.lockscreenBatteryEnabled = json.lockscreenBatteryEnabled === true || json.lockscreenBatteryEnabled === "true"
+                        if (json.lockscreenCalendarEnabled !== undefined) sharedData.lockscreenCalendarEnabled = json.lockscreenCalendarEnabled === true || json.lockscreenCalendarEnabled === "true"
+                        if (json.lockscreenNetworkEnabled !== undefined) sharedData.lockscreenNetworkEnabled = json.lockscreenNetworkEnabled === true || json.lockscreenNetworkEnabled === "true"
+
                     } catch (e) {
                     }
                 }
@@ -538,6 +552,28 @@ ShellRoot {
                                     }
                                 }
                                 
+                                // Lockscreen Settings Updates
+                                if (json.lockscreenMediaEnabled !== undefined) {
+                                    var v = json.lockscreenMediaEnabled === true || json.lockscreenMediaEnabled === "true"
+                                    if (v !== sharedData.lockscreenMediaEnabled) { sharedData.lockscreenMediaEnabled = v; changed = true }
+                                }
+                                if (json.lockscreenWeatherEnabled !== undefined) {
+                                    var v = json.lockscreenWeatherEnabled === true || json.lockscreenWeatherEnabled === "true"
+                                    if (v !== sharedData.lockscreenWeatherEnabled) { sharedData.lockscreenWeatherEnabled = v; changed = true }
+                                }
+                                if (json.lockscreenBatteryEnabled !== undefined) {
+                                    var v = json.lockscreenBatteryEnabled === true || json.lockscreenBatteryEnabled === "true"
+                                    if (v !== sharedData.lockscreenBatteryEnabled) { sharedData.lockscreenBatteryEnabled = v; changed = true }
+                                }
+                                if (json.lockscreenCalendarEnabled !== undefined) {
+                                    var v = json.lockscreenCalendarEnabled === true || json.lockscreenCalendarEnabled === "true"
+                                    if (v !== sharedData.lockscreenCalendarEnabled) { sharedData.lockscreenCalendarEnabled = v; changed = true }
+                                }
+                                if (json.lockscreenNetworkEnabled !== undefined) {
+                                    var v = json.lockscreenNetworkEnabled === true || json.lockscreenNetworkEnabled === "true"
+                                    if (v !== sharedData.lockscreenNetworkEnabled) { sharedData.lockscreenNetworkEnabled = v; changed = true }
+                                }
+
                                 // Note: We don't auto-reload sidebarVisible from file watcher
                                 // because user toggles it directly in the UI. Only load it on startup
                                 // to avoid race condition with Dashboard save function
