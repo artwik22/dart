@@ -13,6 +13,10 @@ Item {
     // Forward signal from inner Rectangle
     signal notificationClosed()
     
+    // Swipe Logic Properties
+    property real dragX: 0
+    property bool isSwiping: false
+    
     Rectangle {
         id: notificationItem
         
@@ -57,6 +61,7 @@ Item {
         transform: Translate {
             id: entranceTranslate
             y: 0
+            x: notificationWrapper.dragX
         }
     
     color: getBackgroundColor()
@@ -309,15 +314,92 @@ Item {
     
 
     
+    // Drag Proxy for handling swipe calculations
+    Item {
+        id: dragProxy
+    }
+
     // Click to dismiss (excluding close button area)
     MouseArea {
         anchors.fill: parent
         anchors.rightMargin: 40
         cursorShape: Qt.PointingHandCursor
-        z: -1
+        z: -1 // Ensure it's below close button (which has z: 10000) but still reachable
         propagateComposedEvents: false
         enabled: true
+        
+        // Drag configuration
+        drag.target: dragProxy
+        drag.axis: Drag.XAxis
+        drag.threshold: 10
+        drag.filterChildren: true
+
+        onPressed: {
+            dragProxy.x = notificationWrapper.dragX
+        }
+        
+        onPositionChanged: {
+            if (drag.active) {
+                notificationWrapper.isSwiping = true
+                notificationWrapper.dragX = dragProxy.x
+                
+                // Opacity fade based on drag distance
+                var opacityFactor = 1.0 - Math.min(1.0, Math.abs(dragProxy.x) / 200)
+                notificationItem.opacity = opacityFactor
+            }
+        }
+        
+        onReleased: {
+            notificationWrapper.isSwiping = false
+            
+            // Check if dragged far enough to dismiss (> 100px)
+            if (Math.abs(notificationWrapper.dragX) > 100) {
+                // Determine direction for exit animation
+                var exitToRight = notificationWrapper.dragX > 0
+                
+                // Animate completely off-screen
+                swipeDismissAnim.to = exitToRight ? 500 : -500
+                swipeDismissAnim.start()
+            } else {
+                // Spring back if not far enough
+                springBackAnim.start()
+            }
+        }
+        
         onClicked: function(mouse) {
+            // Only handle click if not dragging
+            if (Math.abs(notificationWrapper.dragX) < 5) {
+                if (notification) {
+                    notification.dismiss()
+                } else {
+                    startExitAnimation()
+                }
+            }
+        }
+    }
+    
+    // Animation to snap back to center
+    NumberAnimation {
+        id: springBackAnim
+        target: notificationWrapper
+        property: "dragX"
+        to: 0
+        duration: 300
+        easing.type: Easing.OutBack
+        onFinished: {
+             notificationItem.opacity = 1.0 // Restore opacity
+        }
+    }
+    
+    // Animation to dismiss (fling off screen)
+    NumberAnimation {
+        id: swipeDismissAnim
+        target: notificationWrapper
+        property: "dragX"
+        to: 0 // set dynamically
+        duration: 200
+        easing.type: Easing.InQuad
+        onFinished: {
             if (notification) {
                 notification.dismiss()
             } else {
@@ -350,6 +432,10 @@ Item {
     // Update when notification property changes
     onNotificationChanged: {
         if (notification) {
+            // Reset state for new notification
+            notificationWrapper.dragX = 0
+            notificationItem.opacity = 1.0
+            
             storedNotification = notification
             if (summaryText) summaryText.text = notification.summary || ""
             if (bodyText) bodyText.text = notification.body || ""
