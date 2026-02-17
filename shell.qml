@@ -621,9 +621,9 @@ ShellRoot {
         model: Quickshell.screens
         delegate: Component {
             Loader {
+                property var modelData
                 active: root.sharedData.lockScreenVisible
                 sourceComponent: LockScreen {
-                    required property var modelData
                     screen: modelData
                     sharedData: root.sharedData
                     projectPath: root.projectPath

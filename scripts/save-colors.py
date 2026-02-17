@@ -215,6 +215,28 @@ if len(sys.argv) > 34 and sys.argv[34]:
 if len(sys.argv) > 35 and sys.argv[35]:
     colors["floatingDashboard"] = sys.argv[35] == "true"
 
+# Argument 36: lockscreenMediaEnabled (true/false)
+if len(sys.argv) > 36 and sys.argv[36]:
+    colors["lockscreenMediaEnabled"] = sys.argv[36] == "true"
+
+# Argument 37: lockscreenWeatherEnabled (true/false)
+if len(sys.argv) > 37 and sys.argv[37]:
+    colors["lockscreenWeatherEnabled"] = sys.argv[37] == "true"
+
+# Argument 38: lockscreenBatteryEnabled (true/false)
+if len(sys.argv) > 38 and sys.argv[38]:
+    colors["lockscreenBatteryEnabled"] = sys.argv[38] == "true"
+
+
+
+# Argument 40: lockscreenCalendarEnabled (true/false)
+if len(sys.argv) > 40 and sys.argv[40]:
+    colors["lockscreenCalendarEnabled"] = sys.argv[40] == "true"
+
+# Argument 41: lockscreenNetworkEnabled (true/false)
+if len(sys.argv) > 41 and sys.argv[41]:
+    colors["lockscreenNetworkEnabled"] = sys.argv[41] == "true"
+
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)
 
