@@ -606,7 +606,7 @@ PanelWindow {
         anchors.rightMargin: 1
         anchors.bottomMargin: 1
         
-        color: (sharedData && sharedData.colorPrimary) ? Qt.lighter(sharedData.colorPrimary, 1.2) : "#252525"
+        color: (sharedData && sharedData.colorPrimary) ? Qt.alpha(sharedData.colorPrimary, 0.15) : Qt.rgba(1, 1, 1, 0.05)
         border.width: 0
         radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
         visible: panelActive
