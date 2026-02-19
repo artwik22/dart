@@ -2040,12 +2040,7 @@ PanelWindow {
                             RowLayout {
                                 Layout.topMargin: 8
                                 spacing: 12
-                                Text {
-                                    text: "System: " + osPrettyName
-                                    font.pixelSize: 12
-                                    font.weight: Font.Bold
-                                    color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6)
-                                }
+
                                 Item { Layout.fillWidth: true }
                                 Text {
                                     text: "Up: " + uptimeString

@@ -235,17 +235,17 @@ PanelWindow {
                         running: lockScreenRoot.visible && (sharedData && sharedData.lockscreenWeatherEnabled === true)
                         triggeredOnStart: true
                         onTriggered: {
-                            console.warn("LockScreen: Weather Timer Triggered")
+                            // console.warn("LockScreen: Weather Timer Triggered")
                             var query = (sharedData && sharedData.weatherLocation) ? sharedData.weatherLocation : ""
                             if (sharedData && sharedData.runCommand) {
                                 sharedData.runCommand(['sh','-c','curl -s "wttr.in/' + query + '?format=%t+%C" 2>/dev/null | head -1 > /tmp/quickshell_lock_weather || echo "15°C Clear" > /tmp/quickshell_lock_weather'], function() {
-                                    console.warn("LockScreen: Weather Command Done")
+                                    // console.warn("LockScreen: Weather Command Done")
                                     var xhr = new XMLHttpRequest()
                                     xhr.open("GET", "file:///tmp/quickshell_lock_weather?t=" + new Date().getTime())
                                     xhr.onreadystatechange = function() {
                                         if (xhr.readyState === XMLHttpRequest.DONE) {
                                             var weather = (xhr.responseText || "").trim()
-                                            console.warn("LockScreen: Weather Read: " + weather)
+                                            // console.warn("LockScreen: Weather Read: " + weather)
                                             var parts = weather.split(" ")
                                             if (parts.length > 0) weatherTemp = parts[0]
                                             if (parts.length > 1) weatherCondition = parts.slice(1).join(" ")
@@ -331,7 +331,7 @@ PanelWindow {
                                     xhr.onreadystatechange = function() {
                                         if (xhr.readyState === XMLHttpRequest.DONE) {
                                             var txt = xhr.responseText || ""
-                                            console.warn("LockScreen Media Raw: " + txt.replace(/\n/g, "\\n"))
+                                            // console.warn("LockScreen Media Raw: " + txt.replace(/\n/g, "\\n"))
                                             if (txt.trim() === "") {
                                                 mpPlaying = false
                                                 mpTitle = "" // Clear title to hide widget if nothing playing
@@ -344,7 +344,7 @@ PanelWindow {
                                             
                                             mpArtist = lines[0] ? lines[0].trim() : ""
                                             mpTitle = lines[1] ? lines[1].trim() : ""
-                                            console.warn("LockScreen Media Parsed: " + mpTitle + " by " + mpArtist)
+                                            // console.warn("LockScreen Media Parsed: " + mpTitle + " by " + mpArtist)
                                             
                                             var art = lines[3] ? lines[3].trim() : ""
                                             if (art.indexOf("file://") === 0) mpArt = art.replace("file://", "")
