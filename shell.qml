@@ -59,6 +59,8 @@ ShellRoot {
         property bool lockscreenCalendarEnabled: true
         property bool lockscreenNetworkEnabled: false
         property string sidebarStyle: "dots" // "dots" | "lines"
+        property bool clockBlinkColon: true
+        property string sidebarWorkspaceMode: "top" // "top" | "center" | "bottom"
     }
     
     // Color config file path - dynamically determined
@@ -305,6 +307,10 @@ ShellRoot {
                         if (json.sidebarStyle && (json.sidebarStyle === "dots" || json.sidebarStyle === "lines")) {
                             sharedData.sidebarStyle = json.sidebarStyle
                         }
+                        
+                        if (json.clockBlinkColon !== undefined) sharedData.clockBlinkColon = json.clockBlinkColon === true || json.clockBlinkColon === "true"
+                        
+                        if (json.sidebarWorkspaceMode) sharedData.sidebarWorkspaceMode = json.sidebarWorkspaceMode
 
                     } catch (e) {
                     }
@@ -584,6 +590,16 @@ ShellRoot {
                                         sharedData.sidebarStyle = json.sidebarStyle
                                         changed = true
                                     }
+                                }
+                                
+                                if (json.clockBlinkColon !== undefined) {
+                                    var v = json.clockBlinkColon === true || json.clockBlinkColon === "true"
+                                    if (v !== sharedData.clockBlinkColon) { sharedData.clockBlinkColon = v; changed = true }
+                                }
+                                
+                                if (json.sidebarWorkspaceMode && json.sidebarWorkspaceMode !== sharedData.sidebarWorkspaceMode) {
+                                    sharedData.sidebarWorkspaceMode = json.sidebarWorkspaceMode
+                                    changed = true
                                 }
 
                                 // Note: We don't auto-reload sidebarVisible from file watcher

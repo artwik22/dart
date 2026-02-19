@@ -32,6 +32,7 @@ PanelWindow {
     
     property var sidePanelRoot: sidePanel
     property bool isHorizontal: panelPosition === "top" || panelPosition === "bottom"
+    property bool clockColonVisible: true
     
     property color btnBg: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
     property color btnBgHover: (sharedData && sharedData.colorAccent) ? Qt.alpha(sharedData.colorAccent, 0.2) : "rgba(74, 158, 255, 0.2)"
@@ -250,6 +251,20 @@ PanelWindow {
                 verticalAlignment: Text.AlignVCenter
                 Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutQuart } } 
             }
+            Text {
+                text: ":"
+                font.pixelSize: 22
+                font.family: "Outfit, Inter, sans-serif"
+                font.weight: Font.ExtraLight
+                color: "#ffffff"
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+                opacity: (sharedData && sharedData.clockBlinkColon) ? (clockColonVisible ? 0.9 : 0.1) : 0.9
+                Behavior on opacity { NumberAnimation { duration: 100 } }
+                
+                // Align text baseline with the hours text for correct typographical positioning
+                anchors.baseline: sidePanelHoursDisplayTop.baseline
+            }
             Text { 
                 id: sidePanelMinutesDisplayTop
                 text: "00"
@@ -276,6 +291,7 @@ PanelWindow {
                 sidePanelMinutesDisplay.text = mStr
                 sidePanelHoursDisplayTop.text = hStr
                 sidePanelMinutesDisplayTop.text = mStr
+                clockColonVisible = !clockColonVisible
             }
             Component.onCompleted: { 
                 var now = new Date()
@@ -293,9 +309,25 @@ PanelWindow {
             width: parent.width
             height: sidePanelWorkspaceColumn.height // Dynamic height based on content
             visible: !isHorizontal
+            
+            // Dynamic Anchoring based on Mode
+            property string mode: (sharedData && sharedData.sidebarWorkspaceMode) ? sharedData.sidebarWorkspaceMode : "top"
+            
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: sidePanelClockColumn.bottom
-            anchors.topMargin: 24
+            
+            // Mode: Top
+            anchors.top: mode === "top" ? sidePanelClockColumn.bottom : undefined
+            anchors.topMargin: mode === "top" ? 24 : 0
+            
+            // Mode: Center
+            anchors.verticalCenter: mode === "center" ? parent.verticalCenter : undefined
+            
+            // Mode: Bottom
+            // Anchor to the top of the tray (if visible) or actionsGroup
+            property Item bottomAnchorItem: (sidePanelTrayVertical.visible && sidePanelTrayVertical.height > 0) ? sidePanelTrayVertical : actionsGroup
+            anchors.bottom: mode === "bottom" ? bottomAnchorItem.top : undefined
+            anchors.bottomMargin: mode === "bottom" ? 24 : 0
+            
             z: 50
             opacity: panelActive ? 1.0 : 0.0
             scale: panelActive ? 1.0 : 0.85

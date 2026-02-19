@@ -3,6 +3,14 @@ import json
 import sys
 import os
 
+# Debug logging
+with open("/tmp/save-colors.log", "a") as log:
+    log.write(f"Args: {sys.argv}\n")
+
+if len(sys.argv) < 7:
+    print("Usage: save-colors.py <script_path> <bg> <primary> <secondary> <text> <accent> <path> [optional_args...]")
+    sys.exit(1)
+
 # Load existing colors.json if it exists to preserve additional settings
 existing_data = {}
 if len(sys.argv) > 6 and os.path.exists(sys.argv[6]):
@@ -35,6 +43,10 @@ if "githubUsername" in existing_data:
     colors["githubUsername"] = existing_data["githubUsername"]
 if "sidebarStyle" in existing_data:
     colors["sidebarStyle"] = existing_data["sidebarStyle"]
+if "clockBlinkColon" in existing_data:
+    colors["clockBlinkColon"] = existing_data["clockBlinkColon"]
+if "sidebarWorkspaceMode" in existing_data:
+    colors["sidebarWorkspaceMode"] = existing_data["sidebarWorkspaceMode"]
 
 # Override with provided values if they exist
 # Argument 7: lastWallpaper
@@ -243,6 +255,14 @@ if len(sys.argv) > 40 and sys.argv[40]:
 # sys.argv[41] corresponds to the 41st argument passed to the script.
 if len(sys.argv) > 41 and sys.argv[41]:
     colors["sidebarStyle"] = sys.argv[41]
+
+# Argument 42: clockBlinkColon (true/false)
+if len(sys.argv) > 42 and sys.argv[42]:
+    colors["clockBlinkColon"] = sys.argv[42] == "true"
+
+# Argument 43: sidebarWorkspaceMode ("top", "center", "bottom")
+if len(sys.argv) > 43 and sys.argv[43]:
+    colors["sidebarWorkspaceMode"] = sys.argv[43]
 
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)
