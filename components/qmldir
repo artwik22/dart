@@ -19,3 +19,5 @@ WallpaperBackground 1.0 WallpaperBackground.qml
 CalendarView 1.0 CalendarView.qml
 GithubActivity 1.0 GithubActivity.qml
 QuickToggle 1.0 QuickToggle.qml
+WifiMenu 1.0 WifiMenu.qml
+BluetoothMenu 1.0 BluetoothMenu.qml
