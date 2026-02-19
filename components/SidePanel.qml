@@ -645,14 +645,14 @@ PanelWindow {
         height: isHorizontal ? sidePanelRect.height : actionsLayout.implicitHeight + 4
         // Always fill the sidebar width/height but keep tight margins
         anchors.left: !isHorizontal ? sidePanelRect.left : undefined
-        anchors.right: !isHorizontal ? sidePanelRect.right : (isHorizontal ? statusContainer.left : undefined)
+        anchors.right: !isHorizontal ? sidePanelRect.right : (isHorizontal ? sidePanelRect.right : undefined)
         anchors.top: isHorizontal ? sidePanelRect.top : undefined
-        anchors.bottom: isHorizontal ? sidePanelRect.bottom : (!isHorizontal ? statusContainer.top : undefined)
+        anchors.bottom: isHorizontal ? sidePanelRect.bottom : (!isHorizontal ? sidePanelRect.bottom : undefined)
         
         anchors.leftMargin: 1
         anchors.topMargin: 1
-        anchors.rightMargin: 1
-        anchors.bottomMargin: 1
+        anchors.rightMargin: isHorizontal ? 50 : 1
+        anchors.bottomMargin: !isHorizontal ? 12 : 1
         
         color: (sharedData && sharedData.colorPrimary) ? Qt.alpha(sharedData.colorPrimary, 0.15) : Qt.rgba(1, 1, 1, 0.05)
         border.width: 0
@@ -663,9 +663,9 @@ PanelWindow {
         GridLayout {
             id: actionsLayout
             anchors.centerIn: parent
+            flow: GridLayout.LeftToRight
             columns: !isHorizontal ? 1 : 4
-            rows: !isHorizontal ? 4 : 1
-            columnSpacing: 2
+            rows: !isHorizontal ? -1 : 1
             rowSpacing: 2
             
             QuickToggle {
