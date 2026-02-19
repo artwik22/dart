@@ -33,6 +33,8 @@ if "sidepanelContent" in existing_data:
     colors["sidepanelContent"] = existing_data["sidepanelContent"]
 if "githubUsername" in existing_data:
     colors["githubUsername"] = existing_data["githubUsername"]
+if "sidebarStyle" in existing_data:
+    colors["sidebarStyle"] = existing_data["sidebarStyle"]
 
 # Override with provided values if they exist
 # Argument 7: lastWallpaper
@@ -236,6 +238,11 @@ if len(sys.argv) > 39 and sys.argv[39]:
 # Argument 40: lockscreenNetworkEnabled (true/false)
 if len(sys.argv) > 40 and sys.argv[40]:
     colors["lockscreenNetworkEnabled"] = sys.argv[40] == "true"
+
+# Argument 41: sidebarStyle ("dots", "lines")
+# sys.argv[41] corresponds to the 41st argument passed to the script.
+if len(sys.argv) > 41 and sys.argv[41]:
+    colors["sidebarStyle"] = sys.argv[41]
 
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)

@@ -291,9 +291,11 @@ PanelWindow {
         Item {
             id: sidePanelWorkspaceColumnContainer
             width: parent.width
-            height: parent.height
+            height: sidePanelWorkspaceColumn.height // Dynamic height based on content
             visible: !isHorizontal
-            anchors.centerIn: parent
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: sidePanelClockColumn.bottom
+            anchors.topMargin: 24
             z: 50
             opacity: panelActive ? 1.0 : 0.0
             scale: panelActive ? 1.0 : 0.85
@@ -320,10 +322,9 @@ PanelWindow {
             }
             Column { 
                 id: sidePanelWorkspaceColumn
-                spacing: 12
+                spacing: 8
                 width: parent.width
-                x: (parent.width - width) / 2
-                y: (parent.height - height) / 2
+                
                 Repeater { 
                     model: 4
                     Item { 
@@ -336,19 +337,26 @@ PanelWindow {
                             var ws = Hyprland.workspaces.values.find(w => w.id === (index + 1))
                             return ws ? ws.lastIpcObject.windows > 0 : false 
                         }
+                        
+                        // Height: Active=24, Occupied=12, Empty=6 (Dots) vs Active=64, Occupied=32, Empty=16 (Lines)
+                        property bool isDots: (sharedData && sharedData.sidebarStyle === "dots")
+                        property real targetHeight: isDots ? (isActive ? 32 : (hasWindows ? 12 : 6)) : (isActive ? 64 : (hasWindows ? 32 : 16))
+                        property real targetWidth: isDots ? 6 : 3
+                        
                         Rectangle { 
                             id: workspaceLine
                             anchors.centerIn: parent
-                            width: 3
-                            height: workspaceItem.isActive ? 64 : (workspaceItem.hasWindows ? 32 : 16)
-                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
+                            width: workspaceItem.targetWidth
+                            height: workspaceItem.targetHeight
+                            radius: isDots ? (width / 2) : ((sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0)
                             color: workspaceItem.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItem.hasWindows ? "#fff" : "#666")
                             opacity: workspaceItem.isActive ? 1.0 : (workspaceItem.hasWindows ? 0.8 : 0.4)
                             Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
+                            Behavior on color { ColorAnimation { duration: 200 } }
                         }
                         MouseArea { 
                             anchors.fill: workspaceLine
-                            anchors.margins: -5
+                            anchors.margins: -12
                             onClicked: Hyprland.dispatch("workspace", index + 1) 
                         }
                     }
@@ -358,17 +366,18 @@ PanelWindow {
         
         Item {
             id: sidePanelWorkspaceRowContainer
-            width: parent.width
+            width: sidePanelWorkspaceRow.width // Dynamic width
             height: parent.height
             visible: isHorizontal
-            anchors.centerIn: parent
+            anchors.left: sidePanelClockRow.right
+            anchors.leftMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
             z: 50
+            
             Row { 
                 id: sidePanelWorkspaceRow
-                spacing: 12
+                spacing: 8
                 height: parent.height
-                x: (parent.width - width) / 2
-                y: (parent.height - height) / 2
                 opacity: panelActive ? 1.0 : 0.0
                 scale: panelActive ? 1.0 : 0.85
                 transform: Translate { 
@@ -392,19 +401,26 @@ PanelWindow {
                             var ws = Hyprland.workspaces.values.find(w => w.id === (index + 1))
                             return ws ? ws.lastIpcObject.windows > 0 : false 
                         }
+
+                        // Width: Active=24, Occupied=12, Empty=6 (Dots) vs Active=64, Occupied=32, Empty=16 (Lines)
+                        property bool isDots: (sharedData && sharedData.sidebarStyle === "dots")
+                        property real targetWidth: isDots ? (isActive ? 32 : (hasWindows ? 12 : 6)) : (isActive ? 64 : (hasWindows ? 32 : 16))
+                        property real targetHeight: isDots ? 6 : 3
+
                         Rectangle { 
                             id: workspaceLineTop
                             anchors.centerIn: parent
-                            height: 3
-                            width: workspaceItemTop.isActive ? 64 : (workspaceItemTop.hasWindows ? 32 : 16)
-                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
+                            height: workspaceItemTop.targetHeight
+                            width: workspaceItemTop.targetWidth
+                            radius: isDots ? (height / 2) : ((sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0)
                             color: workspaceItemTop.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItemTop.hasWindows ? "#fff" : "#666")
                             opacity: workspaceItemTop.isActive ? 1.0 : (workspaceItemTop.hasWindows ? 0.8 : 0.4)
                             Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
+                            Behavior on color { ColorAnimation { duration: 200 } }
                         }
                         MouseArea { 
                             anchors.fill: workspaceLineTop
-                            anchors.margins: -5
+                            anchors.margins: -12
                             onClicked: Hyprland.dispatch("workspace", index + 1) 
                         }
                     }
