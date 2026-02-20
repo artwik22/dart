@@ -264,6 +264,10 @@ if len(sys.argv) > 42 and sys.argv[42]:
 if len(sys.argv) > 43 and sys.argv[43]:
     colors["sidebarWorkspaceMode"] = sys.argv[43]
 
+# Argument 44: dynamicSidebarBackground (true/false)
+if len(sys.argv) > 44 and sys.argv[44]:
+    colors["dynamicSidebarBackground"] = sys.argv[44] == "true"
+
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)
 

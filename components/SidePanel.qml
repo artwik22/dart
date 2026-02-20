@@ -68,6 +68,7 @@ PanelWindow {
     height: implicitHeight
     color: "transparent"
     property var sharedData: null
+    property bool dynamicBackground: !!(sharedData && sharedData.dynamicSidebarBackground)
 
     property bool panelActive: !!(sharedData && (sharedData.sidebarVisible === undefined || sharedData.sidebarVisible) && sharedData.sidebarPosition === panelPosition && !(sharedData.sidebarHiddenByFullscreen === true))
     property real panelProgress: panelActive ? 1.0 : 0.0
@@ -120,7 +121,7 @@ PanelWindow {
         radius: 0
         enabled: false
         z: -1
-        opacity: sidePanel.panelProgress
+        opacity: sidePanel.dynamicBackground ? 0 : sidePanel.panelProgress
         Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
         
         transform: Translate {
@@ -132,21 +133,59 @@ PanelWindow {
         }
     }
 
+    Component {
+        id: islandBg
+        Rectangle {
+            anchors.fill: parent
+            z: -1
+            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
+            
+            gradient: Gradient {
+                orientation: !isHorizontal ? Gradient.Vertical : Gradient.Horizontal
+                GradientStop { position: 0.0; color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0d0d0d" }
+                GradientStop { position: 1.0; color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#151515" }
+            }
+            border.width: 1
+            border.color: Qt.rgba(1,1,1,0.05)
+        }
+    }
+
     Item {
         id: sidePanelContent
-        // Anchor only to the visible sidebar area
-        anchors.fill: sidePanelRect
+        // Anchor to the whole window, not just the rect, to avoid circularity
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         enabled: true
         z: 0
         clip: false
         
+        // Shared loader for Clock + Workspaces (Vertical)
+        Loader { 
+            anchors.left: sidePanelClockColumn.left
+            anchors.right: sidePanelClockColumn.right
+            anchors.top: sidePanelClockColumn.top
+            anchors.bottom: (sidePanelWorkspaceColumnContainer.mode === "top") ? sidePanelWorkspaceColumnContainer.bottom : sidePanelClockColumn.bottom
+            
+            // Flatten both the panel edge AND the screen side edge in corners
+            anchors.leftMargin: (panelPosition === "left" || (isHorizontal && anchors.left !== undefined)) ? -16 : -8
+            anchors.rightMargin: (panelPosition === "right" || (isHorizontal && anchors.right !== undefined)) ? -16 : -8
+            anchors.topMargin: (panelPosition === "top" || (!isHorizontal && anchors.top !== undefined)) ? -16 : -8
+            anchors.bottomMargin: (panelPosition === "bottom" || (!isHorizontal && anchors.bottom !== undefined)) ? -16 : -8
+            
+            sourceComponent: islandBg; 
+            z: -1
+            active: !isHorizontal && sidePanelClockColumn.visible && sidePanel.dynamicBackground 
+        }
         Column {
             id: sidePanelClockColumn
             anchors.top: parent.top
-            anchors.topMargin: 12
+            anchors.topMargin: 0
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: -6 // Very tight spacing for monolithic look
             visible: !isHorizontal
+            
             opacity: (visible && panelActive) ? 1.0 : 0.0
             scale: panelActive ? 1.0 : 0.85
             
@@ -202,13 +241,31 @@ PanelWindow {
             }
         }
         
+        // Shared loader for Clock + Workspaces (Horizontal)
+        Loader { 
+            anchors.left: sidePanelClockRow.left
+            anchors.right: (sidePanelWorkspaceRowContainer.visible) ? sidePanelWorkspaceRowContainer.right : sidePanelClockRow.right
+            anchors.top: sidePanelClockRow.top
+            anchors.bottom: sidePanelClockRow.bottom
+            
+            // Flatten both the panel edge AND the screen side edge in corners
+            anchors.leftMargin: (panelPosition === "left" || (isHorizontal && anchors.left !== undefined)) ? -16 : -8
+            anchors.rightMargin: (panelPosition === "right" || (isHorizontal && anchors.right !== undefined)) ? -16 : -8
+            anchors.topMargin: (panelPosition === "top" || (!isHorizontal && anchors.top !== undefined)) ? -16 : -8
+            anchors.bottomMargin: (panelPosition === "bottom" || (!isHorizontal && anchors.bottom !== undefined)) ? -16 : -8
+            
+            sourceComponent: islandBg; 
+            z: -1
+            active: isHorizontal && sidePanelClockRow.visible && sidePanel.dynamicBackground 
+        }
         Row {
             id: sidePanelClockRow
             anchors.left: parent.left
-            anchors.leftMargin: 12
+            anchors.leftMargin: 0
             anchors.verticalCenter: parent.verticalCenter
             spacing: 2
             visible: isHorizontal
+            
             opacity: (visible && panelActive) ? 1.0 : 0.0
             scale: panelActive ? 1.0 : 0.85
             
@@ -352,6 +409,17 @@ PanelWindow {
                     } 
                 } 
             }
+            // Dedicated background for workspaces IF NOT at top (Vertical)
+            Loader { 
+                anchors.fill: sidePanelWorkspaceColumn
+                anchors.leftMargin: panelPosition === "left" ? -16 : -6
+                anchors.rightMargin: panelPosition === "right" ? -16 : -6
+                anchors.topMargin: panelPosition === "top" ? -16 : -8
+                anchors.bottomMargin: panelPosition === "bottom" ? -16 : -8
+                sourceComponent: islandBg; 
+                z: -1
+                active: !isHorizontal && sidePanelWorkspaceColumnContainer.visible && sidePanel.dynamicBackground && sidePanelWorkspaceColumnContainer.mode !== "top"
+            }
             Column { 
                 id: sidePanelWorkspaceColumn
                 spacing: 8
@@ -406,10 +474,12 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             z: 50
             
+            // Background for workspaces is shared in Horizontal mode (see above), so no loader here.
             Row { 
                 id: sidePanelWorkspaceRow
                 spacing: 8
                 height: parent.height
+                
                 opacity: panelActive ? 1.0 : 0.0
                 scale: panelActive ? 1.0 : 0.85
                 transform: Translate { 
@@ -614,7 +684,7 @@ PanelWindow {
         id: sidePanelTrayVertical
         anchors.bottom: actionsGroup.top
         anchors.bottomMargin: 8
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenter: sidePanelContent.horizontalCenter
         spacing: 4
         visible: !isHorizontal && SystemTray.items.count > 0
         
@@ -622,6 +692,17 @@ PanelWindow {
             model: SystemTray.items
             delegate: trayItemDelegate
         }
+    }
+
+    Loader { 
+        anchors.fill: sidePanelTrayVertical
+        anchors.leftMargin: panelPosition === "left" ? -16 : -4
+        anchors.rightMargin: panelPosition === "right" ? -16 : -4
+        anchors.topMargin: panelPosition === "top" ? -16 : -4
+        anchors.bottomMargin: panelPosition === "bottom" ? -16 : -4
+        sourceComponent: islandBg; 
+        z: -1
+        active: sidePanelTrayVertical.visible && sidePanel.dynamicBackground 
     }
 
     // Horizontal System Tray
@@ -639,27 +720,44 @@ PanelWindow {
         }
     }
 
-    Rectangle {
+    Loader { 
+        anchors.fill: sidePanelTrayHorizontal
+        anchors.leftMargin: panelPosition === "left" ? -16 : -4
+        anchors.rightMargin: panelPosition === "right" ? -16 : -4
+        anchors.topMargin: panelPosition === "top" ? -16 : -4
+        anchors.bottomMargin: panelPosition === "bottom" ? -16 : -4
+        sourceComponent: islandBg; 
+        z: -1
+        active: sidePanelTrayHorizontal.visible && sidePanel.dynamicBackground 
+    }
+
+    Item {
         id: actionsGroup
-        width: !isHorizontal ? sidePanelRect.width : actionsLayout.implicitWidth + 4
-        height: isHorizontal ? sidePanelRect.height : actionsLayout.implicitHeight + 4
-        // Always fill the sidebar width/height but keep tight margins
-        anchors.left: !isHorizontal ? sidePanelRect.left : undefined
-        anchors.right: !isHorizontal ? sidePanelRect.right : (isHorizontal ? sidePanelRect.right : undefined)
-        anchors.top: isHorizontal ? sidePanelRect.top : undefined
-        anchors.bottom: isHorizontal ? sidePanelRect.bottom : (!isHorizontal ? sidePanelRect.bottom : undefined)
-        
-        anchors.leftMargin: 1
-        anchors.topMargin: 1
-        anchors.rightMargin: isHorizontal ? 50 : 1
-        anchors.bottomMargin: !isHorizontal ? 12 : 1
-        
-        color: (sharedData && sharedData.colorPrimary) ? Qt.alpha(sharedData.colorPrimary, 0.15) : Qt.rgba(1, 1, 1, 0.05)
-        border.width: 0
-        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
+        width: !isHorizontal ? actionsLayout.implicitWidth + 8 : actionsLayout.implicitWidth + 24
+        height: isHorizontal ? actionsLayout.implicitHeight + 8 : actionsLayout.implicitHeight + 8
+        anchors.horizontalCenter: !isHorizontal ? parent.horizontalCenter : undefined
+        anchors.verticalCenter: isHorizontal ? parent.verticalCenter : undefined
+        anchors.right: isHorizontal ? parent.right : undefined
+        anchors.rightMargin: 0
+        anchors.bottom: !isHorizontal ? parent.bottom : undefined
+        anchors.top: (!isHorizontal && panelPosition === "top") ? parent.top : undefined
+        anchors.bottomMargin: 0
+        anchors.topMargin: 0
         visible: panelActive
         z: 100001
-
+        
+        Loader {
+            anchors.fill: parent
+            z: -1
+            active: sidePanel.dynamicBackground
+            // Flatten both the panel edge AND the screen side edge in corners
+            anchors.leftMargin: (panelPosition === "left" || (isHorizontal && anchors.left !== undefined)) ? -16 : -8
+            anchors.rightMargin: (panelPosition === "right" || (isHorizontal && anchors.right !== undefined)) ? -16 : -8
+            anchors.topMargin: (panelPosition === "top" || (!isHorizontal && anchors.top !== undefined)) ? -16 : -8
+            anchors.bottomMargin: (panelPosition === "bottom" || (!isHorizontal && anchors.bottom !== undefined)) ? -16 : -8
+            sourceComponent: islandBg
+        }
+        
         GridLayout {
             id: actionsLayout
             anchors.centerIn: parent
@@ -690,7 +788,7 @@ PanelWindow {
                     }
                 }
             }
-
+            
             QuickToggle {
                 icon: "󰂯"
                 sharedData: sidePanel.sharedData
@@ -714,7 +812,7 @@ PanelWindow {
                     }
                 }
             }
-
+            
             QuickToggle {
                 icon: "󰓅"
                 sharedData: sidePanel.sharedData
@@ -727,7 +825,6 @@ PanelWindow {
                 Layout.preferredHeight: 26
                 onClicked: {
                     if (sharedData && sharedData.runCommand) {
-                        // Cycle through power profiles: power-saver -> balanced -> performance -> power-saver
                         var currentProfile = sidePanel.qPwrStatus.toLowerCase()
                         var nextProfile = "balanced"
                         if (currentProfile.includes("power-saver")) nextProfile = "balanced"
@@ -743,16 +840,12 @@ PanelWindow {
                         height: 240
                         color: (sharedData.colorSecondary || "#141414")
                         radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
-                        
                         scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
                         Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
-                        
                         Column { 
                             anchors.fill: parent
                             anchors.margins: 12
                             spacing: 12
-                            
-                            // Header
                             Column { 
                                 spacing: 2
                                 width: parent.width
@@ -760,94 +853,106 @@ PanelWindow {
                                     text: "Power"
                                     color: (sharedData.colorAccent || "#4a9eff")
                                     font.pixelSize: 16
-                                    font.weight: Font.ExtraBold
+                                    font.weight: Font.ExtraBold 
                                 }
                                 Text { 
                                     text: sharedData.activePowerProfile ? sharedData.activePowerProfile.charAt(0).toUpperCase() + sharedData.activePowerProfile.slice(1) : "Unknown Profile"
                                     color: "#fff"
                                     font.pixelSize: 12
                                     font.weight: Font.Medium
-                                    opacity: 0.7
+                                    opacity: 0.7 
                                 }
                             }
-                            
-                            // Profiles
                             Column {
-                                spacing: 6; width: parent.width
-                                Text { text: "PERFORMANCE MODE"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1.2 }
-                                
+                                spacing: 6
+                                width: parent.width
+                                Text { 
+                                    text: "PERFORMANCE MODE"
+                                    color: Qt.rgba(1,1,1,0.5)
+                                    font.pixelSize: 10
+                                    font.weight: Font.Bold
+                                    font.letterSpacing: 1.2 
+                                }
                                 Column {
-                                    width: parent.width; spacing: 4
+                                    width: parent.width
+                                    spacing: 4
                                     Repeater {
                                         model: ["power-saver", "balanced", "performance"]
                                         Rectangle {
-                                            width: parent.width; height: 32
+                                            width: parent.width
+                                            height: 32
                                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                             property bool isActive: sharedData.activePowerProfile === modelData
                                             color: isActive ? (sharedData.colorAccent || "#4a9eff") : (profMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent")
                                             border.width: isActive ? 0 : 1
                                             border.color: Qt.rgba(1,1,1,0.05)
-                                            
                                             Behavior on color { ColorAnimation { duration: 150 } }
-                                            
-                                            Row {
-                                                anchors.centerIn: parent; spacing: 8
+                                            Row { 
+                                                anchors.centerIn: parent
+                                                spacing: 8
                                                 Text { 
                                                     text: modelData === "mic" ? "󰍬" : (modelData === "performance" ? "󰓅" : (modelData === "power-saver" ? "󰾆" : "󰾅"))
                                                     color: isActive ? "#000" : "#fff"
-                                                    font.pixelSize: 14
+                                                    font.pixelSize: 14 
                                                 }
                                                 Text { 
                                                     text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
                                                     color: isActive ? "#000" : "#fff"
                                                     font.pixelSize: 11
-                                                    font.weight: Font.Medium
-                                                }
+                                                    font.weight: Font.Medium 
+                                                } 
                                             }
                                             MouseArea { 
-                                                id: profMa; anchors.fill: parent; hoverEnabled: true
-                                                onClicked: sharedData.runCommand(['powerprofilesctl', 'set', modelData])
+                                                id: profMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                onClicked: sharedData.runCommand(['powerprofilesctl', 'set', modelData]) 
                                             }
                                         }
                                     }
                                 }
                             }
-                            
-                            // System Actions
                             Row {
-                                width: parent.width; spacing: 8
-                                
+                                width: parent.width
+                                spacing: 8
                                 Rectangle {
-                                    width: (parent.width - 8) / 2; height: 32
+                                    width: (parent.width - 8) / 2
+                                    height: 32
                                     color: rbMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
                                     radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                    border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
-                                    
-                                    Row {
-                                        anchors.centerIn: parent; spacing: 6
+                                    border.width: 1
+                                    border.color: Qt.rgba(1,1,1,0.05)
+                                    Row { 
+                                        anchors.centerIn: parent
+                                        spacing: 6
                                         Text { text: "󰜉"; color: "#fff"; font.pixelSize: 14 }
-                                        Text { text: "Reboot"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
+                                        Text { text: "Reboot"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium } 
                                     }
                                     MouseArea { 
-                                        id: rbMa; anchors.fill: parent; hoverEnabled: true
-                                        onClicked: sharedData.runCommand(['systemctl', 'reboot'])
+                                        id: rbMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: sharedData.runCommand(['systemctl', 'reboot']) 
                                     }
                                 }
-                                
                                 Rectangle {
-                                    width: (parent.width - 8) / 2; height: 32
+                                    width: (parent.width - 8) / 2
+                                    height: 32
                                     color: sdMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
                                     radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                    border.width: 1; border.color: Qt.rgba(1,0,0,0.2)
-                                    
-                                    Row {
-                                        anchors.centerIn: parent; spacing: 6
+                                    border.width: 1
+                                    border.color: Qt.rgba(1,0,0,0.2)
+                                    Row { 
+                                        anchors.centerIn: parent
+                                        spacing: 6
                                         Text { text: "󰐥"; color: sdMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 14 }
-                                        Text { text: "OFF"; color: sdMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 11; font.weight: Font.Bold }
+                                        Text { text: "OFF"; color: sdMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 11; font.weight: Font.Bold } 
                                     }
                                     MouseArea { 
-                                        id: sdMa; anchors.fill: parent; hoverEnabled: true
-                                        onClicked: sharedData.runCommand(['systemctl', 'poweroff'])
+                                        id: sdMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: sharedData.runCommand(['systemctl', 'poweroff']) 
                                     }
                                 }
                             }
@@ -855,7 +960,7 @@ PanelWindow {
                     }
                 }
             }
-
+            
             QuickToggle {
                 icon: "󰔛"
                 sharedData: sidePanel.sharedData
@@ -866,140 +971,105 @@ PanelWindow {
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
-                onClicked: {
-                    // For now, toggle 5m timer as default or do nothing?
-                    // Just let hover handle the menu
-                }
+                onClicked: {}
                 popoverContent: Component {
                     Rectangle {
                         width: 240
-                        height: 260 // Increased height for Timer UI
+                        height: 260
                         color: (sharedData.colorSecondary || "#141414")
                         radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                        
                         Column { 
                             anchors.fill: parent
                             anchors.margins: 12
                             spacing: 12
-                            
-                            // Header
                             Column { 
                                 spacing: 2
                                 width: parent.width
-                                Text { 
-                                    text: "Timer"
-                                    color: (sharedData.colorAccent || "#4a9eff")
-                                    font.pixelSize: 16
-                                    font.weight: Font.ExtraBold
-                                }
+                                Text { text: "Timer"; color: (sharedData.colorAccent || "#4a9eff"); font.pixelSize: 16; font.weight: Font.ExtraBold }
                                 Text { 
                                     text: sidePanel.timerRunning ? sidePanel.formatTime(sidePanel.timerRemaining) : "No active timer"
                                     color: sidePanel.timerRunning ? "#fff" : "#aaa"
                                     font.pixelSize: sidePanel.timerRunning ? 14 : 12
                                     font.weight: sidePanel.timerRunning ? Font.Bold : Font.Medium
-                                    opacity: sidePanel.timerRunning ? 1.0 : 0.7
+                                    opacity: sidePanel.timerRunning ? 1.0 : 0.7 
                                 }
-                                
-                                // Progress Bar
-                                Rectangle {
-                                    width: parent.width; height: 4
+                                Rectangle { 
+                                    width: parent.width
+                                    height: 4
                                     color: Qt.rgba(1,1,1,0.1)
                                     radius: (sharedData && sharedData.quickshellBorderRadius > 0) ? 2 : 0
                                     visible: sidePanel.timerRunning
-                                    Rectangle {
+                                    Rectangle { 
                                         height: parent.height
                                         radius: (sharedData && sharedData.quickshellBorderRadius > 0) ? 2 : 0
                                         width: sidePanel.timerDuration > 0 ? (parent.width * (sidePanel.timerRemaining / sidePanel.timerDuration)) : 0
                                         color: (sharedData.colorAccent || "#4a9eff")
-                                        Behavior on width { NumberAnimation { duration: 1000 } }
-                                    }
+                                        Behavior on width { NumberAnimation { duration: 1000 } } 
+                                    } 
                                 }
                             }
-                            
-                            // Timer Presets
                             Column {
-                                spacing: 6; width: parent.width
+                                spacing: 6
+                                width: parent.width
                                 Text { text: "QUICK SET"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1.2 }
-                                
                                 GridLayout {
                                     columns: 2
                                     rowSpacing: 6
                                     columnSpacing: 6
                                     width: parent.width
-                                    
                                     Repeater {
-                                        model: [
-                                            { label: "5m", sec: 300 },
-                                            { label: "15m", sec: 900 },
-                                            { label: "30m", sec: 1800 },
-                                            { label: "1h", sec: 3600 }
-                                        ]
+                                        model: [{ label: "5m", sec: 300 }, { label: "15m", sec: 900 }, { label: "30m", sec: 1800 }, { label: "1h", sec: 3600 }]
                                         Rectangle {
                                             Layout.fillWidth: true
                                             height: 32
                                             color: timerBtnMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
                                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                            border.width: 1; border.color: Qt.rgba(1,1,1,0.05)
+                                            border.width: 1
+                                            border.color: Qt.rgba(1,1,1,0.05)
                                             scale: timerBtnMa.pressed ? 0.95 : (timerBtnMa.containsMouse ? 1.02 : 1.0)
-                                            
                                             Behavior on color { ColorAnimation { duration: 150 } }
                                             Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                            
-                                            Text { 
-                                                anchors.centerIn: parent
-                                                text: modelData.label
-                                                color: "#fff"
-                                                font.pixelSize: 11
-                                                font.weight: Font.Medium
-                                            }
-                                            
-                                            MouseArea {
+                                            Text { anchors.centerIn: parent; text: modelData.label; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
+                                            MouseArea { 
                                                 id: timerBtnMa
                                                 anchors.fill: parent
                                                 hoverEnabled: true
-                                                onClicked: {
+                                                onClicked: { 
                                                     sidePanel.timerDuration = modelData.sec
                                                     sidePanel.timerRemaining = modelData.sec
                                                     sidePanel.timerRunning = true
-                                                    if (sharedData && sharedData.runCommand) {
-                                                        sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Set', 'Timer for ' + modelData.label + ' started'])
-                                                    }
-                                                }
+                                                    if (sharedData && sharedData.runCommand) sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Set', 'Timer for ' + modelData.label + ' started']) 
+                                                } 
                                             }
                                         }
                                     }
                                 }
                             }
-                            
-                            // Stop Button
                             Rectangle {
                                 width: parent.width
                                 height: 32
                                 color: stopTimerMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
                                 radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                border.width: 1; border.color: Qt.rgba(1,0,0,0.2)
+                                border.width: 1
+                                border.color: Qt.rgba(1,0,0,0.2)
                                 scale: stopTimerMa.pressed ? 0.95 : (stopTimerMa.containsMouse ? 1.02 : 1.0)
-                                
                                 Behavior on color { ColorAnimation { duration: 150 } }
                                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                
-                                Row {
-                                    anchors.centerIn: parent; spacing: 6
+                                Row { 
+                                    anchors.centerIn: parent
+                                    spacing: 6
                                     Text { text: "󰅙"; color: stopTimerMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 14 }
-                                    Text { text: "Stop / Clear"; color: stopTimerMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 11; font.weight: Font.Bold }
+                                    Text { text: "Stop / Clear"; color: stopTimerMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 11; font.weight: Font.Bold } 
                                 }
-                                
-                                MouseArea {
+                                MouseArea { 
                                     id: stopTimerMa
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    onClicked: {
+                                    onClicked: { 
                                         sidePanel.timerRunning = false
                                         sidePanel.timerRemaining = 0
-                                        if (sharedData && sharedData.runCommand) {
-                                            sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Stopped', 'Active timer cancelled'])
-                                        }
-                                    }
+                                        if (sharedData && sharedData.runCommand) sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Stopped', 'Active timer cancelled']) 
+                                    } 
                                 }
                             }
                         }

@@ -61,6 +61,7 @@ ShellRoot {
         property string sidebarStyle: "dots" // "dots" | "lines"
         property bool clockBlinkColon: true
         property string sidebarWorkspaceMode: "top" // "top" | "center" | "bottom"
+        property bool dynamicSidebarBackground: false
     }
     
     // Color config file path - dynamically determined
@@ -311,6 +312,10 @@ ShellRoot {
                         if (json.clockBlinkColon !== undefined) sharedData.clockBlinkColon = json.clockBlinkColon === true || json.clockBlinkColon === "true"
                         
                         if (json.sidebarWorkspaceMode) sharedData.sidebarWorkspaceMode = json.sidebarWorkspaceMode
+                        
+                        if (json.dynamicSidebarBackground !== undefined) {
+                            sharedData.dynamicSidebarBackground = json.dynamicSidebarBackground === true || json.dynamicSidebarBackground === "true"
+                        }
 
                     } catch (e) {
                     }
@@ -600,6 +605,14 @@ ShellRoot {
                                 if (json.sidebarWorkspaceMode && json.sidebarWorkspaceMode !== sharedData.sidebarWorkspaceMode) {
                                     sharedData.sidebarWorkspaceMode = json.sidebarWorkspaceMode
                                     changed = true
+                                }
+                                
+                                if (json.dynamicSidebarBackground !== undefined) {
+                                    var dsb = json.dynamicSidebarBackground === true || json.dynamicSidebarBackground === "true"
+                                    if (dsb !== sharedData.dynamicSidebarBackground) {
+                                        sharedData.dynamicSidebarBackground = dsb
+                                        changed = true
+                                    }
                                 }
 
                                 // Note: We don't auto-reload sidebarVisible from file watcher
