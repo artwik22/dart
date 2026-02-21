@@ -51,15 +51,28 @@ Item {
         Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
     }
     
+    property bool pulsing: false
+    
     // Small sidebar mode
     Text {
+        id: iconText
         visible: !root.isLarge
         anchors.centerIn: parent
         text: root.icon
         font.pixelSize: 18
         font.family: "Material Design Icons"
         color: root.contentColor
+        z: 1
+
+        // Subtle but noticeable breathing for the icon
+        SequentialAnimation on opacity {
+            running: root.pulsing && !root.isLarge
+            loops: Animation.Infinite
+            NumberAnimation { from: 1.0; to: 0.4; duration: 1500; easing.type: Easing.InOutSine }
+            NumberAnimation { from: 0.4; to: 1.0; duration: 1500; easing.type: Easing.InOutSine }
+        }
     }
+
     
     // Large Dashboard mode
     RowLayout {
@@ -112,8 +125,6 @@ Item {
     }
     
     property var sidePanelRoot: null
-
-    // ... (existing properties)
 
     MouseArea {
         id: mouseArea

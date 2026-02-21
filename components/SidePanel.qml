@@ -1089,6 +1089,7 @@ PanelWindow {
 
             QuickToggle {
                 icon: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "⚡" : ""
+                pulsing: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged")
                 contentColor: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "#00ff41" : (sidePanel.qBatteryPct > 40 ? "#ffffff" : (sidePanel.qBatteryPct > 20 ? "#ffd700" : "#ff3b3b"))
                 sharedData: sidePanel.sharedData
                 sidePanelRoot: sidePanel

@@ -256,30 +256,30 @@ if len(sys.argv) > 39 and sys.argv[39]:
 if len(sys.argv) > 40 and sys.argv[40]:
     colors["lockscreenNetworkEnabled"] = sys.argv[40] == "true"
 
-# Argument 42: sidebarStyle ("dots", "lines")
-# sys.argv[42] corresponds to the 42nd argument passed to the script.
+# Argument 41: sidebarStyle ("dots", "lines")
+# sys.argv[41] corresponds to the 41st argument passed to the script.
+if len(sys.argv) > 41 and sys.argv[41]:
+    colors["sidebarStyle"] = sys.argv[41]
+
+# Argument 42: clockBlinkColon (true/false)
 if len(sys.argv) > 42 and sys.argv[42]:
-    colors["sidebarStyle"] = sys.argv[42]
+    colors["clockBlinkColon"] = sys.argv[42] == "true"
 
-# Argument 43: clockBlinkColon (true/false)
+# Argument 43: sidebarWorkspaceMode ("top", "center", "bottom")
 if len(sys.argv) > 43 and sys.argv[43]:
-    colors["clockBlinkColon"] = sys.argv[43] == "true"
+    colors["sidebarWorkspaceMode"] = sys.argv[43]
 
-# Argument 44: sidebarWorkspaceMode ("top", "center", "bottom")
+# Argument 44: dynamicSidebarBackground (true/false)
 if len(sys.argv) > 44 and sys.argv[44]:
-    colors["sidebarWorkspaceMode"] = sys.argv[44]
+    colors["dynamicSidebarBackground"] = sys.argv[44] == "true"
 
-# Argument 45: dynamicSidebarBackground (true/false)
+# Argument 45: screensaverWidgetsEnabled (true/false)
 if len(sys.argv) > 45 and sys.argv[45]:
-    colors["dynamicSidebarBackground"] = sys.argv[45] == "true"
+    colors["screensaverWidgetsEnabled"] = sys.argv[45] == "true"
 
-# Argument 46: screensaverWidgetsEnabled (true/false)
+# Argument 46: sidebarBatteryEnabled (true/false)
 if len(sys.argv) > 46 and sys.argv[46]:
-    colors["screensaverWidgetsEnabled"] = sys.argv[46] == "true"
-
-# Argument 47: sidebarBatteryEnabled (true/false)
-if len(sys.argv) > 47 and sys.argv[47]:
-    colors["sidebarBatteryEnabled"] = sys.argv[47] == "true"
+    colors["sidebarBatteryEnabled"] = sys.argv[46] == "true"
 
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)
