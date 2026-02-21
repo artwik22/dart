@@ -56,8 +56,9 @@ ShellRoot {
         property bool lockscreenMediaEnabled: true
         property bool lockscreenWeatherEnabled: true
         property bool lockscreenBatteryEnabled: true
-        property bool lockscreenCalendarEnabled: true
         property bool lockscreenNetworkEnabled: false
+        property bool screensaverWidgetsEnabled: true
+        property bool sidebarBatteryEnabled: true
         property string sidebarStyle: "dots" // "dots" | "lines"
         property bool clockBlinkColon: true
         property string sidebarWorkspaceMode: "top" // "top" | "center" | "bottom"
@@ -304,6 +305,8 @@ ShellRoot {
                         if (json.lockscreenBatteryEnabled !== undefined) sharedData.lockscreenBatteryEnabled = json.lockscreenBatteryEnabled === true || json.lockscreenBatteryEnabled === "true"
                         if (json.lockscreenCalendarEnabled !== undefined) sharedData.lockscreenCalendarEnabled = json.lockscreenCalendarEnabled === true || json.lockscreenCalendarEnabled === "true"
                         if (json.lockscreenNetworkEnabled !== undefined) sharedData.lockscreenNetworkEnabled = json.lockscreenNetworkEnabled === true || json.lockscreenNetworkEnabled === "true"
+                        if (json.screensaverWidgetsEnabled !== undefined) sharedData.screensaverWidgetsEnabled = json.screensaverWidgetsEnabled === true || json.screensaverWidgetsEnabled === "true"
+                        if (json.sidebarBatteryEnabled !== undefined) sharedData.sidebarBatteryEnabled = json.sidebarBatteryEnabled === true || json.sidebarBatteryEnabled === "true"
 
                         if (json.sidebarStyle && (json.sidebarStyle === "dots" || json.sidebarStyle === "lines")) {
                             sharedData.sidebarStyle = json.sidebarStyle

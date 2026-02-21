@@ -214,7 +214,7 @@ PanelWindow {
                     anchors.right: parent.right
                     anchors.rightMargin: 120
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: !(sharedData && sharedData.lockScreenNonBlocking)
+                    visible: !(sharedData && sharedData.lockScreenNonBlocking) || (sharedData && sharedData.screensaverWidgetsEnabled)
 
                     // --- Widget Logic ---
                     property string weatherTemp: "--"
@@ -695,12 +695,16 @@ PanelWindow {
 
 
                         // Spacer
-                        Item { width: 1; height: 24 }
+                        Item { 
+                            width: 1; height: 24 
+                            visible: !(sharedData && sharedData.lockScreenNonBlocking)
+                        }
 
                         // Minimal Input Line
                         Item {
                             width: parent.width
                             height: 60
+                            visible: !(sharedData && sharedData.lockScreenNonBlocking)
                             
                             Rectangle {
                                 anchors.bottom: parent.bottom
@@ -729,7 +733,7 @@ PanelWindow {
                                 verticalAlignment: TextInput.AlignVCenter
                                 echoMode: TextInput.Password
                                 clip: true
-                                focus: lockScreenRoot.visible
+                                focus: lockScreenRoot.visible && !(sharedData && sharedData.lockScreenNonBlocking)
                                 onAccepted: lockScreenRoot.verifyPassword()
                                 
                                 selectionColor: (sharedData && sharedData.colorAccent) ? Qt.alpha(sharedData.colorAccent, 0.4) : "#334a9eff"
@@ -750,6 +754,7 @@ PanelWindow {
                         Row {
                             spacing: 24
                             width: parent.width
+                            visible: !(sharedData && sharedData.lockScreenNonBlocking)
 
                             Text {
                                 id: errorLabel

@@ -2,6 +2,7 @@
 import json
 import sys
 import os
+import typing
 
 # Debug logging
 with open("/tmp/save-colors.log", "a") as log:
@@ -20,7 +21,7 @@ if len(sys.argv) > 6 and os.path.exists(sys.argv[6]):
     except:
         pass
 
-colors = {
+colors: typing.Dict[str, typing.Any] = {
     "background": sys.argv[1],
     "primary": sys.argv[2],
     "secondary": sys.argv[3],
@@ -47,6 +48,10 @@ if "clockBlinkColon" in existing_data:
     colors["clockBlinkColon"] = existing_data["clockBlinkColon"]
 if "sidebarWorkspaceMode" in existing_data:
     colors["sidebarWorkspaceMode"] = existing_data["sidebarWorkspaceMode"]
+if "dynamicSidebarBackground" in existing_data:
+    colors["dynamicSidebarBackground"] = existing_data["dynamicSidebarBackground"]
+if "screensaverWidgetsEnabled" in existing_data:
+    colors["screensaverWidgetsEnabled"] = existing_data["screensaverWidgetsEnabled"]
 
 # Override with provided values if they exist
 # Argument 7: lastWallpaper
@@ -251,22 +256,30 @@ if len(sys.argv) > 39 and sys.argv[39]:
 if len(sys.argv) > 40 and sys.argv[40]:
     colors["lockscreenNetworkEnabled"] = sys.argv[40] == "true"
 
-# Argument 41: sidebarStyle ("dots", "lines")
-# sys.argv[41] corresponds to the 41st argument passed to the script.
-if len(sys.argv) > 41 and sys.argv[41]:
-    colors["sidebarStyle"] = sys.argv[41]
-
-# Argument 42: clockBlinkColon (true/false)
+# Argument 42: sidebarStyle ("dots", "lines")
+# sys.argv[42] corresponds to the 42nd argument passed to the script.
 if len(sys.argv) > 42 and sys.argv[42]:
-    colors["clockBlinkColon"] = sys.argv[42] == "true"
+    colors["sidebarStyle"] = sys.argv[42]
 
-# Argument 43: sidebarWorkspaceMode ("top", "center", "bottom")
+# Argument 43: clockBlinkColon (true/false)
 if len(sys.argv) > 43 and sys.argv[43]:
-    colors["sidebarWorkspaceMode"] = sys.argv[43]
+    colors["clockBlinkColon"] = sys.argv[43] == "true"
 
-# Argument 44: dynamicSidebarBackground (true/false)
+# Argument 44: sidebarWorkspaceMode ("top", "center", "bottom")
 if len(sys.argv) > 44 and sys.argv[44]:
-    colors["dynamicSidebarBackground"] = sys.argv[44] == "true"
+    colors["sidebarWorkspaceMode"] = sys.argv[44]
+
+# Argument 45: dynamicSidebarBackground (true/false)
+if len(sys.argv) > 45 and sys.argv[45]:
+    colors["dynamicSidebarBackground"] = sys.argv[45] == "true"
+
+# Argument 46: screensaverWidgetsEnabled (true/false)
+if len(sys.argv) > 46 and sys.argv[46]:
+    colors["screensaverWidgetsEnabled"] = sys.argv[46] == "true"
+
+# Argument 47: sidebarBatteryEnabled (true/false)
+if len(sys.argv) > 47 and sys.argv[47]:
+    colors["sidebarBatteryEnabled"] = sys.argv[47] == "true"
 
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)

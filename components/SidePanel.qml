@@ -169,10 +169,10 @@ PanelWindow {
             anchors.bottom: (sidePanelWorkspaceColumnContainer.mode === "top") ? sidePanelWorkspaceColumnContainer.bottom : sidePanelClockColumn.bottom
             
             // Flatten both the panel edge AND the screen side edge in corners
-            anchors.leftMargin: (panelPosition === "left" || (isHorizontal && anchors.left !== undefined)) ? -16 : -8
-            anchors.rightMargin: (panelPosition === "right" || (isHorizontal && anchors.right !== undefined)) ? -16 : -8
-            anchors.topMargin: (panelPosition === "top" || (!isHorizontal && anchors.top !== undefined)) ? -16 : -8
-            anchors.bottomMargin: (panelPosition === "bottom" || (!isHorizontal && anchors.bottom !== undefined)) ? -16 : -8
+            anchors.leftMargin: -32
+            anchors.rightMargin: -32
+            anchors.topMargin: 0
+            anchors.bottomMargin: -32
             
             sourceComponent: islandBg; 
             z: -1
@@ -249,10 +249,10 @@ PanelWindow {
             anchors.bottom: sidePanelClockRow.bottom
             
             // Flatten both the panel edge AND the screen side edge in corners
-            anchors.leftMargin: (panelPosition === "left" || (isHorizontal && anchors.left !== undefined)) ? -16 : -8
-            anchors.rightMargin: (panelPosition === "right" || (isHorizontal && anchors.right !== undefined)) ? -16 : -8
-            anchors.topMargin: (panelPosition === "top" || (!isHorizontal && anchors.top !== undefined)) ? -16 : -8
-            anchors.bottomMargin: (panelPosition === "bottom" || (!isHorizontal && anchors.bottom !== undefined)) ? -16 : -8
+            anchors.leftMargin: -32
+            anchors.rightMargin: -32
+            anchors.topMargin: 0
+            anchors.bottomMargin: -32
             
             sourceComponent: islandBg; 
             z: -1
@@ -412,10 +412,10 @@ PanelWindow {
             // Dedicated background for workspaces IF NOT at top (Vertical)
             Loader { 
                 anchors.fill: sidePanelWorkspaceColumn
-                anchors.leftMargin: panelPosition === "left" ? -16 : -6
-                anchors.rightMargin: panelPosition === "right" ? -16 : -6
-                anchors.topMargin: panelPosition === "top" ? -16 : -8
-                anchors.bottomMargin: panelPosition === "bottom" ? -16 : -8
+                anchors.leftMargin: -32
+                anchors.rightMargin: -32
+                anchors.topMargin: 0
+                anchors.bottomMargin: -32
                 sourceComponent: islandBg; 
                 z: -1
                 active: !isHorizontal && sidePanelWorkspaceColumnContainer.visible && sidePanel.dynamicBackground && sidePanelWorkspaceColumnContainer.mode !== "top"
@@ -605,13 +605,13 @@ PanelWindow {
                     sidePanelRoot.runAndRead('powerprofilesctl get 2>/dev/null || echo "N/A"', function(out) { 
                         if (out !== undefined) root.qPwrStatus = (out.trim() && out.trim() !== "N/A") ? out.trim() : "Default" 
                     })
-                    sidePanelRoot.runAndRead('B_CAP=$(cat /sys/class/power_supply/*/capacity 2>/dev/null | head -n1); [ -z "$B_CAP" ] && B_CAP=$(upower -i $(upower -e | grep BAT | head -n1) 2>/dev/null | grep percentage | awk \'{print $2}\' | tr -d "%"); [ -n "$B_CAP" ] && echo "$B_CAP" || echo 0', function(out) {
+                    sidePanelRoot.runAndRead('cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -n1', function(out) {
                         if (out !== undefined) {
                             var val = parseInt(out.trim())
                             root.qBatteryPct = isNaN(val) ? 0 : val
                         }
                     })
-                    sidePanelRoot.runAndRead('B_STAT=$(cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -n1); [ -z "$B_STAT" ] && B_STAT=$(cat /sys/class/power_supply/*/status 2>/dev/null | head -n1); [ -z "$B_STAT" ] && B_STAT=$(upower -i $(upower -e | grep BAT | head -n1) 2>/dev/null | grep state | awk \'{print $2}\'); [ -n "$B_STAT" ] && echo "$B_STAT" || echo "Unknown"', function(out) {
+                    sidePanelRoot.runAndRead('cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -n1', function(out) {
                         if (out !== undefined) root.qBatteryStatus = out.trim() || "Unknown"
                     })
                     sidePanelRoot.runAndRead('nmcli -f IN-USE,SIGNAL dev wifi | grep "*" | awk \'{print $2}\' || echo 0', function(out) {
@@ -696,10 +696,10 @@ PanelWindow {
 
     Loader { 
         anchors.fill: sidePanelTrayVertical
-        anchors.leftMargin: panelPosition === "left" ? -16 : -4
-        anchors.rightMargin: panelPosition === "right" ? -16 : -4
-        anchors.topMargin: panelPosition === "top" ? -16 : -4
-        anchors.bottomMargin: panelPosition === "bottom" ? -16 : -4
+        anchors.leftMargin: -32
+        anchors.rightMargin: -32
+        anchors.topMargin: 0
+        anchors.bottomMargin: -32
         sourceComponent: islandBg; 
         z: -1
         active: sidePanelTrayVertical.visible && sidePanel.dynamicBackground 
@@ -722,10 +722,10 @@ PanelWindow {
 
     Loader { 
         anchors.fill: sidePanelTrayHorizontal
-        anchors.leftMargin: panelPosition === "left" ? -16 : -4
-        anchors.rightMargin: panelPosition === "right" ? -16 : -4
-        anchors.topMargin: panelPosition === "top" ? -16 : -4
-        anchors.bottomMargin: panelPosition === "bottom" ? -16 : -4
+        anchors.leftMargin: -32
+        anchors.rightMargin: -32
+        anchors.topMargin: 0
+        anchors.bottomMargin: -32
         sourceComponent: islandBg; 
         z: -1
         active: sidePanelTrayHorizontal.visible && sidePanel.dynamicBackground 
@@ -751,10 +751,10 @@ PanelWindow {
             z: -1
             active: sidePanel.dynamicBackground
             // Flatten both the panel edge AND the screen side edge in corners
-            anchors.leftMargin: (panelPosition === "left" || (isHorizontal && anchors.left !== undefined)) ? -16 : -8
-            anchors.rightMargin: (panelPosition === "right" || (isHorizontal && anchors.right !== undefined)) ? -16 : -8
-            anchors.topMargin: (panelPosition === "top" || (!isHorizontal && anchors.top !== undefined)) ? -16 : -8
-            anchors.bottomMargin: (panelPosition === "bottom" || (!isHorizontal && anchors.bottom !== undefined)) ? -16 : -8
+            anchors.leftMargin: -32
+            anchors.rightMargin: -32
+            anchors.topMargin: 0
+            anchors.bottomMargin: -32
             sourceComponent: islandBg
         }
         
@@ -762,7 +762,7 @@ PanelWindow {
             id: actionsLayout
             anchors.centerIn: parent
             flow: GridLayout.LeftToRight
-            columns: !isHorizontal ? 1 : 4
+            columns: !isHorizontal ? 1 : (sharedData && sharedData.sidebarBatteryEnabled !== false ? 6 : 4)
             rows: !isHorizontal ? -1 : 1
             rowSpacing: 2
             
@@ -1070,6 +1070,62 @@ PanelWindow {
                                         sidePanel.timerRemaining = 0
                                         if (sharedData && sharedData.runCommand) sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Stopped', 'Active timer cancelled']) 
                                     } 
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Subtle Separator
+            Rectangle {
+                Layout.preferredWidth: !isHorizontal ? 14 : 1
+                Layout.preferredHeight: isHorizontal ? 14 : 1
+                Layout.alignment: Qt.AlignCenter
+                Layout.margins: 4
+                color: Qt.rgba(1, 1, 1, 0.1)
+                visible: sharedData && sharedData.sidebarBatteryEnabled !== false
+            }
+
+            QuickToggle {
+                icon: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "⚡" : ""
+                contentColor: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "#00ff41" : (sidePanel.qBatteryPct > 40 ? "#ffffff" : (sidePanel.qBatteryPct > 20 ? "#ffd700" : "#ff3b3b"))
+                sharedData: sidePanel.sharedData
+                sidePanelRoot: sidePanel
+                panelPosition: sidePanel.panelPosition
+                outputScreen: sidePanel.screen
+                showBackground: false
+                Layout.alignment: Qt.AlignCenter
+                Layout.preferredWidth: 26
+                Layout.preferredHeight: 26
+                visible: sharedData && sharedData.sidebarBatteryEnabled !== false
+                onClicked: {} // No action on click for now, just a display toggle
+                popoverContent: Component {
+                    Rectangle {
+                        width: 200
+                        height: 60
+                        color: (sharedData.colorSecondary || "#141414")
+                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 12
+                            Text { 
+                                text: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "⚡" : ""
+                                font.pixelSize: 24
+                                color: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "#00ff41" : (sidePanel.qBatteryPct > 40 ? "#ffffff" : (sidePanel.qBatteryPct > 20 ? "#ffd700" : "#ff3b3b"))
+                            }
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                Text { 
+                                    text: sidePanel.qBatteryPct + "%"
+                                    font.pixelSize: 18
+                                    font.weight: Font.Bold
+                                    color: "#ffffff" 
+                                }
+                                Text { 
+                                    text: sidePanel.qBatteryStatus
+                                    font.pixelSize: 12
+                                    color: Qt.rgba(1,1,1,0.5) 
                                 }
                             }
                         }
