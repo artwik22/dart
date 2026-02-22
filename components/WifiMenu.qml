@@ -4,10 +4,10 @@ import QtQuick.Controls
 
 Rectangle {
     id: root
-    width: 300
-    height: 400
+    width: 200
+    height: 280
     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
+    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
 
     property var sharedData: null
     property var sidePanelRoot: null
@@ -112,8 +112,8 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: root
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: 10
+        spacing: 10
         
         // Header
         RowLayout {
@@ -121,7 +121,7 @@ Rectangle {
             Text {
                 text: "Wi-Fi"
                 color: (sharedData.colorOnSurface || "#ffffff")
-                font.pixelSize: 18
+                font.pixelSize: 14
                 font.weight: Font.Bold
                 Layout.fillWidth: true
             }
@@ -194,38 +194,44 @@ Rectangle {
             model: root.networks
             delegate: Rectangle {
                 width: ListView.view.width
-                height: 48
-                color: itemMa.containsMouse ? Qt.rgba(1,1,1,0.05) : "transparent"
+                height: 42
+                color: itemMa.containsMouse ? (modelData.active ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.25) : Qt.rgba(1,1,1,0.1)) : (modelData.active ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.15) : "transparent")
                 radius: 8
+                border.width: modelData.active ? 1 : (itemMa.containsMouse ? 1 : 0)
+                border.color: modelData.active ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.5) : Qt.rgba(1,1,1,0.05)
+                Behavior on color { ColorAnimation { duration: 150 } }
                 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 12
+                    anchors.margins: 6
+                    spacing: 10
                     
                     Text {
                         text: modelData.signal > 75 ? "󰤨" : (modelData.signal > 50 ? "󰤥" : (modelData.signal > 25 ? "󰤢" : "󰤟"))
                         font.family: "Material Design Icons"
                         font.pixelSize: 20
-                        color: modelData.active ? (sharedData.colorPrimary || "#D0BCFF") : (sharedData.colorOnSurface || "#ffffff")
+                        color: modelData.active ? (sharedData.colorPrimary || "#D0BCFF") : (itemMa.containsMouse ? "#ffffff" : Qt.rgba(1,1,1,0.7))
+                        Behavior on color { ColorAnimation { duration: 150 } }
                     }
                     
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: 0
                         Text {
                             text: modelData.ssid
-                            font.pixelSize: 14
+                            font.pixelSize: 12
                             font.weight: modelData.active ? Font.Bold : Font.Normal
-                            color: (sharedData.colorOnSurface || "#ffffff")
+                            color: modelData.active ? (sharedData.colorPrimary || "#D0BCFF") : (sharedData.colorOnSurface || "#ffffff")
                             elide: Text.ElideRight
                             Layout.fillWidth: true
+                            Behavior on color { ColorAnimation { duration: 150 } }
                         }
                         Text {
                             text: modelData.active ? "Connected" : (modelData.security !== "" ? "Secure" : "Open")
-                            font.pixelSize: 11
-                            color: (sharedData.colorOnSurfaceVariant || "#aaaaaa")
+                            font.pixelSize: 9
+                            color: modelData.active ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.8) : (sharedData.colorOnSurfaceVariant || "#aaaaaa")
                             Layout.fillWidth: true
+                            Behavior on color { ColorAnimation { duration: 150 } }
                         }
                     }
                     
@@ -237,12 +243,16 @@ Rectangle {
                         // Disconnect Button
                         Rectangle {
                             width: 24; height: 24; radius: 12
-                            color: disconMa.containsMouse ? Qt.rgba(1,0,0,0.2) : "transparent"
+                            color: disconMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
+                            scale: disconMa.pressed ? 0.9 : 1.0
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
                             Text {
                                 anchors.centerIn: parent
                                 text: "󰅙" 
                                 font.family: "Material Design Icons"
-                                color: "#ff4444"
+                                color: disconMa.containsMouse ? "#ffffff" : "#ff4444"
+                                Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             MouseArea {
                                 id: disconMa
@@ -290,20 +300,31 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             
-            Button {
-                text: "Network Settings"
+            Rectangle {
                 Layout.fillWidth: true
-                background: Rectangle {
-                    color: Qt.rgba(1,1,1,0.1)
-                    radius: 8
-                }
-                contentItem: Text {
-                    text: parent.text
+                height: 28
+                radius: 8
+                color: netSetMa.containsMouse ? Qt.rgba(1,1,1,0.15) : Qt.rgba(1,1,1,0.05)
+                scale: netSetMa.pressed ? 0.98 : 1.0
+                border.width: 1
+                border.color: Qt.rgba(1,1,1,0.05)
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: "Network Settings"
                     color: (sharedData.colorOnSurface || "#ffffff")
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: 11
+                    font.weight: Font.Medium
                 }
-                onClicked: runCommand("nm-connection-editor")
+                
+                MouseArea {
+                    id: netSetMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: runCommand("nm-connection-editor")
+                }
             }
         }
     }
@@ -363,32 +384,58 @@ Rectangle {
                 Layout.fillWidth: true
                 spacing: 12
                 
-                Button {
-                    text: "Cancel"
+                Rectangle {
                     Layout.fillWidth: true
-                    background: Rectangle { color: Qt.rgba(1,1,1,0.1); radius: 8 }
-                     contentItem: Text {
-                        text: parent.text
+                    height: 36
+                    radius: 8
+                    color: cancelMa.containsMouse ? Qt.rgba(1,1,1,0.15) : Qt.rgba(1,1,1,0.05)
+                    scale: cancelMa.pressed ? 0.98 : 1.0
+                    border.width: 1
+                    border.color: Qt.rgba(1,1,1,0.05)
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                    
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Cancel"
                         color: (sharedData.colorOnSurface || "#ffffff")
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
                     }
-                    onClicked: root.showPasswordPrompt = false
+                    
+                    MouseArea {
+                        id: cancelMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: root.showPasswordPrompt = false
+                    }
                 }
                 
-                Button {
-                    text: "Connect"
+                Rectangle {
                     Layout.fillWidth: true
-                    background: Rectangle { color: (sharedData.colorPrimary || "#D0BCFF"); radius: 8 }
-                     contentItem: Text {
-                        text: parent.text
+                    height: 36
+                    radius: 8
+                    color: connectMa.containsMouse ? Qt.lighter((sharedData.colorPrimary || "#D0BCFF"), 1.1) : (sharedData.colorPrimary || "#D0BCFF")
+                    scale: connectMa.pressed ? 0.98 : 1.0
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                    
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Connect"
                         color: (sharedData.colorOnPrimary || "#000000")
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: 13
+                        font.weight: Font.Bold
                     }
-                    onClicked: {
-                        root.showPasswordPrompt = false
-                        connectToNetwork(root.pendingSsid, passInput.text)
+                    
+                    MouseArea {
+                        id: connectMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            root.showPasswordPrompt = false
+                            connectToNetwork(root.pendingSsid, passInput.text)
+                        }
                     }
                 }
             }

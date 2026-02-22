@@ -4,10 +4,10 @@ import QtQuick.Controls
 
 Rectangle {
     id: root
-    width: 300
-    height: 400
+    width: 200
+    height: 280
     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
+    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
 
     property var sharedData: null
     property var sidePanelRoot: null
@@ -27,15 +27,13 @@ Rectangle {
 
     function scanDevices() {
         statusMessage = "Refreshing..."
-        // Format: MAC Name (Connected: yes/no, Paired: yes/no)
-        // We'll use a loop in shell to get info
-        var cmd = "bluetoothctl devices | while read -r line; do " +
-                  "mac=$(echo $line | cut -d' ' -f2); " +
-                  "name=$(echo $line | cut -d' ' -f3-); " +
-                  "info=$(bluetoothctl info $mac); " +
-                  "conn=$(echo \"$info\" | grep 'Connected: yes' && echo 'yes' || echo 'no'); " +
-                  "pair=$(echo \"$info\" | grep 'Paired: yes' && echo 'yes' || echo 'no'); " +
-                  "icon=$(echo \"$info\" | grep 'Icon:' | cut -d: -f2- | xargs); " +
+        var cmd = "for mac in $(echo \"devices\" | bluetoothctl | grep \"^Device\" | awk '{print $2}' | head -n 15); do " +
+                  "info=$(echo \"info $mac\" | bluetoothctl); " +
+                  "name=$(echo \"$info\" | grep \"Name:\" | cut -d: -f2- | xargs); " +
+                  "conn=$(echo \"$info\" | grep -q \"Connected: yes\" && echo \"yes\" || echo \"no\"); " +
+                  "pair=$(echo \"$info\" | grep -q \"Paired: yes\" && echo \"yes\" || echo \"no\"); " +
+                  "icon=$(echo \"$info\" | grep \"Icon:\" | cut -d: -f2- | xargs); " +
+                  "[ -z \"$icon\" ] && icon=\"bluetooth\"; " +
                   "echo \"$mac|$name|$conn|$pair|$icon\"; " +
                   "done"
                   
@@ -82,13 +80,18 @@ Rectangle {
         if (scanning) {
             runCommand("bluetoothctl scan off", function() { scanning = false })
         } else {
-            runCommand("bluetoothctl scan on", function() { scanning = true })
+            scanning = true
+            statusMessage = "Discovering..."
+            runCommand("timeout 8 bluetoothctl scan on || true", function() { 
+                scanning = false
+                scanDevices()
+            })
         }
     }
     
     function connectDevice(mac) {
         statusMessage = "Connecting..."
-        runCommand("bluetoothctl connect " + mac, function(out) {
+        runCommand("timeout 10 bluetoothctl connect " + mac, function(out) {
             scanTimer.restart()
              // Check output for success/fail if needed
         })
@@ -96,16 +99,16 @@ Rectangle {
     
     function disconnectDevice(mac) {
         statusMessage = "Disconnecting..."
-        runCommand("bluetoothctl disconnect " + mac, function(out) {
+        runCommand("timeout 10 bluetoothctl disconnect " + mac, function(out) {
             scanTimer.restart()
         })
     }
     
     function pairDevice(mac) {
         statusMessage = "Pairing..."
-        runCommand("bluetoothctl pair " + mac, function(out) {
+        runCommand("timeout 15 bluetoothctl pair " + mac, function(out) {
              statusMessage = "Trusting..."
-             runCommand("bluetoothctl trust " + mac, function(out2) {
+             runCommand("timeout 5 bluetoothctl trust " + mac, function(out2) {
                  connectDevice(mac)
              })
         })
@@ -137,8 +140,8 @@ Rectangle {
     
     ColumnLayout {
         anchors.fill: root
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: 10
+        spacing: 10
         
         // Header
         RowLayout {
@@ -146,28 +149,33 @@ Rectangle {
             Text {
                 text: "Bluetooth"
                 color: (sharedData.colorOnSurface || "#ffffff")
-                font.pixelSize: 18
+                font.pixelSize: 14
                 font.weight: Font.Bold
                 Layout.fillWidth: true
             }
             
             // Scan Toggle
              Rectangle {
-                Layout.preferredWidth: 64
-                Layout.preferredHeight: 24
-                radius: 12
-                color: root.scanning ? (sharedData.colorPrimary || "#D0BCFF") : Qt.rgba(1,1,1,0.1)
+                Layout.preferredWidth: 60
+                Layout.preferredHeight: 22
+                radius: 11
+                color: scanToggleMa.containsMouse ? (root.scanning ? Qt.lighter((sharedData.colorPrimary || "#D0BCFF"), 1.1) : Qt.rgba(1,1,1,0.2)) : (root.scanning ? (sharedData.colorPrimary || "#D0BCFF") : Qt.rgba(1,1,1,0.1))
+                scale: scanToggleMa.pressed ? 0.95 : 1.0
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
                 
                 Text {
                     anchors.centerIn: parent
                     text: root.scanning ? "Scanning" : "Scan"
-                    font.pixelSize: 10
+                    font.pixelSize: 9
                     font.weight: Font.Bold
                     color: root.scanning ? (sharedData.colorOnPrimary || "#000000") : (sharedData.colorOnSurface || "#ffffff")
                 }
                 
                 MouseArea {
+                    id: scanToggleMa
                     anchors.fill: parent
+                    hoverEnabled: true
                     onClicked: toggleScan()
                 }
             }
@@ -191,14 +199,17 @@ Rectangle {
             model: root.devices
             delegate: Rectangle {
                 width: ListView.view.width
-                height: 48
-                color: itemMa.containsMouse ? Qt.rgba(1,1,1,0.05) : "transparent"
+                height: 42
+                color: itemMa.containsMouse ? (modelData.connected ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.25) : Qt.rgba(1,1,1,0.1)) : (modelData.connected ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.15) : "transparent")
                 radius: 8
+                border.width: modelData.connected ? 1 : (itemMa.containsMouse ? 1 : 0)
+                border.color: modelData.connected ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.5) : Qt.rgba(1,1,1,0.05)
+                Behavior on color { ColorAnimation { duration: 150 } }
                 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 12
+                    anchors.margins: 6
+                    spacing: 10
                     
                     Text {
                         text: {
@@ -210,7 +221,8 @@ Rectangle {
                         }
                         font.family: "Material Design Icons"
                         font.pixelSize: 20
-                        color: modelData.connected ? (sharedData.colorPrimary || "#D0BCFF") : (sharedData.colorOnSurface || "#ffffff")
+                        color: modelData.connected ? (sharedData.colorPrimary || "#D0BCFF") : (itemMa.containsMouse ? "#ffffff" : Qt.rgba(1,1,1,0.7))
+                        Behavior on color { ColorAnimation { duration: 150 } }
                     }
                     
                     ColumnLayout {
@@ -218,30 +230,35 @@ Rectangle {
                         spacing: 2
                         Text {
                             text: modelData.name
-                            font.pixelSize: 14
+                            font.pixelSize: 13
                             font.weight: modelData.connected ? Font.Bold : Font.Normal
-                            color: (sharedData.colorOnSurface || "#ffffff")
+                            color: modelData.connected ? (sharedData.colorPrimary || "#D0BCFF") : (sharedData.colorOnSurface || "#ffffff")
                             elide: Text.ElideRight
                             Layout.fillWidth: true
+                            Behavior on color { ColorAnimation { duration: 150 } }
                         }
                         Text {
                             text: modelData.connected ? "Connected" : (modelData.paired ? "Paired" : "New Device")
-                            font.pixelSize: 11
-                            color: (sharedData.colorOnSurfaceVariant || "#aaaaaa")
+                            font.pixelSize: 10
+                            color: modelData.connected ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.8) : (sharedData.colorOnSurfaceVariant || "#aaaaaa")
                             Layout.fillWidth: true
+                            Behavior on color { ColorAnimation { duration: 150 } }
                         }
                     }
                     
                     // Action Button
                     Rectangle {
-                        width: 60; height: 24; radius: 12
+                        width: 60; height: 22; radius: 11
                         visible: itemMa.containsMouse || modelData.connected
                         color: btnMa.containsMouse ? (modelData.connected ? "#ff4444" : (sharedData.colorPrimary || "#D0BCFF")) : Qt.rgba(1,1,1,0.1)
+                        scale: btnMa.pressed ? 0.92 : 1.0
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
                         
                         Text {
                             anchors.centerIn: parent
                             text: modelData.connected ? "Disconnect" : (modelData.paired ? "Connect" : "Pair")
-                            font.pixelSize: 10
+                            font.pixelSize: 9
                             font.weight: Font.Bold
                             color: btnMa.containsMouse ? (modelData.connected ? "#ffffff" : "#000000") : (sharedData.colorOnSurface || "#ffffff")
                         }
@@ -271,20 +288,31 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             
-            Button {
-                text: "Bluetooth Manager"
+            Rectangle {
                 Layout.fillWidth: true
-                background: Rectangle {
-                    color: Qt.rgba(1,1,1,0.1)
-                    radius: 8
-                }
-                contentItem: Text {
-                    text: parent.text
+                height: 28
+                radius: 8
+                color: bmSetMa.containsMouse ? Qt.rgba(1,1,1,0.15) : Qt.rgba(1,1,1,0.05)
+                scale: bmSetMa.pressed ? 0.98 : 1.0
+                border.width: 1
+                border.color: Qt.rgba(1,1,1,0.05)
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: "Bluetooth Manager"
                     color: (sharedData.colorOnSurface || "#ffffff")
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: 11
+                    font.weight: Font.Medium
                 }
-                onClicked: runCommand("blueman-manager")
+                
+                MouseArea {
+                    id: bmSetMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: runCommand("blueman-manager")
+                }
             }
         }
     }

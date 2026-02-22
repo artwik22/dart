@@ -37,18 +37,24 @@ Item {
                                  ((sharedData && sharedData.colorOnPrimary) ? sharedData.colorOnPrimary : "#381E72") : 
                                  ((sharedData && sharedData.colorOnSurface) ? sharedData.colorOnSurface : "#E6E1E5")
     
+    scale: mouseArea.pressed ? 0.90 : (mouseArea.containsMouse ? 1.05 : 1.0)
+    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+
     Rectangle {
         id: bgRect
         anchors.fill: parent
-        radius: (root.sharedData && root.sharedData.quickshellBorderRadius) ? root.sharedData.quickshellBorderRadius : (isLarge ? 28 : 18)
+        radius: (root.sharedData && root.sharedData.quickshellBorderRadius !== undefined) ? root.sharedData.quickshellBorderRadius : (isLarge ? 16 : 10)
         color: {
-            if (root.active && root.isLarge) return root.btnBgActive
-            if (mouseArea.containsMouse) return root.btnBgHover
-            return root.btnBg
+            if (root.active) return root.btnBgActive
+            if (mouseArea.pressed) return Qt.rgba(1,1,1,0.02)
+            if (mouseArea.containsMouse) return Qt.rgba(1,1,1,0.12)
+            return root.showBackground ? root.btnBg : "transparent"
         }
-        visible: root.showBackground
+        border.width: (root.active || mouseArea.containsMouse || root.showBackground) ? 1 : 0
+        border.color: root.active ? "transparent" : Qt.rgba(1,1,1,0.05)
         
-        Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+        Behavior on border.color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
     }
     
     property bool pulsing: false
@@ -148,14 +154,7 @@ Item {
         }
 
         onClicked: {
-            clickAnim.start()
             root.clicked()
         }
-    }
-    
-    SequentialAnimation {
-        id: clickAnim
-        NumberAnimation { target: root; property: "scale"; to: 0.95; duration: 50; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutBack }
     }
 }

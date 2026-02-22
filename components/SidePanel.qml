@@ -774,8 +774,8 @@ PanelWindow {
                 outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 26
-                Layout.preferredHeight: 26
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 onClicked: {
                     if (sharedData && sharedData.runCommand) {
                         sharedData.runCommand(['sh', '-c', 'nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on'])
@@ -797,8 +797,8 @@ PanelWindow {
                 outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 26
-                Layout.preferredHeight: 26
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 onClicked: {
                     if (sharedData && sharedData.runCommand) {
                         var cmd = (sidePanel.qBtStatus === "On") ? 'bluetoothctl power off' : 'bluetoothctl power on'
@@ -821,8 +821,8 @@ PanelWindow {
                 outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 26
-                Layout.preferredHeight: 26
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 onClicked: {
                     if (sharedData && sharedData.runCommand) {
                         var currentProfile = sidePanel.qPwrStatus.toLowerCase()
@@ -836,16 +836,16 @@ PanelWindow {
                 popoverContent: Component {
                     Rectangle {
                         id: powerPopover
-                        width: 240
-                        height: 240
+                        width: 180
+                        height: 180
                         color: (sharedData.colorSecondary || "#141414")
                         radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
                         scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
                         Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
                         Column { 
                             anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 12
+                            anchors.margins: 10
+                            spacing: 8
                             Column { 
                                 spacing: 2
                                 width: parent.width
@@ -880,7 +880,7 @@ PanelWindow {
                                         model: ["power-saver", "balanced", "performance"]
                                         Rectangle {
                                             width: parent.width
-                                            height: 32
+                                            height: 24
                                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                             property bool isActive: sharedData.activePowerProfile === modelData
                                             color: isActive ? (sharedData.colorAccent || "#4a9eff") : (profMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent")
@@ -898,7 +898,7 @@ PanelWindow {
                                                 Text { 
                                                     text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
                                                     color: isActive ? "#000" : "#fff"
-                                                    font.pixelSize: 11
+                                                    font.pixelSize: 10
                                                     font.weight: Font.Medium 
                                                 } 
                                             }
@@ -917,7 +917,7 @@ PanelWindow {
                                 spacing: 8
                                 Rectangle {
                                     width: (parent.width - 8) / 2
-                                    height: 32
+                                    height: 28
                                     color: rbMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
                                     radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                     border.width: 1
@@ -937,7 +937,7 @@ PanelWindow {
                                 }
                                 Rectangle {
                                     width: (parent.width - 8) / 2
-                                    height: 32
+                                    height: 28
                                     color: sdMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
                                     radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                     border.width: 1
@@ -969,27 +969,27 @@ PanelWindow {
                 outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 26
-                Layout.preferredHeight: 26
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 onClicked: {}
                 popoverContent: Component {
                     Rectangle {
-                        width: 240
-                        height: 260
+                        width: 180
+                        height: 200
                         color: (sharedData.colorSecondary || "#141414")
-                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
+                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
                         Column { 
                             anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 12
+                            anchors.margins: 10
+                            spacing: 8
                             Column { 
                                 spacing: 2
                                 width: parent.width
-                                Text { text: "Timer"; color: (sharedData.colorAccent || "#4a9eff"); font.pixelSize: 16; font.weight: Font.ExtraBold }
+                                Text { text: "Timer"; color: (sharedData.colorAccent || "#4a9eff"); font.pixelSize: 14; font.weight: Font.ExtraBold }
                                 Text { 
                                     text: sidePanel.timerRunning ? sidePanel.formatTime(sidePanel.timerRemaining) : "No active timer"
                                     color: sidePanel.timerRunning ? "#fff" : "#aaa"
-                                    font.pixelSize: sidePanel.timerRunning ? 14 : 12
+                                    font.pixelSize: sidePanel.timerRunning ? 13 : 11
                                     font.weight: sidePanel.timerRunning ? Font.Bold : Font.Medium
                                     opacity: sidePanel.timerRunning ? 1.0 : 0.7 
                                 }
@@ -1021,7 +1021,7 @@ PanelWindow {
                                         model: [{ label: "5m", sec: 300 }, { label: "15m", sec: 900 }, { label: "30m", sec: 1800 }, { label: "1h", sec: 3600 }]
                                         Rectangle {
                                             Layout.fillWidth: true
-                                            height: 32
+                                            height: 24
                                             color: timerBtnMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
                                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                             border.width: 1
@@ -1047,7 +1047,7 @@ PanelWindow {
                             }
                             Rectangle {
                                 width: parent.width
-                                height: 32
+                                height: 28
                                 color: stopTimerMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
                                 radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
                                 border.width: 1
@@ -1097,8 +1097,8 @@ PanelWindow {
                 outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 26
-                Layout.preferredHeight: 26
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 visible: sharedData && sharedData.sidebarBatteryEnabled !== false
                 onClicked: {} // No action on click for now, just a display toggle
                 popoverContent: Component {
@@ -1154,10 +1154,14 @@ PanelWindow {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "qssidepanel-popover"
         
-        implicitWidth: 240
-        implicitHeight: 240
-        width: 240
-        height: 240
+        implicitWidth: targetWidth
+        implicitHeight: targetHeight
+        width: targetWidth
+        height: targetHeight
+        
+        property real targetWidth: activeLoader === 1 ? (popoverLoader1.item ? (popoverLoader1.item.width > 0 ? popoverLoader1.item.width : 240) : 240) : (popoverLoader2.item ? (popoverLoader2.item.width > 0 ? popoverLoader2.item.width : 240) : 240)
+        property real targetHeight: activeLoader === 1 ? (popoverLoader1.item ? (popoverLoader1.item.height > 0 ? popoverLoader1.item.height : 240) : 240) : (popoverLoader2.item ? (popoverLoader2.item.height > 0 ? popoverLoader2.item.height : 240) : 240)
+        
         color: "transparent"
         
         
@@ -1229,7 +1233,6 @@ PanelWindow {
             
             Loader {
                 id: popoverLoader1
-                anchors.fill: parent
                 opacity: popoverWindow.activeLoader === 1 ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                 onOpacityChanged: if (opacity === 0 && popoverWindow.activeLoader !== 1) sourceComponent = null
@@ -1237,7 +1240,6 @@ PanelWindow {
 
             Loader {
                 id: popoverLoader2
-                anchors.fill: parent
                 opacity: popoverWindow.activeLoader === 2 ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                 onOpacityChanged: if (opacity === 0 && popoverWindow.activeLoader !== 2) sourceComponent = null
