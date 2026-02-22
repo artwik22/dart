@@ -840,8 +840,20 @@ PanelWindow {
                         height: 180
                         color: (sharedData.colorSecondary || "#141414")
                         radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
+                        
+                        // Mask for flush alignment
+                        Rectangle {
+                            color: parent.color
+                            width: sidePanel.isHorizontal ? parent.width : parent.radius
+                            height: sidePanel.isHorizontal ? parent.radius : parent.height
+                            anchors.left: sidePanel.panelPosition === "right" ? parent.left : undefined
+                            anchors.right: sidePanel.panelPosition === "left" ? parent.right : undefined
+                            anchors.top: sidePanel.panelPosition === "bottom" ? parent.top : undefined
+                            anchors.bottom: sidePanel.panelPosition === "top" ? parent.bottom : undefined
+                        }
+                        
                         scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
-                        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                         Column { 
                             anchors.fill: parent
                             anchors.margins: 10
@@ -978,6 +990,18 @@ PanelWindow {
                         height: 200
                         color: (sharedData.colorSecondary || "#141414")
                         radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
+                        
+                        // Mask for flush alignment
+                        Rectangle {
+                            color: parent.color
+                            width: sidePanel.isHorizontal ? parent.width : parent.radius
+                            height: sidePanel.isHorizontal ? parent.radius : parent.height
+                            anchors.left: sidePanel.panelPosition === "right" ? parent.left : undefined
+                            anchors.right: sidePanel.panelPosition === "left" ? parent.right : undefined
+                            anchors.top: sidePanel.panelPosition === "bottom" ? parent.top : undefined
+                            anchors.bottom: sidePanel.panelPosition === "top" ? parent.bottom : undefined
+                        }
+                        
                         Column { 
                             anchors.fill: parent
                             anchors.margins: 10
@@ -1175,18 +1199,25 @@ PanelWindow {
             if (content !== null) {
                 shouldShow = true
                 if (showProgress > 0) {
-                    // Transition between menus
+                    // Transition between menus: quickly hide old to prevent clipping
                     if (activeLoader === 1 && popoverLoader1.sourceComponent !== content) {
+                        popoverLoader1.sourceComponent = null
                         popoverLoader2.sourceComponent = content
                         activeLoader = 2
                     } else if (activeLoader === 2 && popoverLoader2.sourceComponent !== content) {
+                        popoverLoader2.sourceComponent = null
                         popoverLoader1.sourceComponent = content
                         activeLoader = 1
                     }
                 } else {
-                    // Initial opening
-                    popoverLoader1.sourceComponent = content
-                    activeLoader = 1
+                    // Initial opening or re-opening after hide
+                    if (activeLoader === 1) {
+                        popoverLoader1.sourceComponent = null
+                        popoverLoader1.sourceComponent = content
+                    } else {
+                        popoverLoader2.sourceComponent = null
+                        popoverLoader2.sourceComponent = content
+                    }
                 }
             } else {
                 shouldShow = false
@@ -1208,7 +1239,7 @@ PanelWindow {
         visible: showProgress > 0.01 || content !== null
         
         onIsHoveredChanged: {
-            if (!isHovered && !sidePanel.isAnyToggleHovered) {
+            if (!isHovered && sidePanel.hoveredTogglesCount === 0) {
                 hideTimer.restart()
             } else {
                 hideTimer.stop()
@@ -1219,30 +1250,25 @@ PanelWindow {
         Item {
             anchors.fill: parent
             opacity: popoverWindow.showProgress
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
             
             transform: [
                 Translate {
                     // Slide in from the sidebar edge
-                    x: !isHorizontal ? (panelPosition === "right" ? (1.0 - popoverWindow.showProgress) * 80 : (popoverWindow.showProgress - 1.0) * 80) : 0
-                    y: isHorizontal ? (panelPosition === "bottom" ? (1.0 - popoverWindow.showProgress) * 80 : (popoverWindow.showProgress - 1.0) * 80) : 0
-                    Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                    Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                    x: !isHorizontal ? (panelPosition === "right" ? (1.0 - popoverWindow.showProgress) * 20 : (popoverWindow.showProgress - 1.0) * 20) : 0
+                    y: isHorizontal ? (panelPosition === "bottom" ? (1.0 - popoverWindow.showProgress) * 20 : (popoverWindow.showProgress - 1.0) * 20) : 0
                 }
             ]
             
             Loader {
                 id: popoverLoader1
                 opacity: popoverWindow.activeLoader === 1 ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                onOpacityChanged: if (opacity === 0 && popoverWindow.activeLoader !== 1) sourceComponent = null
+                Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
             }
 
             Loader {
                 id: popoverLoader2
                 opacity: popoverWindow.activeLoader === 2 ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                onOpacityChanged: if (opacity === 0 && popoverWindow.activeLoader !== 2) sourceComponent = null
+                Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
             }
             
             MouseArea {
@@ -1258,10 +1284,11 @@ PanelWindow {
             id: contentCleanupTimer
             interval: 350
             onTriggered: {
+                console.log("contentCleanupTimer triggered. shouldShow is:", popoverWindow.shouldShow)
                 if (!popoverWindow.shouldShow) {
                     popoverLoader1.sourceComponent = null
                     popoverLoader2.sourceComponent = null
-                    popoverWindow.activeLoader = 1
+                    // Do not aggressively reset activeLoader here to avoid 0-component race condition
                 }
             }
         }
@@ -1269,13 +1296,18 @@ PanelWindow {
         Timer {
             id: hideTimer
             interval: 300
-            onTriggered: popoverWindow.content = null
+            onTriggered: {
+                console.log("hideTimer triggered! Nullifying content.")
+                popoverWindow.content = null
+            }
         }
     }
 
-    property bool isAnyToggleHovered: false
+    property int hoveredTogglesCount: 0
+    property bool isAnyToggleHovered: hoveredTogglesCount > 0
 
     function showPopover(content, targetX, targetY) {
+        console.log("showPopover called! content null?", content === null, "hover count:", hoveredTogglesCount)
         if (content) {
             hideTimer.stop()
             popoverWindow.content = content
@@ -1314,8 +1346,11 @@ PanelWindow {
                 }
             }
         } else {
-            if (!popoverWindow.isHovered) {
+            if (!popoverWindow.isHovered && sidePanel.hoveredTogglesCount === 0) {
+                console.log("Restarting hideTimer since not hovered and toggles count is 0")
                 hideTimer.restart()
+            } else {
+                console.log("Not hiding. window hovered?", popoverWindow.isHovered, "toggles count:", sidePanel.hoveredTogglesCount)
             }
         }
     }

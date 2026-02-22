@@ -12,6 +12,20 @@ Rectangle {
     property var sharedData: null
     property var sidePanelRoot: null
     
+    // Mask for flush alignment using sidePanel position
+    Rectangle {
+        color: parent.color
+        width: (sidePanelRoot && sidePanelRoot.isHorizontal) ? parent.width : parent.radius
+        height: (sidePanelRoot && sidePanelRoot.isHorizontal) ? parent.radius : parent.height
+        anchors.left: (sidePanelRoot && sidePanelRoot.panelPosition === "left") ? parent.left : undefined
+        anchors.right: (sidePanelRoot && sidePanelRoot.panelPosition === "right") ? parent.right : undefined
+        anchors.top: (sidePanelRoot && sidePanelRoot.panelPosition === "top") ? parent.top : undefined
+        anchors.bottom: (sidePanelRoot && sidePanelRoot.panelPosition === "bottom") ? parent.bottom : undefined
+    }
+    
+    scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
+    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+    
     // Internal State
     property bool scanning: false
     property string statusMessage: ""

@@ -140,14 +140,19 @@ Item {
         
         onEntered: {
             if (root.sidePanelRoot && root.popoverContent) {
-                root.sidePanelRoot.isAnyToggleHovered = true
+                if (root.sidePanelRoot.hoveredTogglesCount !== undefined) {
+                    root.sidePanelRoot.hoveredTogglesCount += 1
+                }
                 root.sidePanelRoot.showPopover(root.popoverContent, 0, 0)
             }
         }
         
         onExited: {
             if (root.sidePanelRoot) {
-                root.sidePanelRoot.isAnyToggleHovered = false
+                if (root.sidePanelRoot.hoveredTogglesCount !== undefined) {
+                    if (root.sidePanelRoot.hoveredTogglesCount > 0)
+                        root.sidePanelRoot.hoveredTogglesCount -= 1
+                }
                 // Trigger check to hide if not hovering popover
                 root.sidePanelRoot.showPopover(null, 0, 0) 
             }
