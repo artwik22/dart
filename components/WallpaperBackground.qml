@@ -38,11 +38,13 @@ PanelWindow {
     // Image element do wyświetlenia tapety
     Image {
         id: wallpaperImage
+        asynchronous: true
+        sourceSize.width: 1920
+        sourceSize.height: 1080
         anchors.fill: parent
         source: currentWallpaper ? (currentWallpaper.startsWith("/") ? "file://" + currentWallpaper : currentWallpaper) : ""
         fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        cache: true
+        cache: false
         smooth: true
         mipmap: true
         

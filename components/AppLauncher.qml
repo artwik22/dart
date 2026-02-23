@@ -1300,11 +1300,29 @@ PanelWindow {
         }
     }
 
+    // Wyczyść pamięć po zamknięciu launchera
+    Timer {
+        id: memoryFreeTimer
+        interval: 500
+        onTriggered: {
+            if (sharedData && !sharedData.launcherVisible) {
+                apps = []
+                pacmanPackages = []
+                aurPackages = []
+                installedPackages = []
+                installedAurPackages = []
+                if (typeof gc === 'function') gc()
+            }
+        }
+    }
+
     Connections {
         target: sharedData
         enabled: !!sharedData
         function onLauncherVisibleChanged() {
             if (sharedData && sharedData.launcherVisible) {
+                memoryFreeTimer.stop()
+                if (apps.length === 0) loadApps()
                 currentMode = -1
                 currentPackageMode = -1
                 installSourceMode = -1
@@ -1315,6 +1333,7 @@ PanelWindow {
                 selectedIndex = 0
                 launcherOpenFocusTimer.restart()
             } else {
+                memoryFreeTimer.restart()
                 searchInput.focus = false
                 pacmanSearchInput.focus = false
                 aurSearchInput.focus = false
@@ -1644,6 +1663,7 @@ PanelWindow {
         
         // Lista trybów (gdy currentMode === -1) - NOWY DESIGN
         ListView {
+            reuseItems: true
             id: modesList
             anchors.fill: parent
             anchors.margins: 20
@@ -1960,6 +1980,7 @@ PanelWindow {
                             
                             // Lista aplikacji
                             ListView {
+                                reuseItems: true
                                 id: appsList
                                 width: parent.width
                                 height: parent.height - searchBox.height - parent.spacing
@@ -2124,6 +2145,7 @@ PanelWindow {
             // Tryb 1: Packages – ten sam wygląd co strona główna (height 50, radius 4, lewy pasek)
             
             ListView {
+                reuseItems: true
                 id: packagesOptionsList
                 anchors.fill: parent
                 anchors.margins: 20
@@ -2277,6 +2299,7 @@ PanelWindow {
             
             // Wybór źródła instalacji (Pacman/AUR) – ten sam wygląd co strona główna
             ListView {
+                reuseItems: true
                 id: installSourceList
                 anchors.fill: parent
                 anchors.margins: 20
@@ -2533,6 +2556,7 @@ PanelWindow {
                     
                     // Lista pakietów – ten sam wygląd co strona główna
                     ListView {
+                        reuseItems: true
                         id: pacmanPackagesList
                         width: parent.width
                         height: parent.height - pacmanSearchBox.height - parent.spacing
@@ -2757,6 +2781,7 @@ PanelWindow {
                     
                     // Lista pakietów AUR – ten sam wygląd co strona główna
                     ListView {
+                        reuseItems: true
                         id: aurPackagesList
                         width: parent.width
                         height: parent.height - aurSearchBox.height - parent.spacing
@@ -2876,6 +2901,7 @@ PanelWindow {
             
             // Wybór źródła usuwania (Pacman/AUR) – ten sam wygląd co strona główna
             ListView {
+                reuseItems: true
                 id: removeSourceList
                 anchors.fill: parent
                 anchors.margins: 20
@@ -3130,6 +3156,7 @@ PanelWindow {
                     
                     // Lista zainstalowanych pakietów – ten sam wygląd co strona główna
                     ListView {
+                        reuseItems: true
                         id: removePackagesList
                         width: parent.width
                         height: parent.height - removeSearchBox.height - parent.spacing
@@ -3366,6 +3393,7 @@ PanelWindow {
                     
                     // Lista zainstalowanych pakietów AUR – ten sam wygląd co strona główna
                     ListView {
+                        reuseItems: true
                         id: removeAurPackagesList
                         width: parent.width
                         height: parent.height - removeAurSearchBox.height - parent.spacing

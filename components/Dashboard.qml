@@ -1373,6 +1373,8 @@ PanelWindow {
                                             clip: true
                                             
                                             Image {
+                                                sourceSize.width: 128
+                                                sourceSize.height: 128
                                                 anchors.fill: parent
                                                 source: mpArt ? mpArt : ""
                                                 fillMode: Image.PreserveAspectCrop
@@ -1637,6 +1639,7 @@ PanelWindow {
                             height: parent.height - 48
                             
                             ListView {
+                                reuseItems: true
                                 id: clipboardListView
                                 model: dashboardClipboardHistoryModel
                                 spacing: 5
@@ -1801,6 +1804,7 @@ PanelWindow {
                         
                         // Notifications list
                         ListView {
+                            reuseItems: true
                             id: notificationHistoryList
                             width: parent.width
                             height: parent.height - 80
@@ -2322,6 +2326,7 @@ PanelWindow {
                                     Text { text: "CPU"; font.pixelSize: 8; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.2); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight }
                                 }
                                 ListView {
+                                    reuseItems: true
                                     Layout.fillWidth: true; Layout.fillHeight: true;
                                     model: topProcessesModel; interactive: false; clip: true; spacing: 2
                                     delegate: Rectangle {

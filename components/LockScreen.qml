@@ -119,10 +119,13 @@ PanelWindow {
         
         Image {
             id: wallpaper
+            asynchronous: true
+            sourceSize.width: 1920
+            sourceSize.height: 1080
             anchors.fill: parent
             source: lockScreenRoot.wallpaperPath ? (lockScreenRoot.wallpaperPath.startsWith("/") ? "file://" + lockScreenRoot.wallpaperPath : lockScreenRoot.wallpaperPath) : ""
             fillMode: Image.PreserveAspectCrop
-            asynchronous: true
+            cache: false
             smooth: true
             mipmap: true
             opacity: 0.45
@@ -572,6 +575,9 @@ PanelWindow {
                                     color: "#222222"
                                     clip: true
                                     Image {
+                                        asynchronous: true
+                                        sourceSize.width: 256
+                                        sourceSize.height: 256
                                         anchors.fill: parent
                                         source: mpArt ? mpArt : ""
                                         fillMode: Image.PreserveAspectCrop

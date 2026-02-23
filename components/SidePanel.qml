@@ -64,8 +64,6 @@ PanelWindow {
     // STABLE VISUAL SIDWBAR: Keep a fixed 33px width/height
     implicitWidth: !isHorizontal ? 33 : (screen ? screen.width : 2160)
     implicitHeight: isHorizontal ? 33 : (screen ? screen.height : 1440)
-    width: implicitWidth
-    height: implicitHeight
     color: "transparent"
     property var sharedData: null
     property bool dynamicBackground: !!(sharedData && sharedData.dynamicSidebarBackground)
@@ -656,6 +654,9 @@ PanelWindow {
             color: trayMa.containsMouse ? sidePanel.btnBgHover : "transparent"
             
             Image {
+                asynchronous: true
+                sourceSize.width: 64
+                sourceSize.height: 64
                 anchors.fill: parent
                 anchors.margins: 4
                 source: modelData.icon
@@ -1180,8 +1181,6 @@ PanelWindow {
         
         implicitWidth: targetWidth
         implicitHeight: targetHeight
-        width: targetWidth
-        height: targetHeight
         
         property real targetWidth: activeLoader === 1 ? (popoverLoader1.item ? (popoverLoader1.item.width > 0 ? popoverLoader1.item.width : 240) : 240) : (popoverLoader2.item ? (popoverLoader2.item.width > 0 ? popoverLoader2.item.width : 240) : 240)
         property real targetHeight: activeLoader === 1 ? (popoverLoader1.item ? (popoverLoader1.item.height > 0 ? popoverLoader1.item.height : 240) : 240) : (popoverLoader2.item ? (popoverLoader2.item.height > 0 ? popoverLoader2.item.height : 240) : 240)
@@ -1284,7 +1283,6 @@ PanelWindow {
             id: contentCleanupTimer
             interval: 350
             onTriggered: {
-                console.log("contentCleanupTimer triggered. shouldShow is:", popoverWindow.shouldShow)
                 if (!popoverWindow.shouldShow) {
                     popoverLoader1.sourceComponent = null
                     popoverLoader2.sourceComponent = null
@@ -1297,7 +1295,6 @@ PanelWindow {
             id: hideTimer
             interval: 300
             onTriggered: {
-                console.log("hideTimer triggered! Nullifying content.")
                 popoverWindow.content = null
             }
         }
@@ -1307,7 +1304,6 @@ PanelWindow {
     property bool isAnyToggleHovered: hoveredTogglesCount > 0
 
     function showPopover(content, targetX, targetY) {
-        console.log("showPopover called! content null?", content === null, "hover count:", hoveredTogglesCount)
         if (content) {
             hideTimer.stop()
             popoverWindow.content = content
@@ -1347,10 +1343,7 @@ PanelWindow {
             }
         } else {
             if (!popoverWindow.isHovered && sidePanel.hoveredTogglesCount === 0) {
-                console.log("Restarting hideTimer since not hovered and toggles count is 0")
                 hideTimer.restart()
-            } else {
-                console.log("Not hiding. window hovered?", popoverWindow.isHovered, "toggles count:", sidePanel.hoveredTogglesCount)
             }
         }
     }

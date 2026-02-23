@@ -296,6 +296,9 @@ Item {
 
             // Real App Icon
             Image {
+                asynchronous: true
+                sourceSize.width: 64
+                sourceSize.height: 64
                 anchors.fill: parent
                 anchors.margins: 4
                 source: notification ? notification.appIcon : ""

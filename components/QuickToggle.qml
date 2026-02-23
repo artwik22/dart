@@ -64,11 +64,19 @@ Item {
         id: iconText
         visible: !root.isLarge
         anchors.centerIn: parent
+        anchors.verticalCenterOffset: mouseArea.containsMouse ? -2 : 0
         text: root.icon
         font.pixelSize: 18
         font.family: "Material Design Icons"
         color: root.contentColor
         z: 1
+
+        scale: mouseArea.pressed ? 0.9 : (mouseArea.containsMouse ? 1.1 : 1.0)
+        rotation: mouseArea.containsMouse ? 5 : 0
+        
+        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+        Behavior on rotation { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+        Behavior on anchors.verticalCenterOffset { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
 
         // Subtle but noticeable breathing for the icon
         SequentialAnimation on opacity {
@@ -96,10 +104,18 @@ Item {
             
             Text {
                 anchors.centerIn: parent
+                anchors.verticalCenterOffset: mouseArea.containsMouse ? -2 : 0
                 text: root.icon
                 font.pixelSize: 24
                 font.family: "Material Design Icons"
                 color: root.contentColor
+                
+                scale: mouseArea.pressed ? 0.9 : (mouseArea.containsMouse ? 1.1 : 1.0)
+                rotation: mouseArea.containsMouse ? 5 : 0
+                
+                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                Behavior on rotation { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                Behavior on anchors.verticalCenterOffset { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
             }
         }
         

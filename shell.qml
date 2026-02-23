@@ -701,6 +701,7 @@ ShellRoot {
         model: Quickshell.screens
         delegate: Component {
             Loader {
+                asynchronous: true
                 property var modelData
                 active: root.sharedData.lockScreenVisible
                 sourceComponent: LockScreen {
@@ -724,6 +725,7 @@ ShellRoot {
     // AppLauncher - launcher aplikacji (rofi-like)
     // Używamy Loadera, aby ładować tylko gdy potrzebny (oszczędność RAM)
     Loader {
+        asynchronous: true
         id: appLauncherLoader
         // Keep active to allow animations (AppLauncher manages its own visibility/off-screen state)
         active: true
@@ -745,6 +747,7 @@ ShellRoot {
 
     // ClipboardManager - menedżer schowka (jeden na pierwszym ekranie)
     Loader {
+        asynchronous: true
         id: clipboardManagerLoader
         active: root.sharedData.clipboardVisible
         sourceComponent: ClipboardManager {

@@ -540,6 +540,9 @@ PanelWindow {
                             color: "#222222"
                             clip: true
                             Image {
+                                asynchronous: true
+                                sourceSize.width: 512
+                                sourceSize.height: 512
                                 anchors.fill: parent
                                 source: mpArt ? mpArt : ""
                                 fillMode: Image.PreserveAspectCrop
