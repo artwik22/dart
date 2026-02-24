@@ -215,27 +215,56 @@ PanelWindow {
                     } 
                 }
             }
-            Text { 
-                id: sidePanelHoursDisplay
-                text: "00"
-                font.pixelSize: 24
-                font.family: "Outfit, Inter, sans-serif"
-                font.weight: Font.Black
-                font.letterSpacing: -1.5
-                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                horizontalAlignment: Text.AlignHCenter
-                Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutQuart } } 
-            }
-            Text { 
-                id: sidePanelMinutesDisplay
-                text: "00"
-                font.pixelSize: 24
-                font.family: "Outfit, Inter, sans-serif"
-                font.weight: Font.ExtraLight
-                font.letterSpacing: -1.5
-                color: "#ffffff"
-                horizontalAlignment: Text.AlignHCenter
-                opacity: 0.9
+            // Clock background pill
+            Rectangle {
+                width: 30
+                height: sidePanelHoursDisplay.implicitHeight + 6 + sidePanelMinutesDisplay.implicitHeight + 6
+                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined && sharedData.quickshellBorderRadius > 0) ? Math.min(sharedData.quickshellBorderRadius, 8) : 8
+                color: Qt.rgba(1,1,1,0.04)
+                border.width: 1
+                border.color: Qt.rgba(1,1,1,0.06)
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 1
+
+                    Text { 
+                        id: sidePanelHoursDisplay
+                        text: "00"
+                        font.pixelSize: 17
+                        font.family: "Inter, Roboto, sans-serif"
+                        font.weight: Font.ExtraBold
+                        font.letterSpacing: -0.5
+                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        Behavior on color { ColorAnimation { duration: 280; easing.type: Easing.OutQuart } } 
+                    }
+
+                    // Blinking dot separator
+                    Rectangle {
+                        width: 3; height: 3
+                        radius: 1.5
+                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        opacity: (sharedData && sharedData.clockBlinkColon) ? (clockColonVisible ? 0.8 : 0.15) : 0.6
+                        Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
+                    }
+
+                    Text { 
+                        id: sidePanelMinutesDisplay
+                        text: "00"
+                        font.pixelSize: 17
+                        font.family: "Inter, Roboto, sans-serif"
+                        font.weight: Font.Light
+                        font.letterSpacing: -0.5
+                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        opacity: 0.85
+                    }
+                }
             }
         }
         
@@ -299,8 +328,8 @@ PanelWindow {
                 id: sidePanelHoursDisplayTop
                 text: "00"
                 font.pixelSize: 22
-                font.family: "Outfit, Inter, sans-serif"
-                font.weight: Font.Black
+                font.family: "Inter, Roboto, sans-serif"
+                font.weight: Font.ExtraBold
                 font.letterSpacing: -1
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 verticalAlignment: Text.AlignVCenter
@@ -309,9 +338,9 @@ PanelWindow {
             Text {
                 text: ":"
                 font.pixelSize: 22
-                font.family: "Outfit, Inter, sans-serif"
-                font.weight: Font.ExtraLight
-                color: "#ffffff"
+                font.family: "Inter, Roboto, sans-serif"
+                font.weight: Font.Light
+                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
                 opacity: (sharedData && sharedData.clockBlinkColon) ? (clockColonVisible ? 0.9 : 0.1) : 0.9
@@ -324,12 +353,12 @@ PanelWindow {
                 id: sidePanelMinutesDisplayTop
                 text: "00"
                 font.pixelSize: 22
-                font.family: "Outfit, Inter, sans-serif"
-                font.weight: Font.ExtraLight
+                font.family: "Inter, Roboto, sans-serif"
+                font.weight: Font.Light
                 font.letterSpacing: -1
-                color: "#ffffff"
+                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                 verticalAlignment: Text.AlignVCenter
-                opacity: 0.9
+                opacity: 0.85
             }
         }
         

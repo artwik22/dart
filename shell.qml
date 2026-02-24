@@ -702,13 +702,15 @@ ShellRoot {
         delegate: Component {
             Loader {
                 asynchronous: true
-                property var modelData
+                property var modelData: model
                 active: root.sharedData.lockScreenVisible
-                sourceComponent: LockScreen {
-                    screen: modelData
-                    sharedData: root.sharedData
-                    projectPath: root.projectPath
-                    wallpaperPath: root.currentWallpaperPath
+                sourceComponent: Component {
+                    LockScreen {
+                        screen: modelData
+                        sharedData: root.sharedData
+                        projectPath: root.projectPath
+                        wallpaperPath: root.currentWallpaperPath
+                    }
                 }
             }
         }
@@ -723,18 +725,12 @@ ShellRoot {
     }
 
     // AppLauncher - launcher aplikacji (rofi-like)
-    // Używamy Loadera, aby ładować tylko gdy potrzebny (oszczędność RAM)
-    Loader {
-        asynchronous: true
-        id: appLauncherLoader
-        // Keep active to allow animations (AppLauncher manages its own visibility/off-screen state)
-        active: true
-        sourceComponent: AppLauncher {
-            id: appLauncherInstance
-            sharedData: root.sharedData
-            screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
-            projectPath: root.projectPath
-        }
+    // Bez Loadera, aby uniknąć problemów z bindowaniem sharedData i animacjami
+    AppLauncher {
+        id: appLauncherInstance
+        sharedData: root.sharedData
+        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+        projectPath: root.projectPath
     }
 
     // VolumeSlider - slider głośności na prawej krawędzi
@@ -750,10 +746,11 @@ ShellRoot {
         asynchronous: true
         id: clipboardManagerLoader
         active: root.sharedData.clipboardVisible
-        sourceComponent: ClipboardManager {
-            id: clipboardManagerInstance
-            screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
-            sharedData: root.sharedData
+        sourceComponent: Component {
+            ClipboardManager {
+                screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+                sharedData: root.sharedData
+            }
         }
     }
 
