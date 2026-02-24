@@ -193,8 +193,8 @@ PanelWindow {
                 Text {
                     text: currentHours
                     font.pixelSize: 220
-                    font.weight: Font.Black
-                    font.family: "Inter, sans-serif"
+                    font.weight: Font.Bold
+                    font.family: "Outfit, sans-serif"
                     color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                     font.letterSpacing: -10
                 }
@@ -202,8 +202,8 @@ PanelWindow {
                 Text {
                     text: currentMinutes
                     font.pixelSize: 220
-                    font.weight: Font.Light
-                    font.family: "Inter, sans-serif"
+                    font.weight: Font.Bold
+                    font.family: "Outfit, sans-serif"
                     color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                     font.letterSpacing: -10
                 }

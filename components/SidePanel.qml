@@ -233,8 +233,8 @@ PanelWindow {
                         id: sidePanelHoursDisplay
                         text: "00"
                         font.pixelSize: 17
-                        font.family: "Inter, Roboto, sans-serif"
-                        font.weight: Font.ExtraBold
+                        font.family: "Outfit, sans-serif"
+                        font.weight: Font.Bold
                         font.letterSpacing: -0.5
                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                         horizontalAlignment: Text.AlignHCenter
@@ -256,8 +256,8 @@ PanelWindow {
                         id: sidePanelMinutesDisplay
                         text: "00"
                         font.pixelSize: 17
-                        font.family: "Inter, Roboto, sans-serif"
-                        font.weight: Font.Light
+                        font.family: "Outfit, sans-serif"
+                        font.weight: Font.Bold
                         font.letterSpacing: -0.5
                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                         horizontalAlignment: Text.AlignHCenter
@@ -328,8 +328,8 @@ PanelWindow {
                 id: sidePanelHoursDisplayTop
                 text: "00"
                 font.pixelSize: 22
-                font.family: "Inter, Roboto, sans-serif"
-                font.weight: Font.ExtraBold
+                font.family: "Outfit, sans-serif"
+                font.weight: Font.Bold
                 font.letterSpacing: -1
                 color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                 verticalAlignment: Text.AlignVCenter
@@ -353,8 +353,8 @@ PanelWindow {
                 id: sidePanelMinutesDisplayTop
                 text: "00"
                 font.pixelSize: 22
-                font.family: "Inter, Roboto, sans-serif"
-                font.weight: Font.Light
+                font.family: "Outfit, sans-serif"
+                font.weight: Font.Bold
                 font.letterSpacing: -1
                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                 verticalAlignment: Text.AlignVCenter

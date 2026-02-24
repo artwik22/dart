@@ -663,9 +663,14 @@ PanelWindow {
                                             cursorShape: Qt.PointingHandCursor
                                             hoverEnabled: true
                                             onClicked: {
-                                                // Własny lock screen – overlay z polem hasła (bez swaylock/loginctl)
+                                                // Pokaż lockscreen
                                                 if (sharedData) {
+                                                    sharedData.lockScreenNonBlocking = false
                                                     sharedData.lockScreenVisible = true
+                                                    // Ukryj menu dopiero po chwili, by uniknąć problemu znikającego docka/lockscreena
+                                                    if (sharedData.runCommand) {
+                                                        sharedData.runCommand(['sh', '-c', 'sleep 0.1'])
+                                                    }
                                                     sharedData.menuVisible = false
                                                 }
                                             }

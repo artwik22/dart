@@ -29,4 +29,7 @@ fi
 # Apply script settings
 [ -x "${HOME}/.config/alloy/scripts/apply-settings.sh" ] && "${HOME}/.config/alloy/scripts/apply-settings.sh"
 
+# Run lockscreen immediately on startup
+echo "showLockScreen" > /tmp/quickshell_command
+
 exec quickshell --path "$QUICKSHELL_PROJECT_PATH"
