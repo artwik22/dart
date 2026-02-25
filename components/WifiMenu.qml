@@ -11,6 +11,7 @@ Rectangle {
 
     property var sharedData: null
     property var sidePanelRoot: null
+    property var popoverWindow: null
     
     // Mask for flush alignment using sidePanel position
     Rectangle {
@@ -34,6 +35,14 @@ Rectangle {
     
     // Password Dialog State
     property bool showPasswordPrompt: false
+    onShowPasswordPromptChanged: {
+        if (showPasswordPrompt) {
+            if (popoverWindow) popoverWindow.popoverRequestsFocus = true
+            passInput.forceActiveFocus()
+        } else {
+            if (popoverWindow) popoverWindow.popoverRequestsFocus = false
+        }
+    }
     property string pendingSsid: ""
     
     function runCommand(cmd, callback) {
@@ -115,6 +124,11 @@ Rectangle {
     }
     
     Component.onCompleted: scanNetworks()
+    Component.onDestruction: {
+        if (showPasswordPrompt && popoverWindow) {
+            popoverWindow.popoverRequestsFocus = false
+        }
+    }
     
     Timer {
         id: scanTimer

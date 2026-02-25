@@ -815,6 +815,7 @@ PanelWindow {
                     WifiMenu {
                         sharedData: sidePanel.sharedData
                         sidePanelRoot: sidePanel
+                        popoverWindow: popoverWindow
                     }
                 }
             }
@@ -1207,6 +1208,7 @@ PanelWindow {
         
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "qssidepanel-popover"
+        WlrLayershell.keyboardFocus: (shouldShow && popoverRequestsFocus) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         
         implicitWidth: targetWidth
         implicitHeight: targetHeight
@@ -1222,6 +1224,7 @@ PanelWindow {
         property bool isHovered: popoverMouseArea.containsMouse
         property real showProgress: 0.0
         property bool shouldShow: false
+        property bool popoverRequestsFocus: false
         
         onContentChanged: {
             if (content !== null) {
