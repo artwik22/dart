@@ -56,6 +56,7 @@ ShellRoot {
         property bool lockscreenMediaEnabled: true
         property bool lockscreenWeatherEnabled: true
         property bool lockscreenBatteryEnabled: true
+        property bool lockscreenCalendarEnabled: true
         property bool lockscreenNetworkEnabled: false
         property bool screensaverWidgetsEnabled: true
         property bool sidebarBatteryEnabled: true
@@ -600,6 +601,14 @@ ShellRoot {
                                     }
                                 }
                                 
+                                if (json.sidebarBatteryEnabled !== undefined) {
+                                    var v = json.sidebarBatteryEnabled === true || json.sidebarBatteryEnabled === "true"
+                                    if (v !== sharedData.sidebarBatteryEnabled) { 
+                                        sharedData.sidebarBatteryEnabled = v; 
+                                        changed = true;
+                                    }
+                                }
+                                
                                 if (json.clockBlinkColon !== undefined) {
                                     var v = json.clockBlinkColon === true || json.clockBlinkColon === "true"
                                     if (v !== sharedData.clockBlinkColon) { sharedData.clockBlinkColon = v; changed = true }
@@ -625,6 +634,7 @@ ShellRoot {
                                 if (changed) {
                                 }
                             } catch (e) {
+                                console.error("QML LiveReload Error: " + e);
                             }
                         }
                     }

@@ -792,7 +792,7 @@ PanelWindow {
             id: actionsLayout
             anchors.centerIn: parent
             flow: GridLayout.LeftToRight
-            columns: !isHorizontal ? 1 : (sharedData && sharedData.sidebarBatteryEnabled !== false ? 6 : 4)
+            columns: !isHorizontal ? 1 : (sharedData && sharedData.sidebarBatteryEnabled === true ? 6 : 4)
             rows: !isHorizontal ? -1 : 1
             rowSpacing: 2
             
@@ -1139,7 +1139,7 @@ PanelWindow {
                 Layout.alignment: Qt.AlignCenter
                 Layout.margins: 4
                 color: Qt.rgba(1, 1, 1, 0.1)
-                visible: sharedData && sharedData.sidebarBatteryEnabled !== false
+                visible: (sharedData && sharedData.sidebarBatteryEnabled === true)
             }
 
             QuickToggle {
@@ -1154,7 +1154,7 @@ PanelWindow {
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 28
                 Layout.preferredHeight: 28
-                visible: sharedData && sharedData.sidebarBatteryEnabled !== false
+                visible: (sharedData && sharedData.sidebarBatteryEnabled === true)
                 onClicked: {} // No action on click for now, just a display toggle
                 popoverContent: Component {
                     Rectangle {
