@@ -32,4 +32,41 @@ fi
 # Run lockscreen immediately on startup
 echo "showLockScreen" > /tmp/quickshell_command
 
+# Script Autostart Logic
+if command -v jq >/dev/null 2>&1 && [ -f "$CONFIG_ALLOY" ]; then
+    # Parse flags and configurations
+    AUTOFLOAT_ENABLED=$(jq -r '.scriptsAutostartAutofloat // false' "$CONFIG_ALLOY")
+    AUTOFLOAT_W=$(jq -r '.autofloatWidth // 1400' "$CONFIG_ALLOY")
+    AUTOFLOAT_H=$(jq -r '.autofloatHeight // 920' "$CONFIG_ALLOY")
+    
+    BATTERY_ENABLED=$(jq -r '.scriptsAutostartBattery // false' "$CONFIG_ALLOY")
+    BATTERY_THRESH=$(jq -r '.batteryThreshold // 20' "$CONFIG_ALLOY")
+    
+    SCREENSAVER_ENABLED=$(jq -r '.scriptsAutostartScreensaver // false' "$CONFIG_ALLOY")
+    SCREENSAVER_TIMEOUT=$(jq -r '.screensaverTimeout // 300' "$CONFIG_ALLOY")
+    SCREENSAVER_LOCKSCREEN=$(jq -r '.scriptsUseLockscreen // false' "$CONFIG_ALLOY")
+    
+    # Kill old instances to avoid duplicates
+    killall auto-float.sh battery_monitor.sh idle-screensaver.sh 2>/dev/null || true
+    
+    # Start scripts if enabled
+    if [ "$AUTOFLOAT_ENABLED" = "true" ]; then
+        if [ -x "${QUICKSHELL_PROJECT_PATH}/scripts/auto-float.sh" ]; then
+            "${QUICKSHELL_PROJECT_PATH}/scripts/auto-float.sh" "$AUTOFLOAT_W" "$AUTOFLOAT_H" &
+        fi
+    fi
+    
+    if [ "$BATTERY_ENABLED" = "true" ]; then
+        if [ -x "${QUICKSHELL_PROJECT_PATH}/scripts/battery_monitor.sh" ]; then
+            "${QUICKSHELL_PROJECT_PATH}/scripts/battery_monitor.sh" "$BATTERY_THRESH" &
+        fi
+    fi
+    
+    if [ "$SCREENSAVER_ENABLED" = "true" ]; then
+        if [ -x "${QUICKSHELL_PROJECT_PATH}/scripts/idle-screensaver.sh" ]; then
+            "${QUICKSHELL_PROJECT_PATH}/scripts/idle-screensaver.sh" "$SCREENSAVER_TIMEOUT" "$SCREENSAVER_LOCKSCREEN" &
+        fi
+    fi
+fi
+
 exec quickshell --path "$QUICKSHELL_PROJECT_PATH"
