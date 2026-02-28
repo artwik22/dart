@@ -136,10 +136,10 @@ PanelWindow {
     // Primary axis (e.g. Right): Animate for slide-in (-width to 15)
     // Perpendicular axes (e.g. Top/Bottom): Fixed 15 OR 0 if classic
     margins {
-        top: panelPos === "top" ? (-implicitHeight * (1.0 - showProgress) + (isFloating ? 15 : 0) * showProgress) : (isFloating ? 15 : 0)
-        bottom: panelPos === "bottom" ? (-implicitHeight * (1.0 - showProgress) + (isFloating ? 15 : 0) * showProgress) : (isFloating ? 15 : 0)
-        right: panelPos === "right" ? (-implicitWidth * (1.0 - showProgress) + (isFloating ? 15 : 0) * showProgress) : (isFloating ? 15 : 0)
-        left: panelPos === "left" ? (-implicitWidth * (1.0 - showProgress) + (isFloating ? 15 : 0) * showProgress) : (isFloating ? 15 : 0)
+        top: panelPos === "top" ? (-implicitHeight * (1.0 - showProgress) + (isFloating ? 20 : 0) * showProgress) : (isFloating ? 20 : 0)
+        bottom: panelPos === "bottom" ? (-implicitHeight * (1.0 - showProgress) + (isFloating ? 20 : 0) * showProgress) : (isFloating ? 20 : 0)
+        right: panelPos === "right" ? (-implicitWidth * (1.0 - showProgress) + (isFloating ? 20 : 0) * showProgress) : (isFloating ? 20 : 0)
+        left: panelPos === "left" ? (-implicitWidth * (1.0 - showProgress) + (isFloating ? 20 : 0) * showProgress) : (isFloating ? 20 : 0)
     }
 
     Item {
@@ -169,8 +169,19 @@ PanelWindow {
                 width: 450
                 
                 radius: isFloating ? ((sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 14) : 0
-                color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff"
-            clip: true // Clip children to rounded corners
+                color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#121212"
+
+                // Material Design elevation shadow
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: -4
+                    color: Qt.rgba(0, 0, 0, 0.25)
+                    radius: parent.radius + 4
+                    z: -1
+                    visible: isFloating
+                }
+
+                clip: true // Clip children to rounded corners
             
 
 
@@ -181,7 +192,7 @@ PanelWindow {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                height: 50 // Fixed height for navbar
+                height: 40 // Fixed height for navbar
                 
                 // Inherit radius from parent for bottom corners
                 radius: parent.radius 
@@ -207,19 +218,19 @@ PanelWindow {
 
                 Item {
                     anchors.centerIn: parent
-                    width: (4 * 40) + (3 * 40) // 4 items * 40px + 3 spacings * 40px = 280px
-                    height: 40
+                    width: (4 * 32) + (3 * 32) // 4 items * 32px + 3 spacings * 32px = 224px
+                    height: 32
                     
                     // Sliding Active Indicator Pill
                     Rectangle {
-                        width: 40
-                        height: 40
+                        width: 32
+                        height: 32
                         radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? (sharedData.quickshellBorderRadius > 8 ? 8 : sharedData.quickshellBorderRadius) : 8 // Consistent smaller radius for pill
                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
                         opacity: 0.15
                         
                         // Calculate position based on currentTab index * (itemWidth + spacing)
-                        x: currentTab * 80 
+                        x: currentTab * 64 
                         
                         Behavior on x { 
                             NumberAnimation { 
@@ -231,7 +242,7 @@ PanelWindow {
 
                     Row {
                         anchors.fill: parent
-                        spacing: 40 // Spacing between icons
+                        spacing: 32 // Spacing between icons
                         
                         Repeater {
                             model: [
@@ -242,8 +253,8 @@ PanelWindow {
                             ]
                             
                             Item {
-                                width: 40
-                                height: 40
+                                width: 32
+                                height: 32
                                 
                                 property bool isActive: currentTab === index
                                 property bool isHovered: navBarTabMouseArea.containsMouse
@@ -251,7 +262,7 @@ PanelWindow {
                                 Text {
                                     anchors.centerIn: parent
                                     text: modelData.icon
-                                    font.pixelSize: 24
+                                    font.pixelSize: 20
                                     color: parent.isActive ? 
                                         ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : 
                                         ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
@@ -374,18 +385,29 @@ PanelWindow {
                                 Rectangle {
                                     anchors.fill: parent
                                     visible: !(sharedData && sharedData.dashboardTileLeft === "network")
-                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
-                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 24
+                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1c1c1c"
 
                                     // Horizontal Battery Indicator (Pill Style)
                                     Item {
-                                        scale: batMouseArea.containsMouse ? 1.02 : 1.0
-                                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                                        MouseArea { id: batMouseArea; anchors.fill: parent; hoverEnabled: true; onClicked: { /* No action */ } }
-
+                                        scale: batMouseArea.containsMouse ? 1.05 : 1.0
+                                        Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
                                         anchors.fill: parent
                                         anchors.margins: 12
-                                        
+
+                                        // Material shadow
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: batMouseArea.containsMouse ? -3 : -1
+                                            color: Qt.rgba(0, 0, 0, batMouseArea.containsMouse ? 0.25 : 0.15)
+                                            radius: parent.parent.radius + (batMouseArea.containsMouse ? 3 : 1)
+                                            z: -1
+                                            Behavior on anchors.margins { NumberAnimation { duration: 150 } }
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                        }
+
+                                        MouseArea { id: batMouseArea; anchors.fill: parent; hoverEnabled: true; onClicked: { /* No action */ } }
+
                                         // Top Row: Icon + Value Text
                                         Row {
                                             anchors.centerIn: parent
@@ -441,15 +463,27 @@ PanelWindow {
                                 Rectangle {
                                     anchors.fill: parent
                                     visible: (sharedData && sharedData.dashboardTileLeft === "network")
-                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
-                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 24
+                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1c1c1c"
 
                                     Item {
                                         anchors.fill: parent
                                         anchors.margins: 12
                                         
                                         scale: netMouseArea.containsMouse ? 1.02 : 1.0
-                                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                        Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
+
+                                        // Material shadow
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: netMouseArea.containsMouse ? -3 : -1
+                                            color: Qt.rgba(0, 0, 0, netMouseArea.containsMouse ? 0.25 : 0.15)
+                                            radius: parent.parent.radius + (netMouseArea.containsMouse ? 3 : 1)
+                                            z: -1
+                                            Behavior on anchors.margins { NumberAnimation { duration: 150 } }
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                        }
+
                                         MouseArea { id: netMouseArea; anchors.fill: parent; hoverEnabled: true; onClicked: { /* No action */ } }
 
                                         Row {
@@ -552,27 +586,38 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: (parent.width - 8) / 2
-                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
-                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 24
+                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1c1c1c"
                                 
-                                scale: quickActionsMouseArea.containsMouse ? 1.02 : 1.0
-                                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                scale: quickActionsMouseArea.containsMouse ? 1.05 : 1.0
+                                Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
                                 MouseArea { id: quickActionsMouseArea; anchors.fill: parent; hoverEnabled: true; z: -1; onClicked: { /* No action */ } }
+
+                                // Material shadow
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: quickActionsMouseArea.containsMouse ? -3 : -1
+                                    color: Qt.rgba(0, 0, 0, quickActionsMouseArea.containsMouse ? 0.25 : 0.15)
+                                    radius: parent.radius + (quickActionsMouseArea.containsMouse ? 3 : 1)
+                                    z: -1
+                                    Behavior on anchors.margins { NumberAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                }
                                 
                                 // Center the grid in the card
                                 GridLayout {
                                     anchors.fill: parent
-                                    anchors.margins: 10
+                                    anchors.margins: 12
                                     columns: 2
                                     rows: 2
-                                    columnSpacing: 8
-                                    rowSpacing: 8
+                                    columnSpacing: 10
+                                    rowSpacing: 10
                                         
                                         // Toggle Sidebar Button (Swiss Block)
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
                                         clip: true
 
                                             // Softer style - Visible background
@@ -585,7 +630,7 @@ PanelWindow {
                                             anchors.centerIn: parent
                                             text: "󰍜"
                                             font.pixelSize: 22
-                                            font.family: "sans-serif"
+                                            font.family: "Material Design Icons"
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                         }
                                         
@@ -606,7 +651,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
                                         clip: true
                                         
                                         // Softer style
@@ -619,7 +664,7 @@ PanelWindow {
                                             anchors.centerIn: parent
                                             text: "󰂛"
                                             font.pixelSize: 22
-                                            font.family: "sans-serif"
+                                            font.family: "Material Design Icons"
                                             color: ((dndQuickMouseArea.containsMouse) || (sharedData && sharedData.notificationsEnabled === false)) ? 
                                                    ((sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#ffffff") :
                                                    ((sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff")
@@ -642,7 +687,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
                                         clip: true
 
                                         // Softer style
@@ -656,7 +701,7 @@ PanelWindow {
                                             anchors.centerIn: parent
                                             text: "󰌾"
                                             font.pixelSize: 22
-                                            font.family: "sans-serif"
+                                            font.family: "Material Design Icons"
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                         }
                                         
@@ -684,7 +729,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 6
+                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
                                         clip: true
 
                                         // Softer style
@@ -698,7 +743,7 @@ PanelWindow {
                                             anchors.centerIn: parent
                                             text: "󰐥"
                                             font.pixelSize: 22
-                                            font.family: "sans-serif"
+                                            font.family: "Material Design Icons"
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                         }
                                         
@@ -724,7 +769,7 @@ PanelWindow {
                         RowLayout {
                             id: weatherClockRow
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 50
+                            Layout.preferredHeight: 55
                             spacing: 8
                             
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
@@ -751,11 +796,23 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: (parent.width - 8) / 2
-                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
-                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 14
+                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1c1c1c"
                                 
-                                scale: weatherMouseArea.containsMouse ? 1.02 : 1.0
-                                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                scale: weatherMouseArea.containsMouse ? 1.05 : 1.0
+                                Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
+
+                                // Material shadow
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.margins: weatherMouseArea.containsMouse ? -3 : -1
+                                    color: Qt.rgba(0, 0, 0, weatherMouseArea.containsMouse ? 0.25 : 0.15)
+                                    radius: parent.radius + (weatherMouseArea.containsMouse ? 3 : 1)
+                                    z: -1
+                                    Behavior on anchors.margins { NumberAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                }
+
                                 MouseArea { id: weatherMouseArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: updateWeather() }
 
                                 ColumnLayout {
@@ -775,14 +832,14 @@ PanelWindow {
                                             if (cond.indexOf("storm") !== -1 || cond.indexOf("thunder") !== -1) return "󰖓"
                                             return "󰖕"
                                         }
-                                        font.pixelSize: 24
+                                        font.pixelSize: 18
                                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                                         Layout.alignment: Qt.AlignHCenter
                                     }
 
                                     Text {
                                         text: weatherTemp
-                                        font.pixelSize: 20
+                                        font.pixelSize: 16
                                         font.weight: Font.Bold
                                         font.family: "sans-serif"
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
@@ -799,8 +856,8 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.preferredWidth: (parent.width - 8) / 2
-                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
-                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 14
+                                color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1c1c1c"
                                 
                                 property string currentTime: Qt.formatDateTime(new Date(), "HH:mm")
                                 property string currentDate: Qt.formatDateTime(new Date(), "ddd, MMM d")
@@ -817,8 +874,8 @@ PanelWindow {
                                     }
                                 }
                                 
-                                scale: clockMouseArea.containsMouse ? 1.02 : 1.0
-                                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                scale: clockMouseArea.containsMouse ? 1.05 : 1.0
+                                Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
                                 MouseArea { id: clockMouseArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor }
 
                                 ColumnLayout {
@@ -831,7 +888,7 @@ PanelWindow {
 
                                     Text {
                                         text: clockCard.currentTime
-                                        font.pixelSize: 24
+                                        font.pixelSize: 18
                                         font.weight: Font.Bold
                                         font.family: "sans-serif"
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
@@ -840,7 +897,7 @@ PanelWindow {
                                     
                                     Text {
                                         text: clockCard.currentDate.toUpperCase()
-                                        font.pixelSize: 10
+                                        font.pixelSize: 9
                                         font.weight: Font.Black
                                         font.family: "sans-serif"
                                         font.letterSpacing: 1
@@ -864,7 +921,7 @@ PanelWindow {
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
-                            scale: showProgress > 0.01 ? 1.0 : 0.9
+                            scale: calendarGithubMouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
                             transform: Translate {
                                 y: showProgress > 0.01 ? 0 : 40
                                 Behavior on y {
@@ -882,13 +939,21 @@ PanelWindow {
                                 }
                             }
                             Behavior on scale {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: 100 }
-                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                                }
+                                SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 }
                             }
 
                             MouseArea { id: calendarGithubMouseArea; anchors.fill: parent; hoverEnabled: true; onClicked: { /* No action */ } }
+
+                            // Material shadow
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: calendarGithubMouseArea.containsMouse ? -3 : -1
+                                color: Qt.rgba(0, 0, 0, calendarGithubMouseArea.containsMouse ? 0.25 : 0.15)
+                                radius: parent.radius + (calendarGithubMouseArea.containsMouse ? 3 : 1)
+                                z: -1
+                                Behavior on anchors.margins { NumberAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                            }
 
                             Loader {
                                 id: dashboardCalendarGithubLoader
@@ -980,6 +1045,21 @@ PanelWindow {
                             Layout.minimumHeight: 130
                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                            
+                            scale: res1MouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
+                            Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
+                            MouseArea { id: res1MouseArea; anchors.fill: parent; hoverEnabled: true; z: -1; onClicked: { /* No action */ } }
+
+                            // Material shadow
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: res1MouseArea.containsMouse ? -3 : -1
+                                color: Qt.rgba(0, 0, 0, res1MouseArea.containsMouse ? 0.25 : 0.15)
+                                radius: parent.radius + (res1MouseArea.containsMouse ? 3 : 1)
+                                z: -1
+                                Behavior on anchors.margins { NumberAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                            }
                             
                             property string resource: (sharedData && sharedData.dashboardResource1) ? sharedData.dashboardResource1 : "cpu"
                             
@@ -1135,8 +1215,19 @@ PanelWindow {
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
                             
                             scale: res2MouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
-                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                            Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
                             MouseArea { id: res2MouseArea; anchors.fill: parent; hoverEnabled: true; z: -1; onClicked: { /* No action */ } }
+
+                            // Material shadow
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: res2MouseArea.containsMouse ? -3 : -1
+                                color: Qt.rgba(0, 0, 0, res2MouseArea.containsMouse ? 0.25 : 0.15)
+                                radius: parent.radius + (res2MouseArea.containsMouse ? 3 : 1)
+                                z: -1
+                                Behavior on anchors.margins { NumberAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                            }
                             
                             property string resource: (sharedData && sharedData.dashboardResource2) ? sharedData.dashboardResource2 : "ram"
                             
@@ -1290,7 +1381,7 @@ PanelWindow {
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
 
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
-                            scale: showProgress > 0.01 ? 1.0 : 0.9
+                            scale: mediaMouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
                             transform: Translate {
                                 y: showProgress > 0.01 ? 0 : 40
                                 Behavior on y {
@@ -1308,13 +1399,21 @@ PanelWindow {
                                 }
                             }
                             Behavior on scale {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: 250 }
-                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                                }
+                                SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 }
                             }
 
                             MouseArea { id: mediaMouseArea; anchors.fill: parent; hoverEnabled: true }
+
+                            // Material shadow
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: mediaMouseArea.containsMouse ? -3 : -1
+                                color: Qt.rgba(0, 0, 0, mediaMouseArea.containsMouse ? 0.25 : 0.15)
+                                radius: parent.radius + (mediaMouseArea.containsMouse ? 3 : 1)
+                                z: -1
+                                Behavior on anchors.margins { NumberAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                            }
 
                             // Audio visualizer bars (cava)
                             Row {
