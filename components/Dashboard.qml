@@ -119,8 +119,11 @@ PanelWindow {
 
     // --- Animacja wejścia/wyjścia (bez glitchy) ---
     // showProgress 0..1, start zawsze 0; Binding ustawia cel, Behavior animuje
+    property bool animationReady: false
+
     property real showProgress: 0
     Binding on showProgress {
+        when: animationReady
         value: (sharedData && sharedData.menuVisible) ? 1.0 : 0.0
     }
     Behavior on showProgress {
@@ -2904,7 +2907,7 @@ PanelWindow {
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === XMLHttpRequest.DONE) {
                         gpuBrand = xhr.responseText.trim()
-                        readGpu() // Run again with detected brand
+                        dashboardRoot.readGpu() // Run again with detected brand
                     }
                 }
                 xhr.send()
@@ -3276,6 +3279,7 @@ PanelWindow {
 
     
     Component.onCompleted: {
+        animationReady = true
         
         // Initialize weatherCity from sharedData if available
         if (sharedData && sharedData.weatherCity !== undefined) {

@@ -15,24 +15,23 @@ PanelWindow {
     property var primaryScreen: null
     property string projectPath: ""
     
-    property string qNetStatus: "Checking..."
-    property string qNetSSID: ""
-    property string qNetIP: ""
-    property string qBtStatus: "Checking..."
-    property int qBtDevices: 0
-    property string qPwrStatus: "Checking..."
-    property int qBatteryPct: 0
-    property string qBatteryStatus: "Unknown"
-    property int qNetSignal: 0
-    property string qNetNearby: ""
-    property string qBtDeviceNames: ""
-    property string qBtPaired: ""
-    property string qBtConnectingMac: ""
-
-    
     property var sidePanelRoot: sidePanel
     property bool isHorizontal: panelPosition === "top" || panelPosition === "bottom"
     property bool clockColonVisible: true
+    
+    // Bindings to centralized data in sharedData (RAM optimization)
+    property string qNetStatus: (sharedData && sharedData.netStatus) || "Checking..."
+    property string qNetSSID: (sharedData && sharedData.netSSID) || ""
+    property string qNetIP: (sharedData && sharedData.netIP) || ""
+    property string qBtStatus: (sharedData && sharedData.btStatus) || "Checking..."
+    property int qBtDevices: (sharedData && sharedData.btDevices) || 0
+    property string qPwrStatus: (sharedData && sharedData.pwrStatus) || "Checking..."
+    property int qBatteryPct: (sharedData && sharedData.batteryPct) || 0
+    property string qBatteryStatus: (sharedData && sharedData.batteryStatus) || "Unknown"
+    property int qNetSignal: (sharedData && sharedData.netSignal) || 0
+    property string qNetNearby: (sharedData && sharedData.netNearby) || ""
+    property string qBtDeviceNames: (sharedData && sharedData.btDeviceNames) || ""
+    property string qBtPaired: (sharedData && sharedData.btPaired) || ""
     
     property color btnBg: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1a1a1a"
     property color btnBgHover: (sharedData && sharedData.colorAccent) ? Qt.alpha(sharedData.colorAccent, 0.2) : "rgba(74, 158, 255, 0.2)"
@@ -596,72 +595,6 @@ PanelWindow {
                     PauseAnimation { duration: 200 }
                     NumberAnimation { duration: 700; easing.type: Easing.OutBack } 
                 } 
-            }
-        }
-
-        Timer {
-            id: statusRefreshTimer
-            interval: 6000
-            running: panelActive
-            repeat: true
-            triggeredOnStart: true
-            onTriggered: {
-                if (sharedData && sharedData.runCommand) {
-                    var root = sidePanelRoot
-                    sidePanelRoot.runAndRead('nmcli -t -f TYPE,NAME connection show --active | grep -E "^(802-11-wireless|ethernet)" | head -n 1 | cut -d: -f2-', function(out) { 
-                        if (out !== undefined) root.qNetSSID = out.trim() 
-                    })
-                    sidePanelRoot.runAndRead('NW_IP=$(networkctl status 2>/dev/null | grep -i "Address:" | awk \'{print $2}\' | grep -v ":" | head -n1); [ -n "$NW_IP" ] && echo "$NW_IP" || ip -o -4 addr show scope global | awk \'{print $4}\' | cut -d/ -f1 | head -n1 || echo ""', function(out) { 
-                        if (out !== undefined) root.qNetIP = out.trim() 
-                    })
-                    sidePanelRoot.runAndRead('nmcli networking connectivity', function(out) { 
-                        if (out !== undefined) {
-                            var status = out.trim();
-                            if (status === "full") root.qNetStatus = "Online";
-                            else if (status === "limited") root.qNetStatus = "Limited";
-                            else if (status === "portal") root.qNetStatus = "Portal";
-                            else root.qNetStatus = "Offline";
-                        }
-                    })
-                    sidePanelRoot.runAndRead('bluetoothctl show | grep -q "Powered: yes" && echo "On" || echo "Off"', function(out) { 
-                        if (out !== undefined) root.qBtStatus = out.trim() 
-                    })
-                    sidePanelRoot.runAndRead('bluetoothctl devices Connected | wc -l', function(out) { 
-                        if (out !== undefined) root.qBtDevices = parseInt(out) || 0 
-                    })
-                    sidePanelRoot.runAndRead('powerprofilesctl get 2>/dev/null || echo "N/A"', function(out) { 
-                        if (out !== undefined) root.qPwrStatus = (out.trim() && out.trim() !== "N/A") ? out.trim() : "Default" 
-                    })
-                    sidePanelRoot.runAndRead('cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -n1', function(out) {
-                        if (out !== undefined) {
-                            var val = parseInt(out.trim())
-                            root.qBatteryPct = isNaN(val) ? 0 : val
-                        }
-                    })
-                    sidePanelRoot.runAndRead('cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -n1', function(out) {
-                        if (out !== undefined) root.qBatteryStatus = out.trim() || "Unknown"
-                    })
-                    sidePanelRoot.runAndRead('nmcli -f IN-USE,SIGNAL dev wifi | grep "*" | awk \'{print $2}\' || echo 0', function(out) {
-                        if (out !== undefined) root.qNetSignal = parseInt(out.trim()) || 0
-                    })
-                    sidePanelRoot.runAndRead('nmcli -t -f SSID dev wifi | grep -v "^$" | head -n 4 | tr "\\n" ";"', function(out) {
-                        if (out !== undefined) root.qNetNearby = out.trim()
-                    })
-                    sidePanelRoot.runAndRead('bluetoothctl devices Connected | cut -d" " -f3- | head -n 2 | tr "\\n" ";"', function(out) {
-                        if (out !== undefined) root.qBtDeviceNames = out.trim()
-                    })
-                    sidePanelRoot.runAndRead('bluetoothctl devices | head -n 10 | while read -r line; do mac=$(echo $line | cut -d" " -f2); name=$(echo $line | cut -d" " -f3-); bluetoothctl info $mac | grep -q "Connected: yes" || echo "$mac|$name"; done | head -n 3 | tr "\\n" ";"', function(out) {
-                        if (out !== undefined) {
-                            var paired = out.trim()
-                            root.qBtPaired = paired
-                            // If the connecting MAC is no longer in the paired list (because it's connected), clear it
-                            if (root.qBtConnectingMac !== "" && paired.indexOf(root.qBtConnectingMac) === -1) {
-                                root.qBtConnectingMac = ""
-                                btConnectTimeout.stop()
-                            }
-                        }
-                    })
-                }
             }
         }
 

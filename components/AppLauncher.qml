@@ -66,19 +66,7 @@ PanelWindow {
         xhr.send()
     }
     
-    Component.onCompleted: {
-        initializePaths()
-        if (!(projectPath && projectPath.length > 0)) loadProjectPath()
-        loadApps()
-        if (sharedData) {
-            // Load colors from sharedData if available
-            colorBackground = sharedData.colorBackground || colorBackground
-            colorPrimary = sharedData.colorPrimary || colorPrimary
-            colorSecondary = sharedData.colorSecondary || colorSecondary
-            colorText = sharedData.colorText || colorText
-            colorAccent = sharedData.colorAccent || colorAccent
-        }
-    }
+    // Moved logic to PanelWindow.onCompleted for stability
     
     // Synchronize colors from sharedData to local properties
     Connections {
@@ -170,7 +158,7 @@ PanelWindow {
         var scriptPath = projectPath + "/scripts/save-colors.py"
         var presetArg = (optionalPresetName && String(optionalPresetName).length > 0) ? String(optionalPresetName).replace(/"/g, '\\"') : ""
         var cmd = 'python3 "' + scriptPath + '" "' + colorBackground + '" "' + colorPrimary + '" "' + colorSecondary + '" "' + colorText + '" "' + colorAccent + '" "' + colorConfigPath + '" "" "' + presetArg + '"'
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + cmd.replace(/'/g, "'\"'\"'") + "']; running: true }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', cmd])
     }
     
     
@@ -368,13 +356,30 @@ PanelWindow {
     }
     
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "qslauncher"
-    WlrLayershell.keyboardFocus: (launcherShowProgress > 0.02) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusiveZone: 0
+    
+    // Animation stability - ensure we start at 0
+    property bool animationReady: false
+    Component.onCompleted: {
+        initializePaths()
+        if (!(projectPath && projectPath.length > 0)) loadProjectPath()
+        loadApps()
+        if (sharedData) {
+            // Load colors from sharedData if available
+            colorBackground = sharedData.colorBackground || colorBackground
+            colorPrimary = sharedData.colorPrimary || colorPrimary
+            colorSecondary = sharedData.colorSecondary || colorSecondary
+            colorText = sharedData.colorText || colorText
+            colorAccent = sharedData.colorAccent || colorAccent
+        }
+        // Mark as ready for animation
+        animationReady = true
+    }
 
     // Jeden sterownik animacji (jak w Dashboard) – start od 0, Binding = brak skoku na pierwszej klatce
     property real launcherShowProgress: 0
     Binding on launcherShowProgress {
+        when: animationReady
         value: (sharedData && sharedData.launcherVisible) ? 1.0 : 0.0
     }
     Behavior on launcherShowProgress {
@@ -445,7 +450,7 @@ PanelWindow {
         // Open kitty, set as floating, size 1200x700 and center
         var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
         
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', command])
         
         // Close launcher after execution
         if (sharedData) {
@@ -466,8 +471,10 @@ PanelWindow {
     
     // Bluetooth functions
     function checkBluetoothStatus() {
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '/usr/bin/bluetoothctl show | grep -q \\\"Powered: yes\\\" && echo 1 > /tmp/quickshell_bt_status || echo 0 > /tmp/quickshell_bt_status']; running: true }", appLauncherRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: appLauncherRoot.readBluetoothStatus() }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', '/usr/bin/bluetoothctl show | grep -q "Powered: yes" && echo 1 > /tmp/quickshell_bt_status || echo 0 > /tmp/quickshell_bt_status'])
+            if (sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.readBluetoothStatus, 300)
+        }
     }
     
     function readBluetoothStatus() {
@@ -489,12 +496,12 @@ PanelWindow {
     function toggleBluetooth() {
         if (bluetoothEnabled) {
             // Block with rfkill and turn off
-            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'rfkill block bluetooth; /usr/bin/bluetoothctl power off']; running: true }", appLauncherRoot)
+            if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'rfkill block bluetooth; /usr/bin/bluetoothctl power off'])
         } else {
             // Unblock with rfkill, wait, then turn on
-            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'rfkill unblock bluetooth; sleep 1; /usr/bin/bluetoothctl power on']; running: true }", appLauncherRoot)
+            if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'rfkill unblock bluetooth; sleep 1; /usr/bin/bluetoothctl power on'])
         }
-        Qt.createQmlObject("import QtQuick; Timer { interval: 1500; running: true; repeat: false; onTriggered: appLauncherRoot.checkBluetoothStatus() }", appLauncherRoot)
+        if (sharedData && sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.checkBluetoothStatus, 1500)
     }
     
     function scanBluetoothDevices() {
@@ -503,15 +510,17 @@ PanelWindow {
         bluetoothDevicesModel.clear()
         
         // Use bluetoothctl with timeout - this will scan for 10 seconds and then automatically stop
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'bluetoothctl --timeout 10 scan on > /tmp/quickshell_bt_scan_output 2>&1']; running: true }", appLauncherRoot)
-        
-        // Wait for scan to complete and get devices
-        Qt.createQmlObject("import QtQuick; Timer { interval: 12000; running: true; repeat: false; onTriggered: appLauncherRoot.getBluetoothDevices() }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'bluetoothctl --timeout 10 scan on > /tmp/quickshell_bt_scan_output 2>&1'])
+            if (sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.getBluetoothDevices, 12000)
+        }
     }
     
     function getBluetoothDevices() {
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'bluetoothctl devices > /tmp/quickshell_bt_devices']; running: true }", appLauncherRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: appLauncherRoot.readBluetoothDevices() }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'bluetoothctl devices > /tmp/quickshell_bt_devices'])
+            if (sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.readBluetoothDevices, 500)
+        }
     }
     
     function readBluetoothDevices() {
@@ -553,20 +562,23 @@ PanelWindow {
         
         // First pair, then connect
         // Step 1: Pair the device
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['/usr/bin/bluetoothctl', 'pair', '" + macStr + "']; running: true }", appLauncherRoot)
-        
-        // Step 2: Wait a bit, then connect
-        
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['/usr/bin/bluetoothctl', 'pair', macStr])
+            if (sharedData.setTimeout) sharedData.setTimeout(function() {
+                appLauncherRoot.connectAfterPair(macStr)
+            }, 1000)
+        }
     }
     
     function connectAfterPair(mac) {
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['/usr/bin/bluetoothctl', 'connect', '" + mac + "']; running: true }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['/usr/bin/bluetoothctl', 'connect', mac])
     }
     
     function disconnectBluetoothDevice(mac) {
-        var escapedMac = mac.replace(/'/g, "\\'")
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'bluetoothctl disconnect \\\"" + escapedMac + "\\\"']; running: true }", appLauncherRoot)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 1000; running: true; repeat: false; onTriggered: appLauncherRoot.getBluetoothDevices() }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'bluetoothctl disconnect "' + mac.replace(/"/g, '\\"') + '"'])
+            if (sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.getBluetoothDevices, 1000)
+        }
     }
     
     // Function to filter applications
@@ -766,8 +778,7 @@ PanelWindow {
             
             if (searchUrl && searchUrl.length > 0) {
                 // Launch Firefox with the search URL
-                var command = "firefox \"" + searchUrl + "\" &"
-                Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
+                if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', "firefox \"" + searchUrl + "\" &"])
                 
                 if (sharedData) {
                     sharedData.launcherVisible = false
@@ -806,9 +817,7 @@ PanelWindow {
             // runCommand może nie być gotowe przy starcie – spróbuj ponownie po chwili albo gdy użytkownik otworzy launcher
             if (_loadAppsRetries < 5) {
                 _loadAppsRetries++
-                Qt.callLater(function() {
-                    var t = Qt.createQmlObject("import QtQuick; Timer { interval: 400; running: true; repeat: false; onTriggered: appLauncherRoot.loadApps() }", appLauncherRoot)
-                })
+                if (sharedData && sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.loadApps, 400)
             }
             return
         }
@@ -938,7 +947,7 @@ PanelWindow {
         if (loadedAppsCount >= totalFilesToLoad && totalFilesToLoad > 0) {
             // All files loaded, call filterApps
             // Wait a moment so all applications are in the array
-            Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: appLauncherRoot.filterApps() }", appLauncherRoot)
+        if (sharedData && sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.filterApps, 500)
         }
     }
     
@@ -949,12 +958,15 @@ PanelWindow {
             return
         }
         
-        
-        // Run search in background
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'pacman -Ss \"" + query.replace(/"/g, '\\"') + "\" 2>/dev/null | head -50 > /tmp/quickshell_pacman_search']; running: true }", appLauncherRoot)
-        
-        // Wait a moment and read results (use Timer instead of onFinished)
-        Qt.createQmlObject("import QtQuick; Timer { interval: 500; running: true; repeat: false; onTriggered: appLauncherRoot.readPacmanSearchResults() }", appLauncherRoot)
+        searchPacman(query)
+    }
+    
+    function searchPacman(query) {
+        if (!query) return
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'pacman -Ss "' + query.replace(/"/g, '\\"') + '" 2>/dev/null | head -50 > /tmp/quickshell_pacman_search'])
+            if (sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.readPacmanSearchResults, 500)
+        }
     }
     
     // Function to read pacman search results
@@ -1034,13 +1046,17 @@ PanelWindow {
             return
         }
         
-        
-        // Check if yay or paru is available
-        // Run search in background (use yay if available, otherwise paru)
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'if command -v yay >/dev/null 2>&1; then yay -Ss \"" + query.replace(/"/g, '\\"') + "\" 2>/dev/null | head -50 > /tmp/quickshell_aur_search; elif command -v paru >/dev/null 2>&1; then paru -Ss \"" + query.replace(/"/g, '\\"') + "\" 2>/dev/null | head -50 > /tmp/quickshell_aur_search; else echo \"AUR helper not found\" > /tmp/quickshell_aur_search; fi']; running: true }", appLauncherRoot)
-        
-        // Wait a moment and read results
-        Qt.createQmlObject("import QtQuick; Timer { interval: 800; running: true; repeat: false; onTriggered: appLauncherRoot.readAurSearchResults() }", appLauncherRoot)
+        searchAur(query)
+    }
+    
+    // Check if yay or paru is available
+    // Run search
+    function searchAur(query) {
+        if (!query) return
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'if command -v yay >/dev/null 2>&1; then yay -Ss "' + query.replace(/"/g, '\\"') + '" 2>/dev/null | head -50 > /tmp/quickshell_aur_search; elif command -v paru >/dev/null 2>&1; then paru -Ss "' + query.replace(/"/g, '\\"') + '" 2>/dev/null | head -50 > /tmp/quickshell_aur_search; else echo "AUR helper not found" > /tmp/quickshell_aur_search; fi'])
+            if (sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.readAurSearchResults, 800)
+        }
     }
     
     // Function to read AUR search results
@@ -1134,7 +1150,7 @@ PanelWindow {
             var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + " " + safeName + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
             
             
-            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', command])
             
             if (sharedData) {
                 sharedData.launcherVisible = false
@@ -1155,7 +1171,7 @@ PanelWindow {
             var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + " " + safeName + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
             
             
-            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', command])
             
             if (sharedData) {
                 sharedData.launcherVisible = false
@@ -1171,10 +1187,10 @@ PanelWindow {
         
         
         // Run pacman -Q and save to file
-        Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'pacman -Q 2>/dev/null > /tmp/quickshell_installed_packages']; running: true }", appLauncherRoot)
-        
-        // Wait a moment and read results
-        Qt.createQmlObject("import QtQuick; Timer { interval: 300; running: true; repeat: false; onTriggered: appLauncherRoot.readInstalledPackages() }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'pacman -Q 2>/dev/null > /tmp/quickshell_installed_packages'])
+            if (sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.readInstalledPackages, 300)
+        }
     }
     
     // Function to read installed packages
@@ -1257,7 +1273,7 @@ PanelWindow {
             var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + " " + safeName + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
             
             
-            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', command])
             
             if (sharedData) {
                 sharedData.launcherVisible = false
@@ -1278,7 +1294,7 @@ PanelWindow {
             var command = "hyprctl dispatch exec \"kitty --class=floating_kitty -e bash " + scriptPath + " " + safeName + "\"; sleep 0.3; hyprctl dispatch focuswindow \"class:floating_kitty\"; hyprctl dispatch togglefloating; hyprctl dispatch resizeactive exact 1200 700; hyprctl dispatch centerwindow"
             
             
-            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', '" + command.replace(/'/g, "\\'") + "']; running: true }", appLauncherRoot)
+        if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', command])
             
             if (sharedData) {
                 sharedData.launcherVisible = false
@@ -1348,8 +1364,8 @@ PanelWindow {
     Item {
         id: launcherContainer
         anchors.fill: parent
-        // Slide animation only - no fade/scale
-        opacity: 1.0 
+        // Apply opacity here instead of root PanelWindow
+        opacity: launcherShowProgress
         enabled: launcherShowProgress > 0.02
         focus: launcherShowProgress > 0.02
         // scale: 1.0 // Removed scale animation
@@ -1539,7 +1555,7 @@ PanelWindow {
                         var mode = modesList.model.get(selectedIndex)
                         if (mode.mode === 2) {
                             // Launch fuse directly using Process
-                            Qt.createQmlObject("import Quickshell.Io; Process { command: ['sh', '-c', 'fuse &']; running: true }", appLauncherRoot)
+                            if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'fuse &'])
                             if (sharedData) {
                                 sharedData.launcherVisible = false
                             }
@@ -1568,7 +1584,9 @@ PanelWindow {
                             selectedIndex = 0
                             packageSearchText = ""
                             // Ustaw focus na pole wyszukiwania po chwili
-                            Qt.createQmlObject("import QtQuick; Timer { interval: 200; running: true; repeat: false; onTriggered: { if (appLauncherRoot.pacmanSearchInput) appLauncherRoot.pacmanSearchInput.forceActiveFocus() } }", appLauncherRoot)
+                        if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() {
+                            if (appLauncherRoot.pacmanSearchInput) appLauncherRoot.pacmanSearchInput.forceActiveFocus()
+                        }, 200)
                         } else if (pkgOption.action === "remove") {
                             // Przełącz na wybór źródła usuwania
                             currentPackageMode = 3
@@ -1817,7 +1835,7 @@ PanelWindow {
                     onClicked: {
                         if (model.mode === 2) {
                             // Launch fuse directly using Process
-                            Qt.createQmlObject("import Quickshell.Io; Process { command: ['sh', '-c', 'fuse &']; running: true }", appLauncherRoot)
+                            if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'fuse &'])
                             if (sharedData) {
                                 sharedData.launcherVisible = false
                             }
@@ -1923,7 +1941,7 @@ PanelWindow {
                                             // Check if it's calculator mode
                                             if (isCalculatorMode && calculatorResult && calculatorResult !== "Error") {
                                                 // Copy result to clipboard
-                                                Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo -n \"" + calculatorResult.replace(/"/g, '\\"') + "\" | xclip -selection clipboard']; running: true }", appLauncherRoot)
+                                                if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo -n "' + calculatorResult.replace(/"/g, '\\"') + '" | xclip -selection clipboard'])
                                                 if (sharedData) {
                                                     sharedData.launcherVisible = false
                                                 }
@@ -1933,7 +1951,7 @@ PanelWindow {
                                             
                                             // Check if search text is "fuse" - launch fuse application
                                             if (searchText && searchText.trim().toLowerCase() === "fuse") {
-                                                Qt.createQmlObject("import Quickshell.Io; Process { command: ['sh', '-c', 'fuse 2>/dev/null || $HOME/.local/bin/fuse 2>/dev/null || " + projectPath + "/../fuse/target/release/fuse 2>/dev/null']; running: true }", appLauncherRoot)
+                                                if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'fuse 2>/dev/null || $HOME/.local/bin/fuse 2>/dev/null || ' + projectPath + '/../fuse/target/release/fuse 2>/dev/null'])
                                                 if (sharedData) {
                                                     sharedData.launcherVisible = false
                                                 }
@@ -1947,7 +1965,7 @@ PanelWindow {
                                                     launchApp(app)
                                                 } else if (app && app.isCalculator && calculatorResult) {
                                                     // Copy calculator result
-                                                    Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo -n \"" + calculatorResult.replace(/"/g, '\\"') + "\" | xclip -selection clipboard']; running: true }", appLauncherRoot)
+                                                    if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo -n "' + calculatorResult.replace(/"/g, '\\"') + '" | xclip -selection clipboard'])
                                                     if (sharedData) {
                                                         sharedData.launcherVisible = false
                                                     }
@@ -2120,7 +2138,7 @@ PanelWindow {
                                         
                                         // Check if it's calculator result
                                         if (appItem.appIsCalculator && isCalculatorMode && calculatorResult && calculatorResult !== "Error") {
-                                            Qt.createQmlObject("import Quickshell.Io; import QtQuick; Process { command: ['sh', '-c', 'echo -n \"" + calculatorResult.replace(/"/g, '\\"') + "\" | xclip -selection clipboard']; running: true }", appLauncherRoot)
+                                            if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'echo -n "' + calculatorResult.replace(/"/g, '\\"') + '" | xclip -selection clipboard'])
                                             if (sharedData) {
                                                 sharedData.launcherVisible = false
                                             }
@@ -2425,7 +2443,9 @@ PanelWindow {
                                 selectedIndex = 0
                                 packageSearchText = ""
                                 // Ustaw focus na pole wyszukiwania
-                                Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: appLauncherRoot.pacmanSearchInput.forceActiveFocus() }", appLauncherRoot)
+                                if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() {
+                                    appLauncherRoot.pacmanSearchInput.forceActiveFocus()
+                                }, 100)
                             } else if (model.source === "aur") {
                                 // Przełącz na tryb wyszukiwania AUR
                                 currentPackageMode = 2
@@ -2433,7 +2453,9 @@ PanelWindow {
                                 selectedIndex = 0
                                 packageSearchText = ""
                                 // Ustaw focus na pole wyszukiwania
-                                Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: appLauncherRoot.aurSearchInput.forceActiveFocus() }", appLauncherRoot)
+                                if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() {
+                                    appLauncherRoot.aurSearchInput.forceActiveFocus()
+                                }, 100)
                             }
                         }
                     }
@@ -3025,7 +3047,9 @@ PanelWindow {
                                 packageSearchText = ""
                                 loadInstalledPackages()
                                 // Ustaw focus na pole wyszukiwania
-                                Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: appLauncherRoot.removeSearchInput.forceActiveFocus() }", appLauncherRoot)
+                                if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() {
+                                    appLauncherRoot.removeSearchInput.forceActiveFocus()
+                                }, 100)
                             } else if (model.source === "aur") {
                                 // Przełącz na tryb usuwania AUR
                                 currentPackageMode = 5
@@ -3034,7 +3058,9 @@ PanelWindow {
                                 packageSearchText = ""
                                 loadInstalledPackages()
                                 // Ustaw focus na pole wyszukiwania
-                                Qt.createQmlObject("import QtQuick; Timer { interval: 100; running: true; repeat: false; onTriggered: appLauncherRoot.removeAurSearchInput.forceActiveFocus() }", appLauncherRoot)
+                                if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() {
+                                    appLauncherRoot.removeAurSearchInput.forceActiveFocus()
+                                }, 100)
                             }
                         }
                     }

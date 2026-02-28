@@ -34,6 +34,25 @@ ShellRoot {
         // Notification history for notification center
         property var notificationHistory: []
 
+        // System Status Properties (Centralized)
+        property string netStatus: "Checking..."
+        property string netSSID: ""
+        property string netIP: ""
+        property string btStatus: "Checking..."
+        property int btDevices: 0
+        property string pwrStatus: "Checking..."
+        property int batteryPct: 0
+        property string batteryStatus: "Unknown"
+        property int netSignal: 0
+        property string netNearby: ""
+        property string btDeviceNames: ""
+        property string btPaired: ""
+        
+        // Persistent loading states
+        property bool dashboardLoaded: false
+        property bool launcherLoaded: false
+        property bool clipboardLoaded: false
+
         // Color theme properties
         property string colorBackground: "#0a0a0a"
         property string colorPrimary: "#1a1a1a"
@@ -163,6 +182,12 @@ ShellRoot {
     Component.onCompleted: {
         tryEarlyColorLoad()
         initializeColorPath()
+        // Background load heavy components after startup
+        if (sharedData && sharedData.setTimeout) {
+            sharedData.setTimeout(function() { root.sharedData.dashboardLoaded = true }, 3000)
+            sharedData.setTimeout(function() { root.sharedData.launcherLoaded = true }, 4000)
+            sharedData.setTimeout(function() { root.sharedData.clipboardLoaded = true }, 5000)
+        }
     }
 
     // Szybkie ładowanie kolorów ze ścieżki zapisanej przez run.sh (~/.config/alloy/colors.json) – kolory = preset z Fuse
@@ -328,6 +353,31 @@ ShellRoot {
         }
         xhr.send()
     }
+
+    function handleRemoteCommand(cmd) {
+        if (!cmd) return
+        if (cmd === "openLauncher") {
+            root.openLauncher()
+        } else if (cmd === "toggleMenu") {
+            root.toggleMenu()
+        } else if (cmd === "openClipboardManager") {
+            root.openClipboardManager()
+        } else if (cmd === "openSettings") {
+            root.openSettings()
+        } else if (cmd === "hideSidebar") {
+            sharedData.sidebarVisible = false
+        } else if (cmd === "showSidebar") {
+            sharedData.sidebarVisible = true
+        } else if (cmd === "showLockScreenNonBlocking") {
+            sharedData.lockScreenNonBlocking = true
+            sharedData.lockScreenVisible = true
+        } else if (cmd === "showLockScreen") {
+            sharedData.lockScreenNonBlocking = false
+            sharedData.lockScreenVisible = true
+        } else if (cmd === "hideLockScreen") {
+            sharedData.lockScreenVisible = false
+        }
+    }
     
     // Funkcja do zamykania/otwierania menu
     function toggleMenu() {
@@ -376,113 +426,59 @@ ShellRoot {
         xhr.send()
     }
     
-    // Polecenia: odczyt XHR; gdy niepusty – akcja od razu, potem clear. busy=false dopiero w callbacku clear,
-    // żeby następny poll nie zobaczył tego samego polecenia (brak migotania, bez okien „duplikat”).
+    // High-frequency timer for commands (polling fallback) - 100ms for instant response
     Timer {
         id: commandCheckTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 800 : 160
+        interval: 100
         running: true
         repeat: true
-        
         onTriggered: {
             if (root.commandHandlerBusy) return
-            root.commandHandlerBusy = true
-            var xhr = new XMLHttpRequest()
-            xhr.open("GET", "file:///tmp/quickshell_command")
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState !== XMLHttpRequest.DONE) return
-                if (xhr.status !== 200 && xhr.status !== 0) {
-                    root.commandHandlerBusy = false
-                    return
+            
+            var cmdXhr = new XMLHttpRequest()
+            cmdXhr.open("GET", "file:///tmp/quickshell_command")
+            cmdXhr.onreadystatechange = function() {
+                if (cmdXhr.readyState === XMLHttpRequest.DONE && (cmdXhr.status === 200 || cmdXhr.status === 0)) {
+                    var cmd = (cmdXhr.responseText || "").trim()
+                    if (cmd.length > 0) {
+                        root.commandHandlerBusy = true
+                        root.handleRemoteCommand(cmd)
+                        // Clear command file instantly
+                        processHelperClear.runCommand(['sh', '-c', ': > /tmp/quickshell_command'], function() {
+                            root.commandHandlerBusy = false
+                        })
+                    }
                 }
-                var cmd = (xhr.responseText || "").trim()
-                if (!cmd || cmd.length === 0) {
-                    root.commandHandlerBusy = false
-                    return
-                }
-                if (cmd === "openLauncher") {
-                    root.openLauncher()
-                } else if (cmd === "toggleMenu") {
-                    root.toggleMenu()
-                } else if (cmd === "openClipboardManager") {
-                    root.openClipboardManager()
-                } else if (cmd === "openSettings") {
-                    root.openSettings()
-                } else if (cmd === "hideSidebar") {
-                    sharedData.sidebarVisible = false
-                } else if (cmd === "showSidebar") {
-                    sharedData.sidebarVisible = true
-                } else if (cmd === "showLockScreenNonBlocking") {
-                    sharedData.lockScreenNonBlocking = true
-                    sharedData.lockScreenVisible = true
-                } else if (cmd === "showLockScreen") {
-                    sharedData.lockScreenNonBlocking = false
-                    sharedData.lockScreenVisible = true
-                } else if (cmd === "hideLockScreen") {
-                    sharedData.lockScreenVisible = false
-                }
-                processHelperClear.runCommand(['sh', '-c', ': > /tmp/quickshell_command'], function() {
-                    root.commandHandlerBusy = false
-                })
             }
-            xhr.send()
+            cmdXhr.send()
+        }
+    }
+
+    // Slower timer for non-critical external signals (e.g. wallpaper)
+    Timer {
+        id: wallpaperCheckTimer
+        interval: 5000 // 5 seconds is plenty for wallpaper
+        running: true
+        repeat: true
+        onTriggered: {
+            var wallXhr = new XMLHttpRequest()
+            wallXhr.open("GET", "file:///tmp/quickshell_wallpaper_path")
+            wallXhr.onreadystatechange = function() {
+                if (wallXhr.readyState === XMLHttpRequest.DONE && (wallXhr.status === 200 || wallXhr.status === 0)) {
+                    var path = (wallXhr.responseText || "").trim()
+                    if (path && path.length > 0 && path !== root.currentWallpaperPath) {
+                        root.currentWallpaperPath = path
+                        processHelperClear.runCommand(['sh', '-c', ': > /tmp/quickshell_wallpaper_path'])
+                    }
+                }
+            }
+            wallXhr.send()
         }
     }
     
     // Current wallpaper path - shared across all screens
     property string currentWallpaperPath: ""
-    
-    // Timer do monitorowania zmiany tapety
-    Timer {
-        id: wallpaperCheckTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 6000 : 4000
-        running: true
-        repeat: true
-        
-        onTriggered: {
-            var xhr = new XMLHttpRequest()
-            xhr.open("GET", "file:///tmp/quickshell_wallpaper_path")
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200 || xhr.status === 0) {
-                        var path = xhr.responseText.trim()
-                        if (path && path.length > 0 && path !== root.currentWallpaperPath) {
-                            root.currentWallpaperPath = path
-                        }
-                        // Plik pozostawiamy – kolejna zmiana tapety go nadpisze
-                    }
-                }
-            }
-            xhr.send()
-        }
-    }
-    
-    // Szybszy timer tylko dla sygnału Fuse – kolory odświeżane w ~500 ms po zmianie w Fuse
-    // Fuse zapisuje w pliku: pierwszą linię = ścieżka do colors.json, potem "reload_TIMESTAMP"
-    Timer {
-        id: fuseNotifyTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 2000 : 1200
-        running: true
-        repeat: true
-        onTriggered: {
-            var xhr = new XMLHttpRequest()
-            xhr.open("GET", "file:///tmp/quickshell_color_change?_=" + Date.now())
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE && (xhr.status === 200 || xhr.status === 0)) {
-                    var raw = (xhr.responseText || "").trim()
-                    if (raw.length > 0) {
-                        var line0 = (raw.split("\n")[0] || "").trim()
-                        var pathFromTrigger = (line0.length > 0 && (line0.indexOf("colors.json") >= 0 || line0[0] === "/")) ? line0 : ""
-                        var loadPath = pathFromTrigger || root.colorConfigPath || ""
-                        if (loadPath) root.loadColors(false, loadPath)
-                        if (sharedData && sharedData.runCommand)
-                            sharedData.runCommand(['sh', '-c', ': > /tmp/quickshell_color_change'])
-                    }
-                }
-            }
-            xhr.send()
-        }
-    }
+    // Note: colorChangeWatcher is handled by colorCheckTimer below
     
     // Timer do monitorowania zmiany kolorów i ustawień (colors.json + ponownie sygnał)
     Timer {
@@ -661,6 +657,48 @@ ShellRoot {
         }
     }
     
+    // Centralized System Status Timer
+    Timer {
+        id: statusRefreshTimer
+        interval: sharedData.lowPerformanceMode ? 10000 : 6000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            // Refactored helper to run command and read output via /tmp
+            var runAndRead = function(cmd, propertyName) {
+                var tmpFile = "/tmp/qs_shared_status_" + propertyName
+                processHelper.runCommand(['sh', '-c', cmd + " > " + tmpFile], function() {
+                    var xhr = new XMLHttpRequest()
+                    xhr.open("GET", "file://" + tmpFile)
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === XMLHttpRequest.DONE) {
+                            var out = (xhr.responseText || "").trim()
+                            if (sharedData[propertyName] !== out) {
+                                // Fix: Check if property is int and parse if necessary
+                                if (propertyName === "btDevices" || propertyName === "batteryPct" || propertyName === "netSignal") {
+                                    var val = parseInt(out)
+                                    sharedData[propertyName] = isNaN(val) ? 0 : val
+                                } else {
+                                    sharedData[propertyName] = out
+                                }
+                            }
+                        }
+                    }
+                    xhr.send()
+                })
+            }
+
+            runAndRead('nmcli -t -f TYPE,NAME connection show --active | grep -E "^(802-11-wireless|ethernet)" | head -n 1 | cut -d: -f2-', "netSSID")
+            runAndRead('NW_IP=$(networkctl status 2>/dev/null | grep -i "Address:" | awk \'{print $2}\' | grep -v ":" | head -n1); [ -n "$NW_IP" ] && echo "$NW_IP" || ip -o -4 addr show scope global | awk \'{print $4}\' | cut -d/ -f1 | head -n1 || echo ""', "netIP")
+            runAndRead('bluetoothctl show | grep -q "Powered: yes" && echo "On" || echo "Off"', "btStatus")
+            runAndRead('bluetoothctl devices Connected | wc -l', "btDevices")
+            runAndRead('cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -n1', "batteryPct")
+            runAndRead('cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -n1', "batteryStatus")
+            runAndRead('nmcli -f IN-USE,SIGNAL dev wifi | grep "*" | awk \'{print $2}\' || echo 0', "netSignal")
+        }
+    }
+
     // Per-screen: każdy typ okna ma własny Variants z delegate = PanelWindow (wymagane dla poprawnego bindowania do ekranu)
     Variants {
         model: Quickshell.screens
@@ -728,19 +766,36 @@ ShellRoot {
 
     // Dashboard - jeden globalny (nie per-ekran)
     // Pokazuje się gdy myszka najedzie na górną krawędź ekranu
-    Dashboard {
-        id: dashboardInstance
-        sharedData: root.sharedData
-        projectPath: root.projectPath
+    Loader {
+        id: dashboardLoader
+        asynchronous: true
+        active: root.sharedData.menuVisible || root.sharedData.dashboardLoaded
+        onStatusChanged: if (status === Loader.Ready) root.sharedData.dashboardLoaded = true
+        sourceComponent: Component {
+            Dashboard {
+                id: dashboardInstance
+                sharedData: root.sharedData
+                projectPath: root.projectPath
+                // Remove visible: sharedData.menuVisible to allow internal animation-out to work
+            }
+        }
     }
 
     // AppLauncher - launcher aplikacji (rofi-like)
-    // Bez Loadera, aby uniknąć problemów z bindowaniem sharedData i animacjami
-    AppLauncher {
-        id: appLauncherInstance
-        sharedData: root.sharedData
-        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
-        projectPath: root.projectPath
+    Loader {
+        id: appLauncherLoader
+        asynchronous: true
+        active: root.sharedData.launcherVisible || root.sharedData.launcherLoaded
+        onStatusChanged: if (status === Loader.Ready) root.sharedData.launcherLoaded = true
+        sourceComponent: Component {
+            AppLauncher {
+                id: appLauncherInstance
+                sharedData: root.sharedData
+                screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+                projectPath: root.projectPath
+                // Remove visible: sharedData.launcherVisible to allow internal animation-out to work
+            }
+        }
     }
 
     // VolumeSlider - slider głośności na prawej krawędzi
@@ -755,11 +810,14 @@ ShellRoot {
     Loader {
         asynchronous: true
         id: clipboardManagerLoader
-        active: root.sharedData.clipboardVisible
+        active: root.sharedData.clipboardVisible || root.sharedData.clipboardLoaded
+        onStatusChanged: if (status === Loader.Ready) root.sharedData.clipboardLoaded = true
         sourceComponent: Component {
             ClipboardManager {
+                id: clipboardManagerInstance
                 screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
                 sharedData: root.sharedData
+                // ClipboardManager already handles its own visibility/animations internally
             }
         }
     }
@@ -776,4 +834,3 @@ ShellRoot {
         }
     }
 }
-

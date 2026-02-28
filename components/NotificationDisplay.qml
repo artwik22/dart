@@ -43,7 +43,7 @@ PanelWindow {
         
         onNotification: function(notification) {
             
-            // Add to notification history
+            // Add to notification history (Limit to 50 items)
             if (sharedData) {
                 var now = new Date()
                 var timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0')
@@ -53,7 +53,9 @@ PanelWindow {
                     body: notification.body || "",
                     time: timeStr
                 }
-                sharedData.notificationHistory = [historyItem].concat(sharedData.notificationHistory)
+                var history = [historyItem].concat(sharedData.notificationHistory)
+                if (history.length > 50) history = history.slice(0, 50)
+                sharedData.notificationHistory = history
             }
             
             // Check if notifications are enabled
@@ -117,13 +119,9 @@ PanelWindow {
             notifications = newNotifs
         }
         if (item) {
-            // Wait a bit for animation to complete, then destroy
-            var destroyTimer = Qt.createQmlObject('import QtQuick; Timer { interval: 400; running: true; repeat: false }', notificationDisplayRoot)
-            destroyTimer.triggered.connect(function() {
-                if (item) {
-                    item.destroy()
-                }
-            })
+            // Use a reusable timer or direct destruction if animation is handled elsewhere
+            // For now, let's use a simpler approach that doesn't leak timers
+            item.destroy(400) // Destroy after 400ms delay (QtQuick 2.x supports this delay)
         }
     }
     
