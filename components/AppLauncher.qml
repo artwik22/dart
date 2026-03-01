@@ -449,6 +449,14 @@ PanelWindow {
     
     // Color config file path - dynamically determined
     property string colorConfigPath: ""
+    
+    function getTransparentColor(hex, alpha) {
+        if (!hex || hex.length < 7) return Qt.rgba(1, 1, 1, alpha);
+        var r = parseInt(hex.substring(1, 3), 16) / 255;
+        var g = parseInt(hex.substring(3, 5), 16) / 255;
+        var b = parseInt(hex.substring(5, 7), 16) / 255;
+        return Qt.rgba(r, g, b, alpha);
+    }
     property string packageSearchText: ""
     
     // Filtered applications list
@@ -2176,25 +2184,10 @@ PanelWindow {
                                     height: 50
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     
-                                    color: (selectedIndex === index) ?
-                                        ((sharedData && sharedData.colorAccent) ? Qt.rgba(
-                                            parseInt(sharedData.colorAccent.substring(1,3), 16)/255,
-                                            parseInt(sharedData.colorAccent.substring(3,5), 16)/255,
-                                            parseInt(sharedData.colorAccent.substring(5,7), 16)/255,
-                                            0.2
-                                        ) : Qt.rgba(0.29, 0.62, 1.0, 0.2)) :
-                                        (fileItemMouseArea && fileItemMouseArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent")
+                                    color: (selectedIndex === index) ? getTransparentColor(colorAccent, 0.15) :
+                                           (fileItemMouseArea && fileItemMouseArea.containsMouse ? getTransparentColor(colorText, 0.08) : "transparent")
                                     
                                     Behavior on color { ColorAnimation { duration: 120 } }
-                                    
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        anchors.top: parent.top
-                                        anchors.bottom: parent.bottom
-                                        width: selectedIndex === index ? 6 : 0
-                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                    }
                                     
                                     Row {
                                         anchors.fill: parent
@@ -2382,25 +2375,10 @@ PanelWindow {
                                     
                                     Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                                     Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                    color: (selectedIndex === index) ?
-                                        ((sharedData && sharedData.colorAccent) ? Qt.rgba(
-                                            parseInt(sharedData.colorAccent.substring(1,3), 16)/255,
-                                            parseInt(sharedData.colorAccent.substring(3,5), 16)/255,
-                                            parseInt(sharedData.colorAccent.substring(5,7), 16)/255,
-                                            0.25 // Clear background for selection (25% opacity)
-                                        ) : Qt.rgba(0.29, 0.62, 1.0, 0.25)) :
-                                        (appItemMouseArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent")
+                                    color: (selectedIndex === index) ? getTransparentColor(colorAccent, 0.15) :
+                                           (appItemMouseArea.containsMouse ? getTransparentColor(colorText, 0.08) : "transparent")
                                     
                                     Behavior on color { ColorAnimation { duration: 120 } }
-                                    
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        anchors.top: parent.top
-                                        anchors.bottom: parent.bottom
-                                        width: selectedIndex === index ? 6 : 0
-                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                    }
                                     
                                     property string appName: model.name || "Unknown"
                                     property string appComment: model.comment || ""
@@ -2543,14 +2521,15 @@ PanelWindow {
                         
                         Rectangle {
                             anchors.fill: parent
-                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                            opacity: (selectedIndex === index || packageOptionItemMouseArea.containsMouse) ? 0.08 : 0
+                            color: selectedIndex === index ? getTransparentColor(colorAccent, 0.15) : getTransparentColor(colorText, 0.08)
+                            opacity: (selectedIndex === index || packageOptionItemMouseArea.containsMouse) ? 1 : 0
                             radius: parent.radius
                             Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                         }
                         
                         opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0
-                        scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0.8
+                        scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 
+                            (selectedIndex === index ? 1.02 : (packageOptionItemMouseArea.containsMouse ? 1.01 : 1.0)) : 0.8
                         
                         transform: Translate {
                             y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 0 : 40
@@ -2681,14 +2660,15 @@ PanelWindow {
                     
                     Rectangle {
                         anchors.fill: parent
-                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                        opacity: (selectedIndex === index || installSourceItemMouseArea.containsMouse) ? 0.08 : 0
+                        color: selectedIndex === index ? getTransparentColor(colorAccent, 0.15) : getTransparentColor(colorText, 0.08)
+                        opacity: (selectedIndex === index || installSourceItemMouseArea.containsMouse) ? 1 : 0
                         radius: parent.radius
                         Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                     }
                     
                     opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 1 : 0
-                    scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 1 : 0.8
+                    scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 
+                        (selectedIndex === index ? 1.02 : (installSourceItemMouseArea.containsMouse ? 1.01 : 1.0)) : 0.8
                     
                     transform: Translate {
                         y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 0 : 40
@@ -2799,14 +2779,7 @@ PanelWindow {
                     }
                 }
                 
-                highlight: Rectangle {
-                    color: colorPrimary
-                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
-                    }
-                }
+                highlight: null
             }
             
             // Wyszukiwarka pakietów Pacman (gdy currentPackageMode === 1)
@@ -2930,52 +2903,10 @@ PanelWindow {
                             width: pacmanPackagesList.width
                             height: 50
                             radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: (selectedIndex === index || packageItemMouseArea.containsMouse) ?
-                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                                "transparent"
+                            color: (selectedIndex === index) ? getTransparentColor(colorAccent, 0.15) :
+                                   (packageItemMouseArea.containsMouse ? getTransparentColor(colorText, 0.08) : "transparent")
                             
-                            opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 1 : 0
-                            scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 1 : 0.8
-                            
-                            transform: Translate {
-                                y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 1) ? 0 : 40
-                            }
-
-                            Behavior on opacity {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
-                                }
-                            }
-                            
-                            Behavior on scale {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                                }
-                            }
-                            
-                            Behavior on transform {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                    PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
-                                }
-                            }
-
-                            Behavior on color {
-                                ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                            }
-                            
-                            Rectangle {
-                                anchors.left: parent.left
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                width: selectedIndex === index ? 3 : 0
-                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                Behavior on width {
-                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                                }
-                            }
+                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
                             
                             property string packageName: model.name || "Unknown"
                             property string packageDescription: model.description || ""
@@ -3026,10 +2957,7 @@ PanelWindow {
                             }
                         }
                         
-                        highlight: Rectangle {
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                        }
+                        highlight: null
                     }
                 }
             }
@@ -3155,52 +3083,10 @@ PanelWindow {
                             width: aurPackagesList.width
                             height: 50
                             radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: (selectedIndex === index || aurPackageItemMouseArea.containsMouse) ?
-                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                                "transparent"
+                            color: (selectedIndex === index) ? getTransparentColor(colorAccent, 0.15) :
+                                   (aurPackageItemMouseArea.containsMouse ? getTransparentColor(colorText, 0.08) : "transparent")
                             
-                            opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 1 : 0
-                            scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 1 : 0.8
-                            
-                            transform: Translate {
-                                y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 2) ? 0 : 40
-                            }
-
-                            Behavior on opacity {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                    NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
-                                }
-                            }
-                            
-                            Behavior on scale {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                                }
-                            }
-                            
-                            Behavior on transform {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                    PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
-                                }
-                            }
-
-                            Behavior on color {
-                                ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                            }
-                            
-                            Rectangle {
-                                anchors.left: parent.left
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                width: selectedIndex === index ? 3 : 0
-                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                Behavior on width {
-                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                                }
-                            }
+                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
                             
                             property string packageName: model.name || "Unknown"
                             property string packageDescription: model.description || ""
@@ -3251,10 +3137,7 @@ PanelWindow {
                             }
                         }
                         
-                        highlight: Rectangle {
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                        }
+                        highlight: null
                     }
                 }
             }
@@ -3280,49 +3163,10 @@ PanelWindow {
                     width: removeSourceList.width
                     height: 50
                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    color: "transparent"
+                    color: (selectedIndex === index) ? getTransparentColor(colorAccent, 0.15) :
+                           (removeSourceItemMouseArea.containsMouse ? getTransparentColor(colorText, 0.08) : "transparent")
                     
-                    Rectangle {
-                        anchors.fill: parent
-                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                        opacity: (selectedIndex === index || removeSourceItemMouseArea.containsMouse) ? 0.08 : 0
-                        radius: parent.radius
-                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                    }
-                    
-                    opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 3) ? 1 : 0
-                    scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 3) ? 1 : 0.8
-                    
-                    transform: Translate {
-                        y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 3) ? 0 : 40
-                    }
-
-                    Behavior on opacity {
-                        SequentialAnimation {
-                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                            NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
-                        }
-                    }
-                    
-                    Behavior on scale {
-                        SequentialAnimation {
-                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                            NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                        }
-                    }
-                    
-                    Behavior on transform {
-                        SequentialAnimation {
-                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                            PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
-                        }
-                    }
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                    }
-                    
-                    // Usunięto boczny akcent
+                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
                     
                     Row {
                         anchors.left: parent.left
@@ -3401,13 +3245,7 @@ PanelWindow {
                     }
                 }
                 
-                highlight: Rectangle {
-                    color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    Behavior on color {
-                        ColorAnimation { duration: 180; easing.type: Easing.OutQuart }
-                    }
-                }
+                highlight: null
             }
             
             // Wyszukiwarka zainstalowanych pakietów do usunięcia z Pacman (gdy currentPackageMode === 4)
@@ -3531,12 +3369,10 @@ PanelWindow {
                             width: removePackagesList.width
                             height: 50
                             radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: (selectedIndex === index || installedPackageItemMouseArea.containsMouse) ?
-                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                                "transparent"
                             
                             opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && (currentPackageMode === 4 || currentPackageMode === 5)) ? 1 : 0
-                            scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && (currentPackageMode === 4 || currentPackageMode === 5)) ? 1 : 0.8
+                            scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && (currentPackageMode === 4 || currentPackageMode === 5)) ? 
+                                (installedPackageItemMouseArea.containsMouse ? 1.02 : 1.0) : 0.8
                             
                             transform: Translate {
                                 y: (sharedData && sharedData.launcherVisible && currentMode === 1 && (currentPackageMode === 4 || currentPackageMode === 5)) ? 0 : 40
@@ -3550,10 +3386,7 @@ PanelWindow {
                             }
                             
                             Behavior on scale {
-                                SequentialAnimation {
-                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                    NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                                }
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                             }
                             
                             Behavior on transform {
@@ -3563,20 +3396,10 @@ PanelWindow {
                                 }
                             }
 
-                            Behavior on color {
-                                ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                            }
+                            color: (selectedIndex === index) ? getTransparentColor(colorAccent, 0.15) :
+                                   (installedPackageItemMouseArea.containsMouse ? getTransparentColor(colorText, 0.08) : "transparent")
                             
-                            Rectangle {
-                                anchors.left: parent.left
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                width: selectedIndex === index ? 3 : 0
-                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                Behavior on width {
-                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                                }
-                            }
+                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
                             
                             property string packageName: model.name || "Unknown"
                             property string packageVersion: model.version || ""
@@ -3643,10 +3466,7 @@ PanelWindow {
                             }
                         }
                         
-                        highlight: Rectangle {
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                        }
+                        highlight: null
                     }
                 }
             }
@@ -3768,23 +3588,15 @@ PanelWindow {
                             width: removeAurPackagesList.width
                             height: 50
                             radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                            color: (selectedIndex === index || installedAurPackageItemMouseArea.containsMouse) ?
-                                ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                                "transparent"
+                            color: (selectedIndex === index) ? getTransparentColor(colorAccent, 0.15) :
+                               (installedAurPackageItemMouseArea.containsMouse ? getTransparentColor(colorText, 0.08) : "transparent")
+                            
+                            scale: (selectedIndex === index) ? 1.02 : (installedAurPackageItemMouseArea.containsMouse ? 1.01 : 1.0)
+                            
+                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                             
                             Behavior on color {
                                 ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                            }
-                            
-                            Rectangle {
-                                anchors.left: parent.left
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                width: selectedIndex === index ? 3 : 0
-                                color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                Behavior on width {
-                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                                }
                             }
                             
                             property string packageName: model.name || "Unknown"
@@ -3848,10 +3660,7 @@ PanelWindow {
                         }
                     }
                     
-                    highlight: Rectangle {
-                        color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    }
+                    highlight: null
                     }
                 }
             }
@@ -3883,13 +3692,13 @@ PanelWindow {
                         
                         Rectangle {
                             anchors.fill: parent
-                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                            opacity: (selectedIndex === index || powerOptionItemMouseArea.containsMouse) ? 0.08 : 0
+                            color: selectedIndex === index ? getTransparentColor(colorAccent, 0.15) : getTransparentColor(colorText, 0.08)
+                            opacity: (selectedIndex === index || powerOptionItemMouseArea.containsMouse) ? 1 : 0
                             radius: parent.radius
                             Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                         }
                         
-                        scale: (selectedIndex === index || powerOptionItemMouseArea.containsMouse) ? 1.02 : 1.0
+                        scale: (selectedIndex === index ? 1.02 : (powerOptionItemMouseArea.containsMouse ? 1.01 : 1.0))
                         
                         opacity: (sharedData && sharedData.launcherVisible && currentMode === 5) ? 1 : 0
                         
