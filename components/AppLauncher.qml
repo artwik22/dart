@@ -379,6 +379,9 @@ PanelWindow {
         } else if (currentMode === 3) {
             // Run command mode - search box only
             return 36;
+        } else if (currentMode === 5) {
+            // Power menu: match packages options height
+            return 150;
         }
         return 108; // default fallback
     }
@@ -490,7 +493,7 @@ PanelWindow {
     }
     
     function triggerFileSearch() {
-        if (!searchText || searchText.trim().length < 3) {
+        if (!searchText || searchText.trim().length < 2) {
             fileSearchResults.clear()
             isSearchingFiles = false
             return
@@ -499,9 +502,13 @@ PanelWindow {
         isSearchingFiles = true
         var query = searchText.trim().replace(/"/g, '\\"')
         if (sharedData && sharedData.runCommand) {
-            sharedData.runCommand(['sh', '-c', 'fd -i "' + query + '" /home/iartwik --max-results 20 > /tmp/quickshell_file_search_results'])
+            // Full disk search starting from /, excluding system virtual filesystems
+            // -i: case insensitive, -H: hidden files, -I: ignore gitignore (more thorough)
+            var cmd = 'fd -i -H -I -E "/proc" -E "/sys" -E "/dev" -E "/run" -E "/mnt" -E "/media" -E "/var/lib" -E "/var/cache" -E "/tmp" "' + query + '" / --max-results 40 > /tmp/quickshell_file_search_results'
+            sharedData.runCommand(['sh', '-c', cmd])
             if (sharedData.setTimeout) {
-                sharedData.setTimeout(appLauncherRoot.readFileSearchResults, 200)
+                // Increased timeout as full disk search might take slightly longer
+                sharedData.setTimeout(appLauncherRoot.readFileSearchResults, 350)
             }
         }
     }
@@ -675,13 +682,12 @@ PanelWindow {
         var search = (searchText || "").trim()
         var searchLower = search.toLowerCase()
         
-        // Check if it's calculator mode (starts with "=" or looks like math expression)
+        // Check for calculator mode
         if (search.startsWith("=") || (search.length > 0 && /^[\d+\-*/().\sπe]+$/.test(search.replace(/sqrt|sin|cos|tan|log|ln|pow/gi, "").replace(/\s+/g, "")))) {
             var result = calculateExpression(search)
             if (result && result !== "Error") {
                 isCalculatorMode = true
                 calculatorResult = result
-                // Add calculator result as a "fake" app
                 filteredApps.append({
                     name: "= " + result,
                     comment: "Calculator result - Press Enter to copy",
@@ -697,22 +703,15 @@ PanelWindow {
         isCalculatorMode = false
         calculatorResult = ""
         
-        // Check if search starts with ! prefix for web search
+        // Check for web search
         if (search.startsWith("!")) {
             var serviceName = "DuckDuckGo"
-            if (search.startsWith("!w ")) {
-                serviceName = "Wikipedia"
-            } else if (search.startsWith("!w")) {
-                serviceName = "Wikipedia"
-            } else if (search.startsWith("!r ")) {
-                serviceName = "Reddit"
-            } else if (search.startsWith("!r")) {
-                serviceName = "Reddit"
-            } else if (search.startsWith("!y ")) {
-                serviceName = "YouTube"
-            } else if (search.startsWith("!y")) {
-                serviceName = "YouTube"
-            }
+            if (search.startsWith("!w ")) serviceName = "Wikipedia"
+            else if (search.startsWith("!w")) serviceName = "Wikipedia"
+            else if (search.startsWith("!r ")) serviceName = "Reddit"
+            else if (search.startsWith("!r")) serviceName = "Reddit"
+            else if (search.startsWith("!y ")) serviceName = "YouTube"
+            else if (search.startsWith("!y")) serviceName = "YouTube"
             
             filteredApps.append({
                 name: "Search in " + serviceName,
@@ -725,37 +724,80 @@ PanelWindow {
             return
         }
         
-        // If there are no applications, do nothing
-        if (apps.length === 0) {
-            return
-        }
-        
+        if (apps.length === 0) return
+
+        var matches = []
         for (var i = 0; i < apps.length; i++) {
             var app = apps[i]
-            if (!app || !app.name || app.name === "") continue
+            if (!app || !app.name) continue
             
-            var name = (app.name || "").toLowerCase()
+            var name = app.name.toLowerCase()
             var comment = (app.comment || "").toLowerCase()
+            var keywords = (app.keywords || "").toLowerCase()
+            var score = 0
             
-            // If search is empty, show all applications
-            // Otherwise, filter by name or comment
-            if (searchLower === "" || name.indexOf(searchLower) >= 0 || comment.indexOf(searchLower) >= 0) {
-                filteredApps.append({
+            if (searchLower === "") {
+                score = 1 // Show all if empty
+            } else if (name === searchLower) {
+                score = 100 // Exact match
+            } else if (name.startsWith(searchLower)) {
+                score = 80 // Starts with
+            } else if (name.indexOf(searchLower) >= 0) {
+                score = 60 // Includes
+            } else if (comment.indexOf(searchLower) >= 0) {
+                score = 40 // In comment
+            } else if (keywords.indexOf(searchLower) >= 0) {
+                score = 30 // In keywords
+            } else {
+                // Fuzzy/partial match
+                var fuzzyScore = 0
+                var searchIdx = 0
+                for (var j = 0; j < name.length && searchIdx < searchLower.length; j++) {
+                    if (name[j] === searchLower[searchIdx]) {
+                        searchIdx++
+                        fuzzyScore += 10
+                    }
+                }
+                if (searchIdx === searchLower.length) {
+                    score = 10 + fuzzyScore
+                }
+            }
+            
+            if (score > 0) {
+                // Smart Ranking: Add bonus for frequently used apps
+                var launchBonus = Math.min((app.launchCount || 0) * 4, 50)
+                score += launchBonus
+                
+                matches.push({
                     name: app.name,
                     comment: app.comment || "",
                     exec: app.exec || "",
                     icon: app.icon || "",
-                    isCalculator: false
+                    score: score
                 })
             }
         }
         
-        // Reset selectedIndex if out of range
+        // Sort by score descending
+        matches.sort(function(a, b) {
+            return b.score - a.score
+        })
+        
+        // Limited to top 15 results for performance
+        var limit = Math.min(matches.length, 15)
+        for (var k = 0; k < limit; k++) {
+            var m = matches[k]
+            filteredApps.append({
+                name: m.name,
+                comment: m.comment,
+                exec: m.exec,
+                icon: m.icon,
+                isCalculator: false
+            })
+        }
+        
         if (selectedIndex >= filteredApps.count) {
             selectedIndex = Math.max(0, filteredApps.count - 1)
-        }
-        if (selectedIndex < 0 && filteredApps.count > 0) {
-            selectedIndex = 0
         }
     }
     
@@ -878,19 +920,20 @@ PanelWindow {
     // Function to launch application
     function launchApp(app) {
         if (app.exec) {
-            // Remove Desktop Entry field codes (%u, %f, %F, %U, %d, %D, %n, %N, %i, %c, %k, %v, %m)
-            // Also handle escaped %% which should become %
             var exec = app.exec
-            // First, replace %% with a placeholder
             exec = exec.replace(/%%/g, "___PERCENT_PLACEHOLDER___")
-            // Remove all field codes (single letter after %)
             exec = exec.replace(/%[a-zA-Z]/g, "")
-            // Restore %% as %
             exec = exec.replace(/___PERCENT_PLACEHOLDER___/g, "%")
-            // Remove multiple spaces and trim
             exec = exec.replace(/\s+/g, " ").trim()
             
-            if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', exec.replace(/'/g, "'\"'\"'") + ' &'])
+            if (sharedData && sharedData.runCommand) {
+                // Launch the app
+                sharedData.runCommand(['sh', '-c', exec.replace(/'/g, "'\"'\"'") + ' &'])
+                
+                // Smart Ranking: Update launch count
+                var statsScript = projectPath + "/scripts/update-launch-stats.py"
+                sharedData.runCommand(['python3', statsScript, app.name])
+            }
             
             if (sharedData) {
                 sharedData.launcherVisible = false
@@ -902,7 +945,6 @@ PanelWindow {
     property int _loadAppsRetries: 0
     function loadApps() {
         if (!(sharedData && sharedData.runCommand)) {
-            // runCommand może nie być gotowe przy starcie – spróbuj ponownie po chwili albo gdy użytkownik otworzy launcher
             if (_loadAppsRetries < 5) {
                 _loadAppsRetries++
                 if (sharedData && sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.loadApps, 400)
@@ -910,144 +952,28 @@ PanelWindow {
             return
         }
         _loadAppsRetries = 0
-        apps = []
-        filteredApps.clear()
-        loadedAppsCount = 0
-        totalFilesToLoad = 0
-        sharedData.runCommand(['sh', '-c', 'find /usr/share/applications ~/.local/share/applications -name "*.desktop" 2>/dev/null | head -200 > /tmp/quickshell_apps_list'], readAppsList)
+        
+        var scriptPath = projectPath + "/scripts/get-apps.py"
+        sharedData.runCommand(['python3', scriptPath], readAppsJson)
     }
     
-    function readAppsList() {
+    function readAppsJson() {
         var xhr = new XMLHttpRequest()
-        xhr.open("GET", "file:///tmp/quickshell_apps_list?_=" + Date.now())
+        xhr.open("GET", "file:///tmp/alloy_apps.json?_=" + Date.now())
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                var files = xhr.responseText.trim().split("\n").filter(function(f) { return f.trim().length > 0 })
-                var totalFiles = Math.min(files.length, 80)
-                
-                // Reset counters
-                loadedAppsCount = 0
-                totalFilesToLoad = totalFiles
-                
-                for (var i = 0; i < totalFiles; i++) {
-                    var file = files[i].trim()
-                    if (file) {
-                        readDesktopFile(file, i, totalFiles)
-                    } else {
-                        // If file is empty, increment counter
-                        loadedAppsCount++
+                try {
+                    var data = JSON.parse(xhr.responseText)
+                    if (Array.isArray(data)) {
+                        apps = data
+                        filterApps()
                     }
-                }
-                
-                // If there are no files, call filterApps
-                if (totalFiles === 0) {
-                    filterApps()
+                } catch (e) {
+                    console.error("Error parsing apps JSON: " + e)
                 }
             }
         }
         xhr.send()
-    }
-    
-    // Counter for loaded applications
-    property int loadedAppsCount: 0
-    property int totalFilesToLoad: 0
-    
-    function readDesktopFile(filePath, index, total) {
-        totalFilesToLoad = total
-        var xhr = new XMLHttpRequest()
-        xhr.open("GET", "file://" + filePath)
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                // Check response status
-                if (xhr.status !== 200 && xhr.status !== 0) {
-                    loadedAppsCount++
-                    checkIfAllLoaded()
-                    return
-                }
-                
-                var content = xhr.responseText
-                if (!content || content.trim() === "") {
-                    loadedAppsCount++
-                    checkIfAllLoaded()
-                    return
-                }
-                
-                var lines = content.split("\n")
-                
-                var app = {
-                    name: "",
-                    comment: "",
-                    exec: "",
-                    icon: "",
-                    type: "Application"  // Default Application
-                }
-                
-                var inDesktopEntry = false
-                var isNoDisplay = false
-                
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i].trim()
-                    if (line.startsWith("[Desktop Entry]")) {
-                        inDesktopEntry = true
-                        continue
-                    } else if (line.startsWith("[") && inDesktopEntry) {
-                        break
-                    } else if (inDesktopEntry && line.indexOf("=") > 0 && !line.startsWith("#")) {
-                        var equalIndex = line.indexOf("=")
-                        var key = line.substring(0, equalIndex).trim()
-                        var value = line.substring(equalIndex + 1).trim()
-                        
-                        if (key === "Name" && !app.name) {
-                            app.name = value
-                        } else if (key === "Comment" && !app.comment) {
-                            app.comment = value
-                        } else if (key === "Exec" && !app.exec) {
-                            app.exec = value
-                        } else if (key === "Icon" && !app.icon) {
-                            app.icon = value
-                        } else if (key === "Type") {
-                            app.type = value
-                        } else if (key === "NoDisplay" && value === "true") {
-                            isNoDisplay = true
-                        }
-                    }
-                }
-                
-                // Filter only applications (not directories, not NoDisplay)
-                // Check if it has Name and Exec (required fields)
-                if (app.name && app.name.length > 0 && app.exec && app.exec.length > 0 && app.type !== "Directory" && !isNoDisplay) {
-                    // Check for duplicates by name
-                    var isDuplicate = false
-                    for (var j = 0; j < apps.length; j++) {
-                        if (apps[j].name === app.name) {
-                            isDuplicate = true
-                            break
-                        }
-                    }
-                    
-                    if (!isDuplicate) {
-                        apps.push({
-                            name: app.name,
-                            comment: app.comment || "",
-                            exec: app.exec,
-                            icon: app.icon || ""
-                        })
-                    }
-                }
-                
-                loadedAppsCount++
-                checkIfAllLoaded()
-            }
-        }
-        xhr.send()
-    }
-    
-    function checkIfAllLoaded() {
-        if (loadedAppsCount >= totalFilesToLoad && totalFilesToLoad > 0) {
-            // All files loaded, call filterApps
-            // Wait a moment so all applications are in the array
-        if (sharedData && sharedData.setTimeout) sharedData.setTimeout(appLauncherRoot.filterApps, 500)
-        }
     }
     
     // Function to search packages in pacman
@@ -1495,12 +1421,11 @@ PanelWindow {
 
         // Tło z gradientem
         // Material Design launcher background with elevation
+        // Glassmorphic background
         Rectangle {
             id: launcherBackground
             anchors.fill: parent
-            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-            
-            // Użyj sharedData.colorBackground jeśli dostępny - jednolite tło bez gradientu
+            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 12
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : colorBackground
         }
         
@@ -1510,8 +1435,8 @@ PanelWindow {
         Keys.onPressed: function(event) {
             // Escape - zamknij launcher lub wróć do wyboru trybu
             if (event.key === Qt.Key_Escape) {
-                if (currentMode === -1 || currentMode === 0) {
-                    // Wybór trybu lub Launch App – jeden Escape zamyka launcher
+                if (currentMode === -1 || currentMode === 0 || currentMode === 5) {
+                    // Wybór trybu, Launch App lub Power Menu – jeden Escape zamyka launcher
                     if (sharedData) {
                         sharedData.launcherVisible = false
                     }
@@ -1784,6 +1709,31 @@ PanelWindow {
                     // W trybie AUR remove search - przekieruj do TextInput
                     if (removeAurSearchInput) removeAurSearchInput.forceActiveFocus()
                     event.accepted = false
+            } else if (currentMode === 5) {
+                // W trybie Power Menu - nawigacja lewo/prawo
+                if (event.key === Qt.Key_Left) {
+                    if (selectedIndex > 0) {
+                        selectedIndex--
+                    }
+                    event.accepted = true
+                } else if (event.key === Qt.Key_Right) {
+                    if (selectedIndex < 3) { // 4 opcje: 0, 1, 2, 3
+                        selectedIndex++
+                    }
+                    event.accepted = true
+                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    var cmd = ""
+                     if (selectedIndex === 0) cmd = "systemctl poweroff"
+                    else if (selectedIndex === 1) cmd = "systemctl reboot"
+                    else if (selectedIndex === 2) cmd = "systemctl suspend"
+                    else if (selectedIndex === 3) cmd = "hyprctl dispatch exit"
+                    
+                    if (cmd !== "" && sharedData && sharedData.runCommand) {
+                        sharedData.runCommand(['sh', '-c', cmd])
+                        sharedData.launcherVisible = false
+                    }
+                    event.accepted = true
+                }
             }
         }
         
@@ -1801,6 +1751,7 @@ PanelWindow {
                 id: launchAppMode
                 anchors.fill: parent
                 visible: currentMode === 0 || currentMode === 3 || currentMode === 4
+                enabled: visible
                 
                 Column {
                     id: launchAppColumn
@@ -1822,20 +1773,14 @@ PanelWindow {
                                 Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
                                 Behavior on transform { PropertyAnimation { property: "y"; duration: 600; easing.type: Easing.OutBack } }
 
-                                Rectangle {
+                                 Rectangle {
                                     id: searchBox
-                                    width: (currentMode === 3 || currentMode === 4) ? parent.width : (parent.width - (36 * 4 + 8 * 4)) // Zostawiamy miejsce na 4 przyciski i ich spacing
-                                    height: 36
-                                    color: searchInput.activeFocus ? colorPrimary : colorSecondary
-                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                    width: (currentMode === 3 || currentMode === 4) ? parent.width : (parent.width - (36 * 4 + 8 * 4))
+                                    height: 38
+                                    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#111111"
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     
                                     Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
-                                    Behavior on color {
-                                        ColorAnimation { 
-                                            duration: 180
-                                            easing.type: Easing.OutQuart
-                                        }
-                                    }
                                     
                                     scale: searchInput.activeFocus ? 1.01 : 1.0
                                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
@@ -1843,18 +1788,50 @@ PanelWindow {
                                 TextInput {
                                     id: searchInput
                                     anchors.fill: parent
-                                    anchors.margins: 14
-                                    font.pixelSize: 16
+                                    anchors.leftMargin: 12
+                                    anchors.rightMargin: 12
+                                    font.pixelSize: 15
                                     font.family: "sans-serif"
                                     font.weight: Font.Medium
-                                    font.letterSpacing: 0.2
-                                    color: colorText
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                     verticalAlignment: TextInput.AlignVCenter
-                                    z: 10  // Na wierzchu
+                                    z: 10
                                     selectByMouse: true
                                     activeFocusOnPress: true
                                     activeFocusOnTab: true
                                     focus: ((currentMode === 0 || currentMode === 3 || currentMode === 4) && sharedData && sharedData.launcherVisible)
+                                    
+                                    // Searching indicator
+                                    Item {
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: 8
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: 20
+                                        height: 20
+                                        visible: isSearchingFiles && currentMode === 4
+                                        
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "󱑊"
+                                            color: parent.parent.color
+                                            font.pixelSize: 18
+                                            opacity: 0.6
+                                            
+                                            RotationAnimation on rotation {
+                                                from: 0; to: 360; duration: 1000; loops: Animation.Infinite
+                                            }
+                                        }
+                                    }
+                                    
+                                    Text {
+                                        text: currentMode === 4 ? "Search files..." : (currentMode === 3 ? "Search terminal..." : "Search apps...")
+                                        color: parent.color
+                                        opacity: 0.3
+                                        visible: !parent.text && !parent.inputMethodComposing
+                                        anchors.fill: parent
+                                        verticalAlignment: Text.AlignVCenter
+                                        font: parent.font
+                                    }
                                     
                                     onTextChanged: {
                                         searchText = text
@@ -1900,21 +1877,36 @@ PanelWindow {
                                         }
 
                                         if (event.key === Qt.Key_Up) {
+                                            highlightedModeIndex = 0 // Reset mode icon focus when navigating results
                                             if (selectedIndex > 0) {
                                                 selectedIndex--
-                                                if (currentMode === 0) appsList.positionViewAtIndex(selectedIndex, ListView.Center)
-                                                else if (currentMode === 4) filesList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                if (currentMode === 0) {
+                                                    appsList.currentIndex = selectedIndex
+                                                    appsList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                }
+                                                else if (currentMode === 4) {
+                                                    filesList.currentIndex = selectedIndex
+                                                    filesList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                }
                                             }
                                             event.accepted = true
                                         } else if (event.key === Qt.Key_Down) {
+                                            highlightedModeIndex = 0 // Reset mode icon focus when navigating results
                                             var maxCount = currentMode === 0 ? filteredApps.count : (currentMode === 4 ? fileSearchResults.count : 0)
                                             if (selectedIndex < maxCount - 1) {
                                                 selectedIndex++
-                                                if (currentMode === 0) appsList.positionViewAtIndex(selectedIndex, ListView.Center)
-                                                else if (currentMode === 4) filesList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                if (currentMode === 0) {
+                                                    appsList.currentIndex = selectedIndex
+                                                    appsList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                }
+                                                else if (currentMode === 4) {
+                                                    filesList.currentIndex = selectedIndex
+                                                    filesList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                }
                                             }
                                             event.accepted = true
-                                        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                        }
+ else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                             // 1. If an icon is highlighted, activate that mode
                                             if (highlightedModeIndex > 0) {
                                                 if (highlightedModeIndex === 1) { // Packages
@@ -1924,7 +1916,7 @@ PanelWindow {
                                                 } else if (highlightedModeIndex === 3) { // Terminal
                                                     currentMode = 3;
                                                 } else if (highlightedModeIndex === 4) { // Power
-                                                    // TODO: implement wlogout
+                                                    currentMode = 5;
                                                 }
                                                 selectedIndex = 0
                                                 searchInput.text = ""
@@ -2146,7 +2138,10 @@ PanelWindow {
                                         id: p4Btn
                                         anchors.fill: parent
                                         hoverEnabled: true
-                                        // TODO: implement wlogout launch
+                                        onClicked: {
+                                            currentMode = 5
+                                            selectedIndex = 0
+                                        }
                                     }
                                 }
                             }
@@ -2180,14 +2175,25 @@ PanelWindow {
                                     width: filesList.width
                                     height: 50
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                                    color: "transparent"
+                                    
+                                    color: (selectedIndex === index) ?
+                                        ((sharedData && sharedData.colorAccent) ? Qt.rgba(
+                                            parseInt(sharedData.colorAccent.substring(1,3), 16)/255,
+                                            parseInt(sharedData.colorAccent.substring(3,5), 16)/255,
+                                            parseInt(sharedData.colorAccent.substring(5,7), 16)/255,
+                                            0.2
+                                        ) : Qt.rgba(0.29, 0.62, 1.0, 0.2)) :
+                                        (fileItemMouseArea && fileItemMouseArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent")
+                                    
+                                    Behavior on color { ColorAnimation { duration: 120 } }
                                     
                                     Rectangle {
-                                        anchors.fill: parent
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-                                        opacity: (selectedIndex === index || fileItemMouseArea.containsMouse) ? 0.08 : 0
-                                        radius: parent.radius
-                                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                        anchors.left: parent.left
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        width: selectedIndex === index ? 6 : 0
+                                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                                     }
                                     
                                     Row {
@@ -2221,7 +2227,7 @@ PanelWindow {
                                                 text: model.name || "Unknown"
                                                 font.pixelSize: 15
                                                 font.family: "sans-serif"
-                                                font.weight: selectedIndex === index ? Font.DemiBold : Font.Medium
+                                                font.weight: selectedIndex === index ? Font.Bold : Font.Medium
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
                                                 elide: Text.ElideRight
                                                 width: parent.width
@@ -2244,8 +2250,10 @@ PanelWindow {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         onEntered: {
-                                            selectedIndex = index
-                                            filesList.currentIndex = index
+                                            if (selectedIndex !== index) {
+                                                selectedIndex = index
+                                                filesList.currentIndex = index
+                                            }
                                         }
                                         onClicked: {
                                             if (model.path && sharedData && sharedData.runCommand) {
@@ -2342,7 +2350,7 @@ PanelWindow {
                                 visible: searchText.length > 0 && currentMode === 0
                                 
                                 model: filteredApps
-                                currentIndex: selectedIndex
+                                // currentIndex: selectedIndex // Removed to fix binding loop
                                 
                                 onCurrentIndexChanged: {
                                     if (currentIndex !== selectedIndex) {
@@ -2369,49 +2377,29 @@ PanelWindow {
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     
                                     opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
-                                    scale: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0.8
+                                    scale: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 
+                                        (appItemMouseArea.containsMouse ? 1.01 : 1.0) : 0.96
                                     
-                                    transform: Translate {
-                                        y: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 0 : 40
-                                    }
-
-                                    Behavior on opacity {
-                                        SequentialAnimation {
-                                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                            NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
-                                        }
-                                    }
+                                    Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                    color: (selectedIndex === index) ?
+                                        ((sharedData && sharedData.colorAccent) ? Qt.rgba(
+                                            parseInt(sharedData.colorAccent.substring(1,3), 16)/255,
+                                            parseInt(sharedData.colorAccent.substring(3,5), 16)/255,
+                                            parseInt(sharedData.colorAccent.substring(5,7), 16)/255,
+                                            0.25 // Clear background for selection (25% opacity)
+                                        ) : Qt.rgba(0.29, 0.62, 1.0, 0.25)) :
+                                        (appItemMouseArea.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent")
                                     
-                                    Behavior on scale {
-                                        SequentialAnimation {
-                                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                            NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                                        }
-                                    }
-                                    
-                                    Behavior on transform {
-                                        SequentialAnimation {
-                                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                            PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
-                                        }
-                                    }
-                                    color: (selectedIndex === index || appItemMouseArea.containsMouse) ?
-                                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                                        "transparent"
-                                    
-                                    Behavior on color {
-                                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                                    }
+                                    Behavior on color { ColorAnimation { duration: 120 } }
                                     
                                     Rectangle {
                                         anchors.left: parent.left
                                         anchors.top: parent.top
                                         anchors.bottom: parent.bottom
-                                        width: selectedIndex === index ? 3 : 0
+                                        width: selectedIndex === index ? 6 : 0
                                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        Behavior on width {
-                                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                                        }
+                                        Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                                     }
                                     
                                     property string appName: model.name || "Unknown"
@@ -2420,37 +2408,65 @@ PanelWindow {
                                     property string appIcon: model.icon || ""
                                     property bool appIsCalculator: model.isCalculator || false
                                     
-                                    Column {
-                                        id: appTextColumn
-                                        anchors.left: parent.left
-                                        anchors.right: parent.right
-                                        anchors.leftMargin: 16
-                                        anchors.rightMargin: 16
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        spacing: 2
-                                        width: parent.width - 32
+                                    Row {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 12
+                                        anchors.rightMargin: 12
+                                        spacing: 12
                                         
-                                        Text {
-                                            width: parent.width
-                                            text: appItem.appName
-                                            font.pixelSize: 15
-                                            font.family: "sans-serif"
-                                            font.weight: selectedIndex === index ? Font.DemiBold : Font.Medium
-                                            elide: Text.ElideRight
-                                            maximumLineCount: 1
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        // Icon
+                                        Item {
+                                            width: 32
+                                            height: width
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            
+                                            // Fallback icon if none or fails to load
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: appItem.appIsCalculator ? "󰃀" : "󰀻"
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                                opacity: 0.3
+                                                font.pixelSize: 24
+                                                visible: !appIconImage.visible
+                                            }
+                                            
+                                            Image {
+                                                id: appIconImage
+                                                anchors.fill: parent
+                                                source: appItem.appIcon ? ("image://icon/" + appItem.appIcon) : ""
+                                                sourceSize.width: 32
+                                                sourceSize.height: 32
+                                                smooth: true
+                                                asynchronous: true
+                                                visible: appItem.appIcon && status === Image.Ready
+                                            }
                                         }
-                                        Text {
-                                            width: parent.width
-                                            text: appItem.appComment
-                                            font.pixelSize: 12
-                                            font.family: "sans-serif"
-                                            font.weight: Font.Medium
-                                            elide: Text.ElideRight
-                                            maximumLineCount: 1
-                                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                            opacity: 0.5
-                                            visible: appItem.appComment && appItem.appComment.length > 0
+                                        
+                                        Column {
+                                            id: appTextColumn
+                                            width: parent.width - 44
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 1
+                                            
+                                            Text {
+                                                width: parent.width
+                                                text: appItem.appName
+                                                font.pixelSize: 14
+                                                font.family: "sans-serif"
+                                                font.weight: selectedIndex === index ? Font.Bold : Font.Medium
+                                                elide: Text.ElideRight
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                            }
+                                            Text {
+                                                width: parent.width
+                                                text: appItem.appComment
+                                                font.pixelSize: 11
+                                                font.family: "sans-serif"
+                                                opacity: 0.6
+                                                elide: Text.ElideRight
+                                                visible: appItem.appComment.length > 0
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                            }
                                         }
                                     }
                                 
@@ -2501,13 +2517,13 @@ PanelWindow {
             // Tryb 1: Packages – ten sam wygląd co strona główna (height 50, radius 4, lewy pasek)
             
             // Tryb 1: Packages – układ poziomy kafelków
-            
             Row {
                 id: packagesOptionsList
                 anchors.fill: parent
                 anchors.margins: 20
                 spacing: 8
                 visible: currentMode === 1 && currentPackageMode === -1
+                enabled: visible
                 
                 Repeater {
                     model: ListModel {
@@ -3829,12 +3845,137 @@ PanelWindow {
                                         removeAurPackage(installedAurPackageItem.packageName)
                                     }
                                 }
+                        }
+                    }
+                    
+                    highlight: Rectangle {
+                        color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                    }
+                    }
+                }
+            }
+            
+            // Tryb 5: Power Menu
+            Row {
+                id: powerOptionsList
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 8
+                visible: currentMode === 5
+                enabled: visible
+                
+                Repeater {
+                    model: ListModel {
+                        id: powerModel
+                        ListElement { name: "Shutdown"; description: "Shut down the system"; action: "shutdown"; icon: "󰐥" }
+                        ListElement { name: "Reboot"; description: "Restart the system"; action: "reboot"; icon: "󰜉" }
+                        ListElement { name: "Suspend"; description: "Suspend the system"; action: "suspend"; icon: "󰒲" }
+                        ListElement { name: "Logout"; description: "Exit current session"; action: "logout"; icon: "󰈆" }
+                    }
+                    
+                    delegate: Rectangle {
+                        id: powerOptionItem
+                        width: (powerOptionsList.width - 24) / 4
+                        height: powerOptionsList.height
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                        color: "transparent"
+                        
+                        Rectangle {
+                            anchors.fill: parent
+                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                            opacity: (selectedIndex === index || powerOptionItemMouseArea.containsMouse) ? 0.08 : 0
+                            radius: parent.radius
+                            Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        }
+                        
+                        scale: (selectedIndex === index || powerOptionItemMouseArea.containsMouse) ? 1.02 : 1.0
+                        
+                        opacity: (sharedData && sharedData.launcherVisible && currentMode === 5) ? 1 : 0
+                        
+                        transform: Translate {
+                            y: (sharedData && sharedData.launcherVisible && currentMode === 5) ? 0 : 40
+                        }
+
+                        Behavior on opacity {
+                            SequentialAnimation {
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
+                                NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
                             }
                         }
                         
-                        highlight: Rectangle {
-                            color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : colorPrimary
-                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                        Behavior on scale {
+                            SequentialAnimation {
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
+                                NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                            }
+                        }
+                        
+                        Behavior on transform {
+                            SequentialAnimation {
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
+                                PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                            }
+                        }
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 8
+                            
+                            Text {
+                                text: model.icon || ""
+                                font.pixelSize: 32
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                horizontalAlignment: Text.AlignHCenter
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                            
+                            Column {
+                                spacing: 2
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                
+                                Text {
+                                    text: model.name || "Unknown"
+                                    font.pixelSize: 15
+                                    font.family: "sans-serif"
+                                    font.weight: selectedIndex === index ? Font.DemiBold : Font.Medium
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                    horizontalAlignment: Text.AlignHCenter
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                                Text {
+                                    text: model.description || ""
+                                    font.pixelSize: 11
+                                    font.family: "sans-serif"
+                                    font.weight: Font.Medium
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                    opacity: 0.5
+                                    horizontalAlignment: Text.AlignHCenter
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: powerOptionItem.width - 20
+                                    elide: Text.ElideRight
+                                    wrapMode: Text.NoWrap
+                                }
+                            }
+                        }
+                        
+                        MouseArea {
+                            id: powerOptionItemMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: selectedIndex = index
+                                onClicked: {
+                                    var cmd = ""
+                                    if (model.action === "shutdown") cmd = "systemctl poweroff"
+                                    else if (model.action === "reboot") cmd = "systemctl reboot"
+                                    else if (model.action === "suspend") cmd = "systemctl suspend"
+                                    else if (model.action === "logout") cmd = "hyprctl dispatch exit"
+                                    
+                                    if (cmd !== "" && sharedData && sharedData.runCommand) {
+                                        sharedData.runCommand(['sh', '-c', cmd])
+                                        sharedData.launcherVisible = false
+                                    }
+                                }
                         }
                     }
                 }
