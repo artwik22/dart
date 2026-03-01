@@ -29,8 +29,15 @@ fi
 # Apply script settings
 [ -x "${HOME}/.config/alloy/scripts/apply-settings.sh" ] && "${HOME}/.config/alloy/scripts/apply-settings.sh"
 
-# Run lockscreen immediately on startup
-echo "showLockScreen" > /tmp/quickshell_command
+# Run lockscreen on startup if enabled (default true)
+LOCKSCREEN_ENABLED="true"
+if command -v jq >/dev/null 2>&1 && [ -f "$CONFIG_ALLOY" ]; then
+    LOCKSCREEN_ENABLED=$(jq -r 'if has("scriptsAutostartLockscreen") then .scriptsAutostartLockscreen else true end' "$CONFIG_ALLOY")
+fi
+
+if [ "$LOCKSCREEN_ENABLED" = "true" ]; then
+    echo "showLockScreen" > /tmp/quickshell_command
+fi
 
 # Script Autostart Logic
 if command -v jq >/dev/null 2>&1 && [ -f "$CONFIG_ALLOY" ]; then

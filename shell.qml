@@ -23,6 +23,17 @@ ShellRoot {
         property bool settingsVisible: false
         property bool lockScreenVisible: false  // Własny lock screen (zamiast swaylock/loginctl)
         property bool lockScreenNonBlocking: false // Jeśli true, ruszysz myszką i znika
+        
+        property var setTimeout: function(cb, delayTime) {
+            var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root);
+            timer.interval = delayTime;
+            timer.repeat = false;
+            timer.triggered.connect(function() {
+                cb();
+                timer.destroy();
+            });
+            timer.start();
+        }
         property bool sidebarVisible: true  // Sidebar visibility toggle
         property bool sidebarHiddenByFullscreen: false  // Gdy okno jest fullscreen – sidebar się chowa (Hyprland event "fullscreen")
         property string sidebarPosition: "left"  // Sidebar position: "left" or "top"

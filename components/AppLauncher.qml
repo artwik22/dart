@@ -324,38 +324,69 @@ PanelWindow {
     }
     
     anchors { 
+        top: true
         bottom: true
+        left: true
+        right: true
     }
     
-    // Base size – zbalansowane proporcje
     property int baseWidth: 500
-    property int baseHeight: 320
     
+    property int listHeight: {
+        if (currentMode === 0) {
+            // search input + buttons row (36px)
+            var h = 36;
+            if (searchText.length > 0) {
+                if (filteredApps.count > 0) {
+                    h += 9; // spacing between search and list
+                    var items = Math.min(filteredApps.count, 5);
+                    h += (items * 50) + ((items - 1) * 8);
+                }
+            }
+            return h;
+        } else if (currentMode === 1) {
+            if (currentPackageMode === -1) {
+                // Package options: Horizontal row with 3 buttons
+                return 150;
+            } else if (currentPackageMode === 0 || currentPackageMode === 3) {
+                // Install/Remove sources: 2 items (50px) + 1 spacing (8px) + 40px margins
+                return 148;
+            } else if (currentPackageMode === 1 || currentPackageMode === 2 || currentPackageMode === 4 || currentPackageMode === 5) {
+                // package search: search box 30px
+                var h = 30;
+                if (filteredPackages.count > 0) {
+                    h += 8; // spacing below search
+                    var items = Math.min(filteredPackages.count, 5);
+                    h += (items * 50) + ((items - 1) * 8);
+                }
+                return h;
+            }
+        } else if (currentMode === 4) {
+            // File search mode
+            var h = 36;
+            if (searchText.length >= 3) {
+                if (fileSearchResults && fileSearchResults.count > 0) {
+                    h += 9;
+                    var items = Math.min(fileSearchResults.count, 6);
+                    h += (items * 50) + ((items - 1) * 8);
+                } else if (isSearchingFiles) {
+                    h += 60; // Height of searching box
+                } else {
+                    h += 40; // Height of "No results" message
+                }
+            }
+            return h;
+        } else if (currentMode === 3) {
+            // Run command mode - search box only
+            return 36;
+        }
+        return 108; // default fallback
+    }
 
-    implicitWidth: baseWidth
-    implicitHeight: baseHeight
-    
-    Behavior on implicitWidth {
-        NumberAnimation {
-            duration: 280
-            easing.type: Easing.OutQuart
-        }
-    }
-    
-    Behavior on implicitHeight {
-        NumberAnimation {
-            duration: 280
-            easing.type: Easing.OutQuart
-        }
-    }
-    
-    // Centering - use margins instead of horizontalCenter (dynamic based on current width)
-    margins {
-        left: screen ? (screen.width - width) / 2 : 0
-        right: screen ? (screen.width - width) / 2 : 0
-    }
+    // Native QML centering inside a fullscreen PanelWindow to avoid Wayland stutter
     
     WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: (sharedData && sharedData.launcherVisible) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusiveZone: 0
     
     // Animation stability - ensure we start at 0
@@ -386,15 +417,12 @@ PanelWindow {
         NumberAnimation { duration: 500; easing.type: Easing.OutExpo }
     }
 
-    visible: true
+    visible: launcherShowProgress > 0.0
     color: "transparent"
     property int launcherSlideAmount: 400
-    // Fix: Use margins.bottom for window positioning (0 = flush with edge)
-    // Animation will be handled by the margins to move the window surface
-    // When progress is 0, margin is -implicitHeight (hidden below screen)
-    // When progress is 1, margin is 0 (visible on screen)
-    // Ensure we add a small buffer (e.g. 50px) to make sure it's fully off-screen if shadows exist
-    margins.bottom: -implicitHeight * (1.0 - launcherShowProgress) - (launcherShowProgress < 0.01 ? 50 : 0)
+    // Adjust scale/opacity down when hiding instead of moving off-screen from bottom
+    // We handle scale and opacity on launcherContainer, so window can just stay centered
+    // margins remain static and the window stays exactly in the center
     
     // Applications list
     property var apps: []
@@ -404,7 +432,7 @@ PanelWindow {
     // Calculator properties
     property string calculatorResult: ""
     property bool isCalculatorMode: false
-    property int currentMode: -1  // -1 = mode selection, 0 = Launcher, 1 = Packages, 2 = Fuse
+    property int currentMode: 0  // 0 = Launcher/Search, 1 = Packages, 2 = Fuse
     property int currentPackageMode: -1  // -1 = Packages option selection, 0 = install source selection (Pacman/AUR), 1 = Pacman search, 2 = AUR search, 3 = remove source selection (Pacman/AUR), 4 = Pacman remove search, 5 = AUR remove search
     property int installSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
     property int removeSourceMode: -1  // -1 = selection, 0 = Pacman, 1 = AUR
@@ -438,12 +466,72 @@ PanelWindow {
         id: filteredInstalledPackages
     }
     
+    // File search results
+    ListModel {
+        id: fileSearchResults
+    }
     
+    property bool isSearchingFiles: false
+    property var searchFilesTimeout: null
+    property int highlightedModeIndex: 0 // 0: None (Search), 1: Packages, 2: Files, 3: Terminal, 4: Power
     
+    function getFileIcon(path) {
+        if (!path) return "󰈔";
+        var p = path.toLowerCase();
+        if (p.endsWith("/")) return "󰉋";
+        if (p.endsWith(".jpg") || p.endsWith(".jpeg") || p.endsWith(".png") || p.endsWith(".gif") || p.endsWith(".svg") || p.endsWith(".webp")) return "󰋩";
+        if (p.endsWith(".mp4") || p.endsWith(".mkv") || p.endsWith(".mov") || p.endsWith(".avi") || p.endsWith(".webm")) return "󰿚";
+        if (p.endsWith(".mp3") || p.endsWith(".wav") || p.endsWith(".flac") || p.endsWith(".ogg") || p.endsWith(".m4a")) return "󰝚";
+        if (p.endsWith(".pdf") || p.endsWith(".doc") || p.endsWith(".docx") || p.endsWith(".txt") || p.endsWith(".md") || p.endsWith(".odt")) return "󰈙";
+        if (p.endsWith(".zip") || p.endsWith(".tar") || p.endsWith(".gz") || p.endsWith(".rar") || p.endsWith(".7z") || p.endsWith(".xz")) return "󰿺";
+        if (p.endsWith(".js") || p.endsWith(".py") || p.endsWith(".cpp") || p.endsWith(".h") || p.endsWith(".c") || p.endsWith(".qml") || p.endsWith(".rs") || p.endsWith(".sh")) return "󰅩";
+        if (p.endsWith(".html") || p.endsWith(".css") || p.endsWith(".json") || p.endsWith(".xml") || p.endsWith(".yml") || p.endsWith(".yaml")) return "󰈚";
+        return "󰈔";
+    }
     
+    function triggerFileSearch() {
+        if (!searchText || searchText.trim().length < 3) {
+            fileSearchResults.clear()
+            isSearchingFiles = false
+            return
+        }
+        
+        isSearchingFiles = true
+        var query = searchText.trim().replace(/"/g, '\\"')
+        if (sharedData && sharedData.runCommand) {
+            sharedData.runCommand(['sh', '-c', 'fd -i "' + query + '" /home/iartwik --max-results 20 > /tmp/quickshell_file_search_results'])
+            if (sharedData.setTimeout) {
+                sharedData.setTimeout(appLauncherRoot.readFileSearchResults, 200)
+            }
+        }
+    }
     
-    
-    
+    function readFileSearchResults() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///tmp/quickshell_file_search_results?" + new Date().getTime())
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                fileSearchResults.clear()
+                var content = xhr.responseText || ""
+                var lines = content.trim().split("\n")
+                
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim()
+                    if (line.length > 0) {
+                        var parts = line.split("/")
+                        var name = parts[parts.length - 1]
+                        fileSearchResults.append({ name: name, path: line })
+                    }
+                }
+                isSearchingFiles = false
+                
+                if (selectedIndex >= fileSearchResults.count) {
+                    selectedIndex = Math.max(0, fileSearchResults.count - 1)
+                }
+            }
+        }
+        xhr.send()
+    }
     
     function updateSystem() {
         var scriptPath = projectPath + "/scripts/update-system.sh"
@@ -928,12 +1016,23 @@ PanelWindow {
                 // Filter only applications (not directories, not NoDisplay)
                 // Check if it has Name and Exec (required fields)
                 if (app.name && app.name.length > 0 && app.exec && app.exec.length > 0 && app.type !== "Directory" && !isNoDisplay) {
-                    apps.push({
-                        name: app.name,
-                        comment: app.comment || "",
-                        exec: app.exec,
-                        icon: app.icon || ""
-                    })
+                    // Check for duplicates by name
+                    var isDuplicate = false
+                    for (var j = 0; j < apps.length; j++) {
+                        if (apps[j].name === app.name) {
+                            isDuplicate = true
+                            break
+                        }
+                    }
+                    
+                    if (!isDuplicate) {
+                        apps.push({
+                            name: app.name,
+                            comment: app.comment || "",
+                            exec: app.exec,
+                            icon: app.icon || ""
+                        })
+                    }
                 }
                 
                 loadedAppsCount++
@@ -1323,10 +1422,6 @@ PanelWindow {
         onTriggered: {
             if (sharedData && !sharedData.launcherVisible) {
                 apps = []
-                pacmanPackages = []
-                aurPackages = []
-                installedPackages = []
-                installedAurPackages = []
                 if (typeof gc === 'function') gc()
             }
         }
@@ -1339,7 +1434,7 @@ PanelWindow {
             if (sharedData && sharedData.launcherVisible) {
                 memoryFreeTimer.stop()
                 if (apps.length === 0) loadApps()
-                currentMode = -1
+                currentMode = 0
                 currentPackageMode = -1
                 installSourceMode = -1
                 removeSourceMode = -1
@@ -1360,10 +1455,32 @@ PanelWindow {
         }
     }
     
+    // Tło zamykające launcher po kliknięciu
+    MouseArea {
+        anchors.fill: parent
+        enabled: sharedData && sharedData.launcherVisible
+        hoverEnabled: true    
+        onClicked: {
+            if (sharedData) sharedData.launcherVisible = false
+        }
+    }
+
     // Kontener z zawartością – opacity/scale/enabled z jednego launcherShowProgress
     Item {
         id: launcherContainer
-        anchors.fill: parent
+        width: baseWidth
+        height: listHeight + 40
+        anchors.centerIn: parent
+        
+        Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutQuart } }
+        Behavior on width { NumberAnimation { duration: 280; easing.type: Easing.OutQuart } }
+        
+        MouseArea {
+            anchors.fill: parent
+            // Blokuj kliknięcia, żeby nie szły do MouseArea tła i nie zamykały launchera
+            onClicked: {}
+        }
+        
         // Apply opacity here instead of root PanelWindow
         opacity: launcherShowProgress
         enabled: launcherShowProgress > 0.02
@@ -1372,6 +1489,8 @@ PanelWindow {
         transformOrigin: Item.Bottom
         
         // Window movement handles the slide animation
+
+
 
 
         // Tło z gradientem
@@ -1383,16 +1502,6 @@ PanelWindow {
             
             // Użyj sharedData.colorBackground jeśli dostępny - jednolite tło bez gradientu
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : colorBackground
-            
-            // Material Design elevation shadow
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: -3
-                color: "transparent"
-                border.color: Qt.rgba(0, 0, 0, 0.25)  // Material shadow
-                border.width: 2
-                z: -1
-            }
         }
         
         // Obsługa klawiszy na kontenerze - przekieruj do TextInput tylko w trybie Launch App
@@ -1429,10 +1538,11 @@ PanelWindow {
                     removeSourceMode = -1
                     selectedIndex = 0
                 } else {
-                    // Wróć do wyboru trybu
-                    currentMode = -1
+                    // Wróć do stanu początkowego
+                    currentMode = 0
                     selectedIndex = 0
                     currentPackageMode = -1
+                    searchText = ""
                 }
                 event.accepted = true
             } else if (event.key === Qt.Key_Up) {
@@ -1576,8 +1686,8 @@ PanelWindow {
                     event.accepted = true
                 } else if (currentMode === 1 && currentPackageMode === -1) {
                     // W trybie Packages - wybierz opcję (Install/Remove/Update)
-                    if (selectedIndex >= 0 && selectedIndex < packagesOptionsList.count) {
-                        var pkgOption = packagesOptionsList.model.get(selectedIndex)
+                    if (selectedIndex >= 0 && selectedIndex < packagesModel.count) {
+                        var pkgOption = packagesModel.get(selectedIndex)
                         if (pkgOption.action === "install") {
                             // Przełącz na tryb wyszukiwania pakietów
                             currentPackageMode = 0
@@ -1616,17 +1726,15 @@ PanelWindow {
                     event.accepted = false
                 }
             } else if (currentMode === 1 && currentPackageMode === -1) {
-                // W trybie Packages - nawigacja po liście opcji
-                if (event.key === Qt.Key_Up) {
+                // W trybie Packages - nawigacja po kafelkach w lewo i prawo
+                if (event.key === Qt.Key_Left) {
                     if (selectedIndex > 0) {
                         selectedIndex--
-                        packagesOptionsList.positionViewAtIndex(selectedIndex, ListView.Center)
                     }
                     event.accepted = true
-                } else if (event.key === Qt.Key_Down) {
-                    if (selectedIndex < packagesOptionsList.count - 1) {
+                } else if (event.key === Qt.Key_Right) {
+                    if (selectedIndex < packagesModel.count - 1) {
                         selectedIndex++
-                        packagesOptionsList.positionViewAtIndex(selectedIndex, ListView.Center)
                     }
                     event.accepted = true
                 }
@@ -1679,221 +1787,58 @@ PanelWindow {
             }
         }
         
-        // Lista trybów (gdy currentMode === -1) - NOWY DESIGN
-        ListView {
-            reuseItems: true
-            id: modesList
-            anchors.fill: parent
-            anchors.margins: 20
-            visible: currentMode === -1
-            focus: currentMode === -1 // Ensure focus for keyboard navigation
-            opacity: currentMode === -1 ? 1.0 : 0.0
-            currentIndex: selectedIndex
-            spacing: 8
-            
-            onCurrentIndexChanged: {
-                if (currentIndex !== selectedIndex && currentIndex >= 0) {
-                    selectedIndex = currentIndex
-                }
-            }
-            
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 280
-                    easing.type: Easing.OutQuart
-                }
-            }
-            
-            model: ListModel {
-                ListElement { name: "Launcher"; description: "Launch applications"; mode: 0; icon: "󰈙" }
-                ListElement { name: "Packages"; description: "Manage packages"; mode: 1; icon: "󰏖" }
-            }
-            
-            delegate: Rectangle {
-                id: modeItem
-                width: modesList.width
-                height: 50
-                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                color: (selectedIndex === index || modeItemMouseArea.containsMouse) ?
-                    ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                    "transparent"
-                
-                opacity: (sharedData && sharedData.launcherVisible) ? 1 : 0
-                scale: (sharedData && sharedData.launcherVisible) ? 1 : 0.8
-                
-                transform: Translate {
-                    y: (sharedData && sharedData.launcherVisible) ? 0 : 40
-                }
-
-                Behavior on opacity {
-                    SequentialAnimation {
-                        PauseAnimation { duration: Math.min(index * 40, 400) }
-                        NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
-                    }
-                }
-                
-                Behavior on scale {
-                    SequentialAnimation {
-                        PauseAnimation { duration: Math.min(index * 40, 400) }
-                        NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                    }
-                }
-                
-                Behavior on transform {
-                    SequentialAnimation {
-                        PauseAnimation { duration: Math.min(index * 40, 400) }
-                        PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
-                    }
-                }
-
-                Behavior on color {
-                    ColorAnimation { 
-                        duration: 150
-                        easing.type: Easing.OutCubic
-                    }
-                }
-                
-                // Left accent bar for selected items
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: selectedIndex === index ? 3 : 0
-                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                    
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: 200
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
-                
-                // Content container
-                Item {
-                    anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
-                    
-                    Row {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 12
-                        
-                        // Icon
-                        Text {
-                            text: model.icon || ""
-                            font.pixelSize: 20
-                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 24
-                            horizontalAlignment: Text.AlignLeft
-                        }
-                        
-                        // Text content
-                        Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2
-                            width: parent.width - 36  // Total width minus icon (24) and spacing (12)
-                            
-                            Text {
-                                text: model.name
-                                font.pixelSize: 15
-                                font.family: "sans-serif"
-                                font.weight: selectedIndex === index ? Font.Bold : Font.Normal
-                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                width: parent.width
-                                elide: Text.ElideRight
-                            }
-                            
-                            Text {
-                                text: model.description
-                                font.pixelSize: 12
-                                font.family: "sans-serif"
-                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                opacity: 0.7
-                                width: parent.width
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
-                }
-                
-                MouseArea {
-                    id: modeItemMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    
-                    onEntered: {
-                        if (modesList.currentIndex !== index) {
-                            selectedIndex = index
-                            modesList.currentIndex = index
-                        }
-                    }
-                    
-                    onClicked: {
-                        if (model.mode === 2) {
-                            // Launch fuse directly using Process
-                            if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', 'fuse &'])
-                            if (sharedData) {
-                                sharedData.launcherVisible = false
-                            }
-                            return
-                        }
-                        currentMode = model.mode
-                        selectedIndex = 0
-                        modesList.currentIndex = -1
-                        if (model.mode === 1) {
-                            currentPackageMode = -1
-                        }
-                    }
-                }
-            }
-        }
+        // (Wyrejestrowano starą listę trybów)
         
         // Zawartość trybów – te same marginesy co strona główna (20)
         Item {
             id: modeContent
             anchors.fill: parent
             anchors.margins: 20
-            visible: currentMode !== -1
+            visible: true
         
             // Tryb 0: Launcher
             Item {
                 id: launchAppMode
                 anchors.fill: parent
-                visible: currentMode === 0
+                visible: currentMode === 0 || currentMode === 3 || currentMode === 4
                 
                 Column {
                     id: launchAppColumn
                     anchors.fill: parent
                     spacing: 9
                             
-                            // Pole wyszukiwania
-                            Rectangle {
-                                id: searchBox
+                                Row {
                                 width: parent.width
                                 height: 36
-                                color: searchInput.activeFocus ? colorPrimary : colorSecondary
-                                radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                spacing: 8
                                 
-                                opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
-                                scale: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0.9
+                                opacity: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 1 : 0
+                                scale: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 1 : 0.9
                                 transform: Translate {
-                                    y: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 0 : 20
+                                    y: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 0 : 20
                                 }
 
                                 Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
                                 Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
                                 Behavior on transform { PropertyAnimation { property: "y"; duration: 600; easing.type: Easing.OutBack } }
 
-                                Behavior on color {
-                                    ColorAnimation { 
-                                        duration: 180
-                                        easing.type: Easing.OutQuart
+                                Rectangle {
+                                    id: searchBox
+                                    width: (currentMode === 3 || currentMode === 4) ? parent.width : (parent.width - (36 * 4 + 8 * 4)) // Zostawiamy miejsce na 4 przyciski i ich spacing
+                                    height: 36
+                                    color: searchInput.activeFocus ? colorPrimary : colorSecondary
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                    
+                                    Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                                    Behavior on color {
+                                        ColorAnimation { 
+                                            duration: 180
+                                            easing.type: Easing.OutQuart
+                                        }
                                     }
-                                }
+                                    
+                                    scale: searchInput.activeFocus ? 1.01 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
                                 
                                 TextInput {
                                     id: searchInput
@@ -1909,28 +1854,106 @@ PanelWindow {
                                     selectByMouse: true
                                     activeFocusOnPress: true
                                     activeFocusOnTab: true
-                                    focus: (currentMode === 0 && sharedData && sharedData.launcherVisible)  // Focus tylko w trybie Launch App
+                                    focus: ((currentMode === 0 || currentMode === 3 || currentMode === 4) && sharedData && sharedData.launcherVisible)
                                     
                                     onTextChanged: {
                                         searchText = text
                                         selectedIndex = 0
-                                        filterApps()
+                                        highlightedModeIndex = 0 // Reset mode focus when typing
+                                        if (currentMode === 0) {
+                                            filterApps()
+                                        } else if (currentMode === 4) {
+                                            if (sharedData && sharedData.setTimeout) {
+                                                sharedData.setTimeout(appLauncherRoot.triggerFileSearch, 300)
+                                            } else {
+                                                triggerFileSearch()
+                                            }
+                                        }
                                     }
                                     
                                     Keys.onPressed: function(event) {
+                                        // Tab cycling - moves focus among icons 1-4
+                                        if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+                                            var isBack = (event.key === Qt.Key_Backtab) || (event.modifiers & Qt.ShiftModifier)
+                                            if (isBack) {
+                                                highlightedModeIndex = (highlightedModeIndex - 1 + 5) % 5
+                                            } else {
+                                                highlightedModeIndex = (highlightedModeIndex + 1) % 5
+                                            }
+                                            event.accepted = true
+                                            return
+                                        }
+                                        
+                                        // Ctrl+1-4 shortcuts still allowed as "Expert" navigation
+                                        if (event.modifiers & Qt.ControlModifier) {
+                                            if (event.key === Qt.Key_1) { currentMode = 0; event.accepted = true }
+                                            else if (event.key === Qt.Key_2) { currentMode = 1; currentPackageMode = -1; event.accepted = true }
+                                            else if (event.key === Qt.Key_3) { currentMode = 4; event.accepted = true }
+                                            else if (event.key === Qt.Key_4) { currentMode = 3; event.accepted = true }
+                                            
+                                            if (event.accepted) {
+                                                selectedIndex = 0
+                                                searchInput.text = ""
+                                                highlightedModeIndex = 0
+                                                return
+                                            }
+                                        }
+
                                         if (event.key === Qt.Key_Up) {
                                             if (selectedIndex > 0) {
                                                 selectedIndex--
-                                                appsList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                if (currentMode === 0) appsList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                else if (currentMode === 4) filesList.positionViewAtIndex(selectedIndex, ListView.Center)
                                             }
                                             event.accepted = true
                                         } else if (event.key === Qt.Key_Down) {
-                                            if (selectedIndex < filteredApps.count - 1) {
+                                            var maxCount = currentMode === 0 ? filteredApps.count : (currentMode === 4 ? fileSearchResults.count : 0)
+                                            if (selectedIndex < maxCount - 1) {
                                                 selectedIndex++
-                                                appsList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                if (currentMode === 0) appsList.positionViewAtIndex(selectedIndex, ListView.Center)
+                                                else if (currentMode === 4) filesList.positionViewAtIndex(selectedIndex, ListView.Center)
                                             }
                                             event.accepted = true
                                         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                            // 1. If an icon is highlighted, activate that mode
+                                            if (highlightedModeIndex > 0) {
+                                                if (highlightedModeIndex === 1) { // Packages
+                                                    currentMode = 1; currentPackageMode = -1;
+                                                } else if (highlightedModeIndex === 2) { // Files
+                                                    currentMode = 4;
+                                                } else if (highlightedModeIndex === 3) { // Terminal
+                                                    currentMode = 3;
+                                                } else if (highlightedModeIndex === 4) { // Power
+                                                    // TODO: implement wlogout
+                                                }
+                                                selectedIndex = 0
+                                                searchInput.text = ""
+                                                highlightedModeIndex = 0
+                                                searchInput.forceActiveFocus()
+                                                event.accepted = true
+                                                return
+                                            }
+
+                                            // 2. Default launch actions
+                                            if (currentMode === 3) {
+                                                if (searchText.trim().length > 0 && sharedData && sharedData.runCommand) {
+                                                    sharedData.runCommand(['sh', '-c', searchText.trim() + ' &'])
+                                                    sharedData.launcherVisible = false
+                                                }
+                                                event.accepted = true
+                                                return
+                                            } else if (currentMode === 4) {
+                                                if (fileSearchResults.count > 0 && selectedIndex >= 0 && selectedIndex < fileSearchResults.count) {
+                                                    var file = fileSearchResults.get(selectedIndex)
+                                                    if (file && file.path && sharedData && sharedData.runCommand) {
+                                                        sharedData.runCommand(['xdg-open', file.path])
+                                                        sharedData.launcherVisible = false
+                                                    }
+                                                }
+                                                event.accepted = true
+                                                return
+                                            }
+                                            
                                             // Check if search text starts with "!" for Firefox search
                                             if (searchText && searchText.trim().startsWith("!")) {
                                                 searchInFirefox(searchText.trim())
@@ -1973,27 +1996,339 @@ PanelWindow {
                                             }
                                             event.accepted = true
                                         } else if (event.key === Qt.Key_Escape) {
-                                            if (sharedData) {
-                                                sharedData.launcherVisible = false
+                                            if (searchInput.text.length > 0) {
+                                                searchInput.text = ""
+                                                highlightedModeIndex = 0
+                                            } else if (highlightedModeIndex > 0) {
+                                                highlightedModeIndex = 0
+                                            } else if (currentMode !== 0) {
+                                                currentMode = 0
+                                                selectedIndex = 0
+                                            } else {
+                                                if (sharedData) {
+                                                    sharedData.launcherVisible = false
+                                                }
                                             }
                                             event.accepted = true
                                         }
                                     }
                                 }
                                 
-                                // Placeholder text
-                                Text {
-                                    anchors.fill: searchInput
-                                    anchors.margins: 0
-                                    text: "Search applications..."
-                                    font.pixelSize: 16
-                                    font.family: "sans-serif"
-                                    font.weight: Font.Medium
-                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                    verticalAlignment: Text.AlignVCenter
-                                    visible: searchInput.text.length === 0
-                                    z: 5  // Za TextInput
+                                    // Placeholder text
+                                    Text {
+                                        anchors.fill: searchInput
+                                        anchors.margins: 0
+                                        text: currentMode === 3 ? ">_ Run command... (e.g. htop, ping google.com)" : (currentMode === 4 ? "Search files..." : "Search applications...")
+                                        font.pixelSize: 16
+                                        font.family: "sans-serif"
+                                        font.weight: Font.Medium
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        verticalAlignment: Text.AlignVCenter
+                                        visible: searchInput.text.length === 0
+                                        z: 5  // Za TextInput
+                                    }
                                 }
+                                
+                                // Quick Actions (Icons on the right)
+                                Rectangle {
+                                    width: 36
+                                    height: 36
+                                    radius: 18 // circular
+                                    color: (packagesBtn.containsMouse || highlightedModeIndex === 1) ? colorPrimary : colorSecondary
+                                    visible: currentMode !== 3 && currentMode !== 4
+                                    
+                                    scale: packagesBtn.containsMouse ? 1.1 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "󰏖" // Packages icon
+                                        font.pixelSize: 16
+                                        color: colorText
+                                    }
+                                    
+                                    MouseArea {
+                                        id: packagesBtn
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            currentMode = 1
+                                            selectedIndex = 0
+                                            currentPackageMode = -1
+                                        }
+                                    }
+                                }
+                                
+                                Rectangle {
+                                    width: 36
+                                    height: 36
+                                    radius: 18 // circular
+                                    color: (p2Btn.containsMouse || highlightedModeIndex === 2) ? colorPrimary : colorSecondary
+                                    visible: currentMode !== 3 && currentMode !== 4
+                                    
+                                    scale: p2Btn.containsMouse ? 1.1 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "󰉋" // Files
+                                        font.pixelSize: 16
+                                        color: colorText
+                                    }
+                                    
+                                    MouseArea {
+                                        id: p2Btn
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            currentMode = 4
+                                            if (searchInput) {
+                                                searchInput.text = ""
+                                                searchInput.forceActiveFocus()
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                Rectangle {
+                                    width: 36
+                                    height: 36
+                                    radius: 18 // circular
+                                    color: (p3Btn.containsMouse || highlightedModeIndex === 3) ? colorPrimary : colorSecondary
+                                    visible: currentMode !== 3 && currentMode !== 4
+                                    
+                                    scale: p3Btn.containsMouse ? 1.1 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "󰆍" // Terminal
+                                        font.pixelSize: 16
+                                        color: colorText
+                                    }
+                                    
+                                    MouseArea {
+                                        id: p3Btn
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            currentMode = 3
+                                            if (searchInput) {
+                                                searchInput.text = ""
+                                                searchInput.forceActiveFocus()
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                Rectangle {
+                                    width: 36
+                                    height: 36
+                                    radius: 18 // circular
+                                    color: (p4Btn.containsMouse || highlightedModeIndex === 4) ? colorPrimary : colorSecondary
+                                    visible: currentMode !== 3 && currentMode !== 4
+                                    
+                                    scale: p4Btn.containsMouse ? 1.1 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "󰐥" // Power
+                                        font.pixelSize: 16
+                                        color: colorText
+                                    }
+                                    
+                                    MouseArea {
+                                        id: p4Btn
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        // TODO: implement wlogout launch
+                                    }
+                                }
+                            }
+                            
+                            // Lista plików (Mode 4)
+                            ListView {
+                                reuseItems: true
+                                id: filesList
+                                width: parent.width
+                                height: parent.height - searchBox.height - parent.spacing
+                                clip: true
+                                spacing: 8
+                                visible: (currentMode === 4 && searchText.length >= 3)
+                                
+                                model: fileSearchResults
+                                currentIndex: selectedIndex
+                                
+                                onCurrentIndexChanged: {
+                                    if (currentIndex !== selectedIndex) {
+                                        selectedIndex = currentIndex
+                                    }
+                                }
+                                
+                                add: Transition { 
+                                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200 }
+                                    NumberAnimation { property: "scale"; from: 0.95; to: 1; duration: 200; easing.type: Easing.OutBack }
+                                }
+                                
+                                delegate: Rectangle {
+                                    id: fileItem
+                                    width: filesList.width
+                                    height: 50
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                                    color: "transparent"
+                                    
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                        opacity: (selectedIndex === index || fileItemMouseArea.containsMouse) ? 0.08 : 0
+                                        radius: parent.radius
+                                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                    }
+                                    
+                                    Row {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 12
+                                        anchors.rightMargin: 12
+                                        spacing: 12
+                                        
+                                        Rectangle {
+                                            width: 32
+                                            height: 32
+                                            radius: 8
+                                            color: (selectedIndex === index) ? colorAccent : colorSecondary
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            opacity: (selectedIndex === index) ? 0.2 : 0.1
+                                            
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: getFileIcon(model.path)
+                                                font.pixelSize: 18
+                                                color: (selectedIndex === index) ? colorAccent : ((sharedData && sharedData.colorText) ? sharedData.colorText : colorText)
+                                            }
+                                        }
+                                        
+                                        Column {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: parent.width - 44
+                                            spacing: 1
+                                            
+                                            Text {
+                                                text: model.name || "Unknown"
+                                                font.pixelSize: 15
+                                                font.family: "sans-serif"
+                                                font.weight: selectedIndex === index ? Font.DemiBold : Font.Medium
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                                elide: Text.ElideRight
+                                                width: parent.width
+                                            }
+                                            Text {
+                                                text: model.path || ""
+                                                font.pixelSize: 11
+                                                font.family: "sans-serif"
+                                                font.weight: Font.Medium
+                                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                                opacity: 0.5
+                                                elide: Text.ElideMiddle
+                                                width: parent.width
+                                            }
+                                        }
+                                    }
+                                    
+                                    MouseArea {
+                                        id: fileItemMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onEntered: {
+                                            selectedIndex = index
+                                            filesList.currentIndex = index
+                                        }
+                                        onClicked: {
+                                            if (model.path && sharedData && sharedData.runCommand) {
+                                                sharedData.runCommand(['xdg-open', model.path])
+                                                sharedData.launcherVisible = false
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Text ładowania dla plików
+                            Item {
+                                width: parent.width
+                                height: 60
+                                visible: currentMode === 4 && isSearchingFiles && (fileSearchResults ? fileSearchResults.count === 0 : true) && searchText.length >= 3
+                                
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 8
+                                    
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "Searching files..."
+                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                        opacity: searchingTextAnimation.opacityValue
+                                        font.pixelSize: 15
+                                        font.family: "sans-serif"
+                                        font.weight: Font.DemiBold
+                                    }
+                                    
+                                    Rectangle {
+                                        width: 120
+                                        height: 2
+                                        radius: 1
+                                        color: colorAccent
+                                        opacity: 0.3
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        
+                                        Rectangle {
+                                            width: 40
+                                            height: 2
+                                            radius: 1
+                                            color: colorAccent
+                                            
+                                            NumberAnimation on x {
+                                                from: -40
+                                                to: 120
+                                                duration: 1000
+                                                loops: Animation.Infinite
+                                                running: isSearchingFiles
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                QtObject {
+                                    id: searchingTextAnimation
+                                    property real opacityValue: 0.5
+                                    
+                                    NumberAnimation on opacityValue {
+                                        from: 0.3
+                                        to: 0.8
+                                        duration: 800
+                                        easing.type: Easing.InOutQuad
+                                        loops: Animation.Infinite
+                                        running: isSearchingFiles
+                                    }
+                                }
+                            }
+                            
+                            // Komunikat o braku wyników
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                visible: currentMode === 4 && !isSearchingFiles && (fileSearchResults ? fileSearchResults.count === 0 : true) && searchText.length >= 3
+                                text: "No results found for \"" + searchText + "\""
+                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                opacity: 0.4
+                                font.pixelSize: 14
+                                font.family: "sans-serif"
+                                font.weight: Font.Medium
+                                height: 40
+                                verticalAlignment: Text.AlignVCenter
                             }
                             
                             // Lista aplikacji
@@ -2004,6 +2339,7 @@ PanelWindow {
                                 height: parent.height - searchBox.height - parent.spacing
                                 clip: true
                                 spacing: 8
+                                visible: searchText.length > 0 && currentMode === 0
                                 
                                 model: filteredApps
                                 currentIndex: selectedIndex
@@ -2041,21 +2377,21 @@ PanelWindow {
 
                                     Behavior on opacity {
                                         SequentialAnimation {
-                                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                             NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
                                         }
                                     }
                                     
                                     Behavior on scale {
                                         SequentialAnimation {
-                                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                             NumberAnimation { duration: 600; easing.type: Easing.OutBack }
                                         }
                                     }
                                     
                                     Behavior on transform {
                                         SequentialAnimation {
-                                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                             PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
                                         }
                                     }
@@ -2099,7 +2435,7 @@ PanelWindow {
                                             text: appItem.appName
                                             font.pixelSize: 15
                                             font.family: "sans-serif"
-                                            font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                            font.weight: selectedIndex === index ? Font.DemiBold : Font.Medium
                                             elide: Text.ElideRight
                                             maximumLineCount: 1
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
@@ -2109,10 +2445,11 @@ PanelWindow {
                                             text: appItem.appComment
                                             font.pixelSize: 12
                                             font.family: "sans-serif"
+                                            font.weight: Font.Medium
                                             elide: Text.ElideRight
                                             maximumLineCount: 1
                                             color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                            opacity: 0.7
+                                            opacity: 0.5
                                             visible: appItem.appComment && appItem.appComment.length > 0
                                         }
                                     }
@@ -2154,161 +2491,149 @@ PanelWindow {
                                             })
                                         }
                                     }
-                                }
-                            }
-                        }
-                }
-            }
+                            } // closes appItemMouseArea
+                        } // closes appItem
+                    } // closes appsList
+                            
+                } // closes launchAppColumn
+            } // closes launchAppMode
             
             // Tryb 1: Packages – ten sam wygląd co strona główna (height 50, radius 4, lewy pasek)
             
-            ListView {
-                reuseItems: true
+            // Tryb 1: Packages – układ poziomy kafelków
+            
+            Row {
                 id: packagesOptionsList
                 anchors.fill: parent
                 anchors.margins: 20
                 spacing: 8
                 visible: currentMode === 1 && currentPackageMode === -1
-                clip: true
-                z: 1
-                currentIndex: selectedIndex
                 
-                onCurrentIndexChanged: {
-                    if (currentIndex !== selectedIndex && currentIndex >= 0) {
-                        selectedIndex = currentIndex
-                    }
-                }
-                
-                model: ListModel {
-                    id: packagesModel
-                    ListElement { name: "Install"; description: "Install packages"; action: "install"; icon: "󰐕" }
-                    ListElement { name: "Remove"; description: "Remove packages"; action: "remove"; icon: "󰆐" }
-                    ListElement { name: "Update"; description: "Update system packages (pacman -Syyu)"; action: "update"; icon: "󰏕" }
-                }
-                
-                delegate: Rectangle {
-                    id: packageOptionItem
-                    width: packagesOptionsList.width
-                    height: 50
-                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    color: (selectedIndex === index || packageOptionItemMouseArea.containsMouse) ?
-                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                        "transparent"
-                    
-                    opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0
-                    scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0.8
-                    
-                    transform: Translate {
-                        y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 0 : 40
-                    }
-
-                    Behavior on opacity {
-                        SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
-                            NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
-                        }
+                Repeater {
+                    model: ListModel {
+                        id: packagesModel
+                        ListElement { name: "Install"; description: "Install packages"; action: "install"; icon: "󰐕" }
+                        ListElement { name: "Remove"; description: "Remove packages"; action: "remove"; icon: "󰆐" }
+                        ListElement { name: "Update"; description: "Update system"; action: "update"; icon: "󰏕" }
                     }
                     
-                    Behavior on scale {
-                        SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
-                            NumberAnimation { duration: 600; easing.type: Easing.OutBack }
-                        }
-                    }
-                    
-                    Behavior on transform {
-                        SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
-                            PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
-                        }
-                    }
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                    }
-                    
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: selectedIndex === index ? 3 : 0
-                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                        Behavior on width {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                        }
-                    }
-                    
-                    Row {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.leftMargin: 16
-                        anchors.rightMargin: 16
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 12
+                    delegate: Rectangle {
+                        id: packageOptionItem
+                        // Szerokość = (dostępne miejsce - 2 * spacing) / 3
+                        width: (packagesOptionsList.width - 16) / 3
+                        height: packagesOptionsList.height
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
+                        color: "transparent"
                         
-                        Text {
-                            text: model.icon || ""
-                            font.pixelSize: 20
-                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                            width: 24
-                            horizontalAlignment: Text.AlignLeft
-                            anchors.verticalCenter: parent.verticalCenter
+                        Rectangle {
+                            anchors.fill: parent
+                            color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                            opacity: (selectedIndex === index || packageOptionItemMouseArea.containsMouse) ? 0.08 : 0
+                            radius: parent.radius
+                            Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                         }
+                        
+                        opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0
+                        scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0.8
+                        
+                        transform: Translate {
+                            y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 0 : 40
+                        }
+
+                        Behavior on opacity {
+                            SequentialAnimation {
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
+                                NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                            }
+                        }
+                        
+                        Behavior on scale {
+                            SequentialAnimation {
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
+                                NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                            }
+                        }
+                        
+                        Behavior on transform {
+                            SequentialAnimation {
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
+                                PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                            }
+                        }
+
+                        Behavior on color {
+                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        
+                        // Usunięto boczny pasek akcentu zgodnie z poleceniem użytkownika
                         
                         Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2
-                            width: parent.width - 36
+                            anchors.centerIn: parent
+                            spacing: 8
                             
                             Text {
-                                text: model.name || "Unknown"
-                                font.pixelSize: 15
-                                font.family: "sans-serif"
-                                font.weight: selectedIndex === index ? Font.Bold : Font.Normal
+                                text: model.icon || ""
+                                font.pixelSize: 32
                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                width: parent.width
-                                elide: Text.ElideRight
+                                horizontalAlignment: Text.AlignHCenter
+                                anchors.horizontalCenter: parent.horizontalCenter
                             }
-                            Text {
-                                text: model.description || ""
-                                font.pixelSize: 12
-                                font.family: "sans-serif"
-                                color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                opacity: 0.7
-                                width: parent.width
-                                elide: Text.ElideRight
+                            
+                            Column {
+                                spacing: 2
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                
+                                Text {
+                                    text: model.name || "Unknown"
+                                    font.pixelSize: 15
+                                    font.family: "sans-serif"
+                                    font.weight: selectedIndex === index ? Font.DemiBold : Font.Medium
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                    horizontalAlignment: Text.AlignHCenter
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
+                                Text {
+                                    text: model.description || ""
+                                    font.pixelSize: 11
+                                    font.family: "sans-serif"
+                                    font.weight: Font.Medium
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
+                                    opacity: 0.5
+                                    horizontalAlignment: Text.AlignHCenter
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: packageOptionItem.width - 20
+                                    elide: Text.ElideRight
+                                    wrapMode: Text.NoWrap
+                                }
                             }
                         }
-                    }
-                    
-                    MouseArea {
-                        id: packageOptionItemMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
                         
-                        onEntered: {
-                            if (packagesOptionsList.currentIndex !== index) {
-                            selectedIndex = index
-                                packagesOptionsList.currentIndex = index
+                        MouseArea {
+                            id: packageOptionItemMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            
+                            onEntered: {
+                                if (selectedIndex !== index) {
+                                    selectedIndex = index
+                                }
                             }
-                        }
-                        
-                        onClicked: {
-                            if (model.action === "install") {
-                                // Przełącz na wybór źródła instalacji (Pacman/AUR)
-                                currentPackageMode = 0
-                                installSourceMode = -1
-                                selectedIndex = 0
-                                packagesOptionsList.currentIndex = -1
-                            } else if (model.action === "remove") {
-                                // Przełącz na wybór źródła usuwania (Pacman/AUR)
-                                currentPackageMode = 3
-                                removeSourceMode = -1
-                                selectedIndex = 0
-                                packagesOptionsList.currentIndex = -1
-                            } else if (model.action === "update") {
-                                // Uruchom update systemu
-                                updateSystem()
+                            
+                            onClicked: {
+                                if (model.action === "install") {
+                                    // Przełącz na wybór źródła instalacji (Pacman/AUR)
+                                    currentPackageMode = 0
+                                    installSourceMode = -1
+                                    selectedIndex = 0
+                                } else if (model.action === "remove") {
+                                    // Przełącz na wybór źródła usuwania (Pacman/AUR)
+                                    currentPackageMode = 3
+                                    removeSourceMode = -1
+                                    selectedIndex = 0
+                                } else if (model.action === "update") {
+                                    // Uruchom update systemu
+                                    updateSystem()
+                                }
                             }
                         }
                     }
@@ -2336,9 +2661,15 @@ PanelWindow {
                     width: installSourceList.width
                     height: 50
                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    color: (selectedIndex === index || installSourceItemMouseArea.containsMouse) ?
-                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                        "transparent"
+                    color: "transparent"
+                    
+                    Rectangle {
+                        anchors.fill: parent
+                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                        opacity: (selectedIndex === index || installSourceItemMouseArea.containsMouse) ? 0.08 : 0
+                        radius: parent.radius
+                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                    }
                     
                     opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 1 : 0
                     scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 0) ? 1 : 0.8
@@ -2349,21 +2680,21 @@ PanelWindow {
 
                     Behavior on opacity {
                         SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                             NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
                         }
                     }
                     
                     Behavior on scale {
                         SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                             NumberAnimation { duration: 600; easing.type: Easing.OutBack }
                         }
                     }
                     
                     Behavior on transform {
                         SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                             PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
                         }
                     }
@@ -2372,16 +2703,7 @@ PanelWindow {
                         ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
                     }
                     
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: selectedIndex === index ? 3 : 0
-                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                        Behavior on width {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                        }
-                    }
+                    // Usunięto boczny akcent
                     
                     Row {
                         anchors.left: parent.left
@@ -2605,21 +2927,21 @@ PanelWindow {
 
                             Behavior on opacity {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
                                 }
                             }
                             
                             Behavior on scale {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     NumberAnimation { duration: 600; easing.type: Easing.OutBack }
                                 }
                             }
                             
                             Behavior on transform {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
                                 }
                             }
@@ -2830,21 +3152,21 @@ PanelWindow {
 
                             Behavior on opacity {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
                                 }
                             }
                             
                             Behavior on scale {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     NumberAnimation { duration: 600; easing.type: Easing.OutBack }
                                 }
                             }
                             
                             Behavior on transform {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
                                 }
                             }
@@ -2942,9 +3264,15 @@ PanelWindow {
                     width: removeSourceList.width
                     height: 50
                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    color: (selectedIndex === index || removeSourceItemMouseArea.containsMouse) ?
-                        ((sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a") :
-                        "transparent"
+                    color: "transparent"
+                    
+                    Rectangle {
+                        anchors.fill: parent
+                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                        opacity: (selectedIndex === index || removeSourceItemMouseArea.containsMouse) ? 0.08 : 0
+                        radius: parent.radius
+                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                    }
                     
                     opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 3) ? 1 : 0
                     scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === 3) ? 1 : 0.8
@@ -2955,21 +3283,21 @@ PanelWindow {
 
                     Behavior on opacity {
                         SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                             NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
                         }
                     }
                     
                     Behavior on scale {
                         SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                             NumberAnimation { duration: 600; easing.type: Easing.OutBack }
                         }
                     }
                     
                     Behavior on transform {
                         SequentialAnimation {
-                            PauseAnimation { duration: Math.min(index * 40, 400) }
+                            PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                             PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
                         }
                     }
@@ -2978,16 +3306,7 @@ PanelWindow {
                         ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
                     }
                     
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: selectedIndex === index ? 3 : 0
-                        color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                        Behavior on width {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                        }
-                    }
+                    // Usunięto boczny akcent
                     
                     Row {
                         anchors.left: parent.left
@@ -3209,21 +3528,21 @@ PanelWindow {
 
                             Behavior on opacity {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
                                 }
                             }
                             
                             Behavior on scale {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     NumberAnimation { duration: 600; easing.type: Easing.OutBack }
                                 }
                             }
                             
                             Behavior on transform {
                                 SequentialAnimation {
-                                    PauseAnimation { duration: Math.min(index * 40, 400) }
+                                    PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
                                     PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
                                 }
                             }
