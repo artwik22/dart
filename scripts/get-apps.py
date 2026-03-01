@@ -31,9 +31,6 @@ def get_apps():
                         if s.get('Type', 'Application') != 'Application': continue
                         
                         name = s.get('Name', '').strip()
-                        # Polish name support
-                        name_pl = s.get('Name[pl]', '').strip()
-                        if name_pl: name = name_pl
                         
                         icon = s.get('Icon', '').strip()
                         exec_cmd = s.get('Exec', '').strip()

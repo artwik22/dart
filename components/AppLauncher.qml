@@ -330,17 +330,17 @@ PanelWindow {
         right: true
     }
     
-    property int baseWidth: 500
+    property int baseWidth: 600
     
     property int listHeight: {
         if (currentMode === 0) {
-            // search input + buttons row (36px)
-            var h = 36;
+            // search input + buttons row (48px)
+            var h = 48;
             if (searchText.length > 0) {
                 if (filteredApps.count > 0) {
-                    h += 9; // spacing between search and list
+                    h += 12; // spacing between search and list
                     var items = Math.min(filteredApps.count, 5);
-                    h += (items * 50) + ((items - 1) * 8);
+                    h += (items * 60) + ((items - 1) * 12);
                 }
             }
             return h;
@@ -363,12 +363,12 @@ PanelWindow {
             }
         } else if (currentMode === 4) {
             // File search mode
-            var h = 36;
+            var h = 48;
             if (searchText.length >= 3) {
                 if (fileSearchResults && fileSearchResults.count > 0) {
-                    h += 9;
+                    h += 12;
                     var items = Math.min(fileSearchResults.count, 6);
-                    h += (items * 50) + ((items - 1) * 8);
+                    h += (items * 60) + ((items - 1) * 12);
                 } else if (isSearchingFiles) {
                     h += 60; // Height of searching box
                 } else {
@@ -378,7 +378,7 @@ PanelWindow {
             return h;
         } else if (currentMode === 3) {
             // Run command mode - search box only
-            return 36;
+            return 48;
         } else if (currentMode === 5) {
             // Power menu: match packages options height
             return 150;
@@ -422,7 +422,7 @@ PanelWindow {
 
     visible: launcherShowProgress > 0.0
     color: "transparent"
-    property int launcherSlideAmount: 400
+    property int launcherSlideAmount: 500
     // Adjust scale/opacity down when hiding instead of moving off-screen from bottom
     // We handle scale and opacity on launcherContainer, so window can just stay centered
     // margins remain static and the window stays exactly in the center
@@ -1768,8 +1768,8 @@ PanelWindow {
                             
                                 Row {
                                 width: parent.width
-                                height: 36
-                                spacing: 8
+                                height: 48
+                                spacing: 12
                                 
                                 opacity: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 1 : 0
                                 scale: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 1 : 0.9
@@ -1783,8 +1783,8 @@ PanelWindow {
 
                                  Rectangle {
                                     id: searchBox
-                                    width: (currentMode === 3 || currentMode === 4) ? parent.width : (parent.width - (36 * 4 + 8 * 4))
-                                    height: 38
+                                    width: (currentMode === 3 || currentMode === 4) ? parent.width : (parent.width - (40 * 4 + 12 * 4))
+                                    height: 48
                                     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#111111"
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     
@@ -1793,12 +1793,25 @@ PanelWindow {
                                     scale: searchInput.activeFocus ? 1.01 : 1.0
                                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
                                 
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 16
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "󰍉" // Search icon
+                                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
+                                    opacity: searchInput.activeFocus ? 0.7 : 0.4
+                                    font.pixelSize: 20
+                                    z: 10
+                                    
+                                    Behavior on opacity { NumberAnimation { duration: 200 } }
+                                }
+                                                                
                                 TextInput {
                                     id: searchInput
                                     anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
-                                    font.pixelSize: 15
+                                    anchors.leftMargin: 46
+                                    anchors.rightMargin: 16
+                                    font.pixelSize: 18
                                     font.family: "sans-serif"
                                     font.weight: Font.Medium
                                     color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
@@ -1832,7 +1845,7 @@ PanelWindow {
                                     }
                                     
                                     Text {
-                                        text: currentMode === 4 ? "Search files..." : (currentMode === 3 ? "Search terminal..." : "Search apps...")
+                                        text: currentMode === 4 ? "Search files..." : (currentMode === 3 ? ">_ Run command... (e.g. htop, ping google.com)" : "Search applications...")
                                         color: parent.color
                                         opacity: 0.3
                                         visible: !parent.text && !parent.inputMethodComposing
@@ -2013,27 +2026,13 @@ PanelWindow {
                                         }
                                     }
                                 }
-                                
-                                    // Placeholder text
-                                    Text {
-                                        anchors.fill: searchInput
-                                        anchors.margins: 0
-                                        text: currentMode === 3 ? ">_ Run command... (e.g. htop, ping google.com)" : (currentMode === 4 ? "Search files..." : "Search applications...")
-                                        font.pixelSize: 16
-                                        font.family: "sans-serif"
-                                        font.weight: Font.Medium
-                                        color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                        verticalAlignment: Text.AlignVCenter
-                                        visible: searchInput.text.length === 0
-                                        z: 5  // Za TextInput
-                                    }
                                 }
                                 
                                 // Quick Actions (Icons on the right)
                                 Rectangle {
-                                    width: 36
-                                    height: 36
-                                    radius: 18 // circular
+                                    width: 40
+                                    height: 40
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (packagesBtn.containsMouse || highlightedModeIndex === 1) ? colorPrimary : colorSecondary
                                     visible: currentMode !== 3 && currentMode !== 4
                                     
@@ -2044,7 +2043,7 @@ PanelWindow {
                                     Text {
                                         anchors.centerIn: parent
                                         text: "󰏖" // Packages icon
-                                        font.pixelSize: 16
+                                        font.pixelSize: 18
                                         color: colorText
                                     }
                                     
@@ -2061,9 +2060,9 @@ PanelWindow {
                                 }
                                 
                                 Rectangle {
-                                    width: 36
-                                    height: 36
-                                    radius: 18 // circular
+                                    width: 40
+                                    height: 40
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p2Btn.containsMouse || highlightedModeIndex === 2) ? colorPrimary : colorSecondary
                                     visible: currentMode !== 3 && currentMode !== 4
                                     
@@ -2074,7 +2073,7 @@ PanelWindow {
                                     Text {
                                         anchors.centerIn: parent
                                         text: "󰉋" // Files
-                                        font.pixelSize: 16
+                                        font.pixelSize: 18
                                         color: colorText
                                     }
                                     
@@ -2093,9 +2092,9 @@ PanelWindow {
                                 }
                                 
                                 Rectangle {
-                                    width: 36
-                                    height: 36
-                                    radius: 18 // circular
+                                    width: 40
+                                    height: 40
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p3Btn.containsMouse || highlightedModeIndex === 3) ? colorPrimary : colorSecondary
                                     visible: currentMode !== 3 && currentMode !== 4
                                     
@@ -2106,7 +2105,7 @@ PanelWindow {
                                     Text {
                                         anchors.centerIn: parent
                                         text: "󰆍" // Terminal
-                                        font.pixelSize: 16
+                                        font.pixelSize: 18
                                         color: colorText
                                     }
                                     
@@ -2125,9 +2124,9 @@ PanelWindow {
                                 }
                                 
                                 Rectangle {
-                                    width: 36
-                                    height: 36
-                                    radius: 18 // circular
+                                    width: 40
+                                    height: 40
+                                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p4Btn.containsMouse || highlightedModeIndex === 4) ? colorPrimary : colorSecondary
                                     visible: currentMode !== 3 && currentMode !== 4
                                     
@@ -2138,7 +2137,7 @@ PanelWindow {
                                     Text {
                                         anchors.centerIn: parent
                                         text: "󰐥" // Power
-                                        font.pixelSize: 16
+                                        font.pixelSize: 18
                                         color: colorText
                                     }
                                     
@@ -2161,7 +2160,7 @@ PanelWindow {
                                 width: parent.width
                                 height: parent.height - searchBox.height - parent.spacing
                                 clip: true
-                                spacing: 8
+                                spacing: 12
                                 visible: (currentMode === 4 && searchText.length >= 3)
                                 
                                 model: fileSearchResults
@@ -2181,7 +2180,7 @@ PanelWindow {
                                 delegate: Rectangle {
                                     id: fileItem
                                     width: filesList.width
-                                    height: 50
+                                    height: 60
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     
                                     color: (selectedIndex === index) ? getTransparentColor(colorAccent, 0.15) :
@@ -2193,11 +2192,11 @@ PanelWindow {
                                         anchors.fill: parent
                                         anchors.leftMargin: 12
                                         anchors.rightMargin: 12
-                                        spacing: 12
+                                        spacing: 16
                                         
                                         Rectangle {
-                                            width: 32
-                                            height: 32
+                                            width: 38
+                                            height: 38
                                             radius: 8
                                             color: (selectedIndex === index) ? colorAccent : colorSecondary
                                             anchors.verticalCenter: parent.verticalCenter
@@ -2206,19 +2205,19 @@ PanelWindow {
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: getFileIcon(model.path)
-                                                font.pixelSize: 18
+                                                font.pixelSize: 20
                                                 color: (selectedIndex === index) ? colorAccent : ((sharedData && sharedData.colorText) ? sharedData.colorText : colorText)
                                             }
                                         }
                                         
                                         Column {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            width: parent.width - 44
-                                            spacing: 1
+                                            width: parent.width - 54
+                                            spacing: 2
                                             
                                             Text {
                                                 text: model.name || "Unknown"
-                                                font.pixelSize: 15
+                                                font.pixelSize: 16
                                                 font.family: "sans-serif"
                                                 font.weight: selectedIndex === index ? Font.Bold : Font.Medium
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
@@ -2227,7 +2226,7 @@ PanelWindow {
                                             }
                                             Text {
                                                 text: model.path || ""
-                                                font.pixelSize: 11
+                                                font.pixelSize: 12
                                                 font.family: "sans-serif"
                                                 font.weight: Font.Medium
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
@@ -2339,7 +2338,7 @@ PanelWindow {
                                 width: parent.width
                                 height: parent.height - searchBox.height - parent.spacing
                                 clip: true
-                                spacing: 8
+                                spacing: 12
                                 visible: searchText.length > 0 && currentMode === 0
                                 
                                 model: filteredApps
@@ -2366,7 +2365,7 @@ PanelWindow {
                                 delegate: Rectangle {
                                     id: appItem
                                     width: appsList.width
-                                    height: 50
+                                    height: 60
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     
                                     opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
@@ -2390,11 +2389,11 @@ PanelWindow {
                                         anchors.fill: parent
                                         anchors.leftMargin: 12
                                         anchors.rightMargin: 12
-                                        spacing: 12
+                                        spacing: 16
                                         
                                         // Icon
                                         Item {
-                                            width: 32
+                                            width: 38
                                             height: width
                                             anchors.verticalCenter: parent.verticalCenter
                                             
@@ -2412,8 +2411,8 @@ PanelWindow {
                                                 id: appIconImage
                                                 anchors.fill: parent
                                                 source: appItem.appIcon ? ("image://icon/" + appItem.appIcon) : ""
-                                                sourceSize.width: 32
-                                                sourceSize.height: 32
+                                                sourceSize.width: 38
+                                                sourceSize.height: 38
                                                 smooth: true
                                                 asynchronous: true
                                                 visible: appItem.appIcon && status === Image.Ready
@@ -2422,14 +2421,14 @@ PanelWindow {
                                         
                                         Column {
                                             id: appTextColumn
-                                            width: parent.width - 44
+                                            width: parent.width - 54
                                             anchors.verticalCenter: parent.verticalCenter
-                                            spacing: 1
+                                            spacing: 2
                                             
                                             Text {
                                                 width: parent.width
                                                 text: appItem.appName
-                                                font.pixelSize: 14
+                                                font.pixelSize: 16
                                                 font.family: "sans-serif"
                                                 font.weight: selectedIndex === index ? Font.Bold : Font.Medium
                                                 elide: Text.ElideRight
@@ -2438,7 +2437,7 @@ PanelWindow {
                                             Text {
                                                 width: parent.width
                                                 text: appItem.appComment
-                                                font.pixelSize: 11
+                                                font.pixelSize: 12
                                                 font.family: "sans-serif"
                                                 opacity: 0.6
                                                 elide: Text.ElideRight
@@ -2502,6 +2501,40 @@ PanelWindow {
                 spacing: 8
                 visible: currentMode === 1 && currentPackageMode === -1
                 enabled: visible
+                focus: visible && sharedData && sharedData.launcherVisible
+                
+                onVisibleChanged: {
+                    if (visible && sharedData && sharedData.launcherVisible) {
+                        forceActiveFocus()
+                    }
+                }
+                
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Left) {
+                        if (selectedIndex > 0) selectedIndex--
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Right) {
+                        if (selectedIndex < 2) selectedIndex++
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        if (selectedIndex === 0) {
+                            currentPackageMode = 0
+                            installSourceMode = -1
+                            selectedIndex = 0
+                        } else if (selectedIndex === 1) {
+                            currentPackageMode = 3
+                            removeSourceMode = -1
+                            selectedIndex = 0
+                        } else if (selectedIndex === 2) {
+                            updateSystem()
+                        }
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Escape) {
+                        currentMode = 0
+                        selectedIndex = 0
+                        event.accepted = true
+                    }
+                }
                 
                 Repeater {
                     model: ListModel {
@@ -2645,6 +2678,42 @@ PanelWindow {
                 visible: currentMode === 1 && currentPackageMode === 0
                 clip: true
                 z: 1
+                focus: visible && sharedData && sharedData.launcherVisible
+                
+                onVisibleChanged: {
+                    if (visible && sharedData && sharedData.launcherVisible) {
+                        forceActiveFocus()
+                    }
+                }
+                
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Up) {
+                        if (selectedIndex > 0) selectedIndex--
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Down) {
+                        if (selectedIndex < 1) selectedIndex++
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        if (selectedIndex === 0) {
+                            currentPackageMode = 1
+                            installSourceMode = 0
+                            selectedIndex = 0
+                            packageSearchText = ""
+                            if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() { appLauncherRoot.pacmanSearchInput.forceActiveFocus() }, 100)
+                        } else if (selectedIndex === 1) {
+                            currentPackageMode = 2
+                            installSourceMode = 1
+                            selectedIndex = 0
+                            packageSearchText = ""
+                            if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() { appLauncherRoot.aurSearchInput.forceActiveFocus() }, 100)
+                        }
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Escape) {
+                        currentPackageMode = -1
+                        selectedIndex = 0
+                        event.accepted = true
+                    }
+                }
                 model: ListModel {
                     id: installSourceModel
                     ListElement { name: "Pacman"; description: "Install from official repositories"; source: "pacman"; icon: "󰏖" }
@@ -3152,6 +3221,44 @@ PanelWindow {
                 visible: currentMode === 1 && currentPackageMode === 3
                 clip: true
                 z: 1
+                focus: visible && sharedData && sharedData.launcherVisible
+                
+                onVisibleChanged: {
+                    if (visible && sharedData && sharedData.launcherVisible) {
+                        forceActiveFocus()
+                    }
+                }
+                
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Up) {
+                        if (selectedIndex > 0) selectedIndex--
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Down) {
+                        if (selectedIndex < 1) selectedIndex++
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        if (selectedIndex === 0) {
+                            currentPackageMode = 4
+                            removeSourceMode = 0
+                            selectedIndex = 0
+                            packageSearchText = ""
+                            loadInstalledPackages()
+                            if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() { appLauncherRoot.removeSearchInput.forceActiveFocus() }, 100)
+                        } else if (selectedIndex === 1) {
+                            currentPackageMode = 5
+                            removeSourceMode = 1
+                            selectedIndex = 0
+                            packageSearchText = ""
+                            loadInstalledPackages()
+                            if (sharedData && sharedData.setTimeout) sharedData.setTimeout(function() { appLauncherRoot.removeAurSearchInput.forceActiveFocus() }, 100)
+                        }
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Escape) {
+                        currentPackageMode = -1
+                        selectedIndex = 0
+                        event.accepted = true
+                    }
+                }
                 model: ListModel {
                     id: removeSourceModel
                     ListElement { name: "Pacman"; description: "Remove from official repositories"; source: "pacman"; icon: "󰏖" }
@@ -3673,6 +3780,39 @@ PanelWindow {
                 spacing: 8
                 visible: currentMode === 5
                 enabled: visible
+                focus: visible && sharedData && sharedData.launcherVisible
+                
+                onVisibleChanged: {
+                    if (visible && sharedData && sharedData.launcherVisible) {
+                        forceActiveFocus()
+                    }
+                }
+                
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Left) {
+                        if (selectedIndex > 0) selectedIndex--
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Right) {
+                        if (selectedIndex < 3) selectedIndex++
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        if (selectedIndex === 0) {
+                            if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'poweroff'])
+                        } else if (selectedIndex === 1) {
+                            if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'reboot'])
+                        } else if (selectedIndex === 2) {
+                            if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'suspend'])
+                        } else if (selectedIndex === 3) {
+                            if (sharedData && sharedData.runCommand) sharedData.runCommand(['hyprctl', 'dispatch', 'exit'])
+                        }
+                        if (sharedData) sharedData.launcherVisible = false
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Escape) {
+                        currentMode = 0
+                        selectedIndex = 0
+                        event.accepted = true
+                    }
+                }
                 
                 Repeater {
                     model: ListModel {
