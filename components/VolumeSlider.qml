@@ -10,8 +10,8 @@ PanelWindow {
         right: true
         top: true
     }
-    implicitWidth: 49
-    implicitHeight: 360  // Height for two sliders
+    implicitWidth: 60
+    implicitHeight: 330  // Mniejsza, bardziej kompaktowa wysokość
     
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qsvolumeslider"
@@ -28,7 +28,7 @@ PanelWindow {
     property int slideOffset: (sharedData && sharedData.volumeVisible) ? 0 : -implicitWidth
     
     margins {
-        top: (screen && screen.height) ? (screen.height - 360) / 2 : 0
+        top: (screen && screen.height) ? (screen.height - 330) / 2 : 0
         bottom: 0
         right: slideOffset
         left: 0
@@ -208,151 +208,183 @@ PanelWindow {
             }
         }
 
-        // Slider brightness i volume - pionowy z animacją fade
+        // Nowoczesny styl Segmentowy (Spine / Equalizer) - Wersja Kompaktowa
         Column {
             id: slidersColumn
             anchors.centerIn: parent
-            spacing: 12
-            width: parent.width - 19
+            spacing: 20
+            width: parent.width - 12
             opacity: (sharedData && sharedData.volumeVisible) ? 1.0 : 0.0
             
             Behavior on opacity {
                 NumberAnimation { 
                     duration: 300
-                    easing.type: Easing.OutQuart
+                    easing.type: Easing.OutCubic
                 }
             }
 
-            // ========== BRIGHTNESS SECTION ==========
-            // Ikona jasności
-            Text {
-                id: brightnessIcon
-                text: {
-                    if (brightnessValue === 0) return "󰃞"
-                    else if (brightnessValue < 33) return "󰃟"
-                    else if (brightnessValue < 66) return "󰃠"
-                    else return "󰃝"
-                }
-                font.pixelSize: 25
-                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#f5f5f5"
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            // Brightness Slider
+            // ========== BRIGHTNESS SPINE ==========
             Item {
-                id: brightnessSliderContainer
+                id: brightnessSection
                 width: parent.width
-                height: 100
+                height: 140 // Wyraźnie obniżona wysokość
                 anchors.horizontalCenter: parent.horizontalCenter
                 z: 1000
 
-                // Tło slidera
-                Rectangle {
-                    id: brightnessSliderTrack
-                    anchors.centerIn: parent
-                    width: 5
-                    height: parent.height
-                    color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"
-                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    z: 1
+                // Ikona jasności
+                Text {
+                    id: brightnessIcon
+                    text: {
+                        if (brightnessValue === 0) return "󰃞"
+                        else if (brightnessValue < 33) return "󰃟"
+                        else if (brightnessValue < 66) return "󰃠"
+                        else return "󰃝"
+                    }
+                    font.pixelSize: 20
+                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#f5f5f5"
+                    anchors.top: parent.top
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    
+                    scale: sliderMouseArea.containsMouse && sliderMouseArea.isInBrightnessArea(sliderMouseArea.mouseY) ? 1.15 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
                 }
 
-                // Wypełnienie slidera
-                Rectangle {
-                    id: brightnessSliderFill
-                    anchors.bottom: brightnessSliderTrack.bottom
-                    anchors.horizontalCenter: brightnessSliderTrack.horizontalCenter
-                    width: brightnessSliderTrack.width
-                    height: brightnessSliderTrack.height * (brightnessValue / 100)
-                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    z: 2
-                    
-                    Behavior on height {
-                        NumberAnimation { 
-                            duration: 150
-                            easing.type: Easing.OutQuart
+                // Segmentowy suwak (Spine)
+                Column {
+                    anchors.top: brightnessIcon.bottom
+                    anchors.bottom: brightnessValueText.top
+                    anchors.topMargin: 8
+                    anchors.bottomMargin: 8
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 3
+
+                    Repeater {
+                        model: 12 // Mniej elementów, by pasowały do mniejszej wysokości
+                        Item {
+                            width: 24
+                            height: (parent.height - (11 * 3)) / 12
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            
+                            // Im niższy index, tym wyżej na ekranie
+                            property real threshold: 100 - (index * 8.33)
+                            property bool isActive: brightnessValue >= (threshold - 4) // nieco mniejsza precyzja wymuszona ilością segmentów
+
+                            Rectangle {
+                                anchors.centerIn: parent
+                                height: parent.height
+                                
+                                // Kropla (4px) -> Aktywny (14px) -> Hover (20px)
+                                width: parent.isActive ? 
+                                       (sliderMouseArea.containsMouse && sliderMouseArea.isInBrightnessArea(sliderMouseArea.mouseY) ? 20 : 14) : 
+                                       4
+                                
+                                radius: 2
+                                color: parent.isActive ? 
+                                       ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
+                                       ((sharedData && sharedData.colorSurfaceContainerHigh) ? sharedData.colorSurfaceContainerHigh : "#2B2930")
+                                opacity: parent.isActive ? 1.0 : 0.6
+
+                                Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutExpo } }
+                                Behavior on color { ColorAnimation { duration: 250 } }
+                            }
                         }
                     }
                 }
-            }
 
-            // Wartość jasności w procentach
-            Text {
-                id: brightnessValueText
-                text: Math.round(brightnessValue) + "%"
-                font.pixelSize: 13
-                font.family: "sans-serif"
-                font.weight: Font.Medium
-                font.letterSpacing: 0.2
-                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#f5f5f5"
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            // ========== VOLUME SECTION ==========
-            // Ikona głośności
-            Text {
-                id: volumeIcon
-                text: {
-                    if (volumeValue === 0) return "󰝟"
-                    else if (volumeValue < 33) return "󰕿"
-                    else if (volumeValue < 66) return "󰖀"
-                    else return "󰕾"
+                // Wartość procentowa
+                Text {
+                    id: brightnessValueText
+                    text: Math.round(brightnessValue) + "%"
+                    font.pixelSize: 12
+                    font.family: "sans-serif"
+                    font.weight: Font.DemiBold
+                    color: sliderMouseArea.containsMouse && sliderMouseArea.isInBrightnessArea(sliderMouseArea.mouseY) ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#f5f5f5")
+                    anchors.bottom: parent.bottom
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    
+                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
                 }
-                font.pixelSize: 25
-                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#f5f5f5"
-                anchors.horizontalCenter: parent.horizontalCenter
             }
 
-            // Volume Slider
+            // ========== VOLUME SPINE ==========
             Item {
-                id: volumeSliderContainer
+                id: volumeSection
                 width: parent.width
-                height: 100
+                height: 140
                 anchors.horizontalCenter: parent.horizontalCenter
                 z: 1000
 
-                // Tło slidera
-                Rectangle {
-                    id: volumeSliderTrack
-                    anchors.centerIn: parent
-                    width: 5
-                    height: parent.height
-                    color: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#3a3a3a"
-                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    z: 1
+                // Ikona głośności
+                Text {
+                    id: volumeIcon
+                    text: {
+                        if (volumeValue === 0) return "󰝟"
+                        else if (volumeValue < 33) return "󰕿"
+                        else if (volumeValue < 66) return "󰖀"
+                        else return "󰕾"
+                    }
+                    font.pixelSize: 20
+                    color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#f5f5f5"
+                    anchors.top: parent.top
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    
+                    scale: sliderMouseArea.containsMouse && sliderMouseArea.isInVolumeArea(sliderMouseArea.mouseY) ? 1.15 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
                 }
 
-                // Wypełnienie slidera
-                Rectangle {
-                    id: volumeSliderFill
-                    anchors.bottom: volumeSliderTrack.bottom
-                    anchors.horizontalCenter: volumeSliderTrack.horizontalCenter
-                    width: volumeSliderTrack.width
-                    height: volumeSliderTrack.height * (volumeValue / 100)
-                    color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                    radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
-                    z: 2
-                    
-                    Behavior on height {
-                        NumberAnimation { 
-                            duration: 150
-                            easing.type: Easing.OutQuart
+                // Segmentowy suwak głośności
+                Column {
+                    anchors.top: volumeIcon.bottom
+                    anchors.bottom: volumeValueText.top
+                    anchors.topMargin: 8
+                    anchors.bottomMargin: 8
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 3
+
+                    Repeater {
+                        model: 12
+                        Item {
+                            width: 24
+                            height: (parent.height - (11 * 3)) / 12
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            
+                            property real threshold: 100 - (index * 8.33)
+                            property bool isActive: volumeValue >= (threshold - 4)
+
+                            Rectangle {
+                                anchors.centerIn: parent
+                                height: parent.height
+                                
+                                width: parent.isActive ? 
+                                       (sliderMouseArea.containsMouse && sliderMouseArea.isInVolumeArea(sliderMouseArea.mouseY) ? 20 : 14) : 
+                                       4
+                                
+                                radius: 2
+                                color: parent.isActive ? 
+                                       ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : 
+                                       ((sharedData && sharedData.colorSurfaceContainerHigh) ? sharedData.colorSurfaceContainerHigh : "#2B2930")
+                                opacity: parent.isActive ? 1.0 : 0.6
+
+                                Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutExpo } }
+                                Behavior on color { ColorAnimation { duration: 250 } }
+                            }
                         }
                     }
                 }
-            }
 
-            // Wartość głośności w procentach
-            Text {
-                id: volumeValueText
-                text: Math.round(volumeValue) + "%"
-                font.pixelSize: 13
-                font.family: "sans-serif"
-                font.weight: Font.Medium
-                font.letterSpacing: 0.2
-                color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#f5f5f5"
-                anchors.horizontalCenter: parent.horizontalCenter
+                // Wartość procentowa
+                Text {
+                    id: volumeValueText
+                    text: Math.round(volumeValue) + "%"
+                    font.pixelSize: 12
+                    font.family: "sans-serif"
+                    font.weight: Font.DemiBold
+                    color: sliderMouseArea.containsMouse && sliderMouseArea.isInVolumeArea(sliderMouseArea.mouseY) ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff") : ((sharedData && sharedData.colorText) ? sharedData.colorText : "#f5f5f5")
+                    anchors.bottom: parent.bottom
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    
+                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                }
             }
         }
     }
