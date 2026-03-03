@@ -474,7 +474,7 @@ PanelWindow {
                     Item { 
                         id: workspaceItem
                         width: parent.width
-                        height: workspaceLine.height
+                        height: Math.max(workspaceLine.height, 12)
                         anchors.horizontalCenter: parent.horizontalCenter
                         property bool isActive: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id === (index + 1) : false
                         property bool hasWindows: { 
@@ -482,11 +482,10 @@ PanelWindow {
                             return ws ? ws.lastIpcObject.windows > 0 : false 
                         }
                         
-                        // Height: Active=24, Occupied=12, Empty=6 (Dots) vs Active=64, Occupied=32, Empty=16 (Lines)
                         property bool isDots: (sharedData && sharedData.sidebarStyle === "dots")
                         property real targetHeight: isDots ? (isActive ? 32 : (hasWindows ? 12 : 6)) : (isActive ? 64 : (hasWindows ? 32 : 16))
                         property real targetWidth: isDots ? 6 : 3
-                        
+
                         Rectangle { 
                             id: workspaceLine
                             anchors.centerIn: parent
@@ -495,14 +494,33 @@ PanelWindow {
                             radius: isDots ? (width / 2) : ((sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0)
                             color: workspaceItem.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItem.hasWindows ? "#fff" : "#666")
                             opacity: workspaceItem.isActive ? 1.0 : (workspaceItem.hasWindows ? 0.8 : 0.4)
+                            scale: wsMouseArea.containsMouse ? 1.3 : 1.0
                             Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
                             Behavior on color { ColorAnimation { duration: 200 } }
+                            Behavior on opacity { NumberAnimation { duration: 200 } }
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                         }
                         MouseArea { 
-                            anchors.fill: workspaceLine
-                            anchors.margins: -12
+                            id: wsMouseArea
+                            anchors.fill: parent
+                            anchors.margins: -4
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
                             onClicked: Hyprland.dispatch("workspace", index + 1) 
                         }
+                    }
+                }
+            }
+            // Scroll area covering entire workspace column
+            MouseArea {
+                anchors.fill: sidePanelWorkspaceColumn
+                anchors.margins: -8
+                acceptedButtons: Qt.NoButton
+                onWheel: function(wheel) {
+                    if (wheel.angleDelta.y > 0) {
+                        Hyprland.dispatch("workspace", "m-1")
+                    } else if (wheel.angleDelta.y < 0) {
+                        Hyprland.dispatch("workspace", "m+1")
                     }
                 }
             }
@@ -558,7 +576,7 @@ PanelWindow {
                     Item { 
                         id: workspaceItemTop
                         height: parent.height
-                        width: workspaceLineTop.width
+                        width: Math.max(workspaceLineTop.width, 12)
                         anchors.verticalCenter: parent.verticalCenter
                         property bool isActive: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id === (index + 1) : false
                         property bool hasWindows: { 
@@ -566,7 +584,6 @@ PanelWindow {
                             return ws ? ws.lastIpcObject.windows > 0 : false 
                         }
 
-                        // Width: Active=24, Occupied=12, Empty=6 (Dots) vs Active=64, Occupied=32, Empty=16 (Lines)
                         property bool isDots: (sharedData && sharedData.sidebarStyle === "dots")
                         property real targetWidth: isDots ? (isActive ? 32 : (hasWindows ? 12 : 6)) : (isActive ? 64 : (hasWindows ? 32 : 16))
                         property real targetHeight: isDots ? 6 : 3
@@ -579,14 +596,33 @@ PanelWindow {
                             radius: isDots ? (height / 2) : ((sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0)
                             color: workspaceItemTop.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItemTop.hasWindows ? "#fff" : "#666")
                             opacity: workspaceItemTop.isActive ? 1.0 : (workspaceItemTop.hasWindows ? 0.8 : 0.4)
+                            scale: wsMouseAreaTop.containsMouse ? 1.3 : 1.0
                             Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
                             Behavior on color { ColorAnimation { duration: 200 } }
+                            Behavior on opacity { NumberAnimation { duration: 200 } }
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
                         }
                         MouseArea { 
-                            anchors.fill: workspaceLineTop
-                            anchors.margins: -12
+                            id: wsMouseAreaTop
+                            anchors.fill: parent
+                            anchors.margins: -4
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
                             onClicked: Hyprland.dispatch("workspace", index + 1) 
                         }
+                    }
+                }
+            }
+            // Scroll area covering entire workspace row
+            MouseArea {
+                anchors.fill: sidePanelWorkspaceRow
+                anchors.margins: -8
+                acceptedButtons: Qt.NoButton
+                onWheel: function(wheel) {
+                    if (wheel.angleDelta.y > 0) {
+                        Hyprland.dispatch("workspace", "m-1")
+                    } else if (wheel.angleDelta.y < 0) {
+                        Hyprland.dispatch("workspace", "m+1")
                     }
                 }
             }
