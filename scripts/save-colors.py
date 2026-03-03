@@ -54,6 +54,8 @@ if "screensaverWidgetsEnabled" in existing_data:
     colors["screensaverWidgetsEnabled"] = existing_data["screensaverWidgetsEnabled"]
 if "scriptsAutostartLockscreen" in existing_data:
     colors["scriptsAutostartLockscreen"] = existing_data["scriptsAutostartLockscreen"]
+if "micaSidebarBackground" in existing_data:
+    colors["micaSidebarBackground"] = existing_data["micaSidebarBackground"]
 
 # Override with provided values if they exist
 # Argument 7: lastWallpaper
@@ -286,6 +288,10 @@ if len(sys.argv) > 46 and sys.argv[46]:
 # Argument 47: scriptsAutostartLockscreen (true/false)
 if len(sys.argv) > 47 and sys.argv[47]:
     colors["scriptsAutostartLockscreen"] = sys.argv[47] == "true"
+
+# Argument 48: micaSidebarBackground (true/false)
+if len(sys.argv) > 48 and sys.argv[48]:
+    colors["micaSidebarBackground"] = sys.argv[48] == "true"
 
 with open(sys.argv[6], 'w') as f:
     json.dump(colors, f, indent=2)

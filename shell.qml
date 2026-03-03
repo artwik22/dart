@@ -94,6 +94,7 @@ ShellRoot {
         property bool clockBlinkColon: true
         property string sidebarWorkspaceMode: "top" // "top" | "center" | "bottom"
         property bool dynamicSidebarBackground: false
+        property bool micaSidebarBackground: false
     }
     
     // Color config file path - dynamically determined
@@ -355,6 +356,9 @@ ShellRoot {
                         
                         if (json.dynamicSidebarBackground !== undefined) {
                             sharedData.dynamicSidebarBackground = json.dynamicSidebarBackground === true || json.dynamicSidebarBackground === "true"
+                        }
+                        if (json.micaSidebarBackground !== undefined) {
+                            sharedData.micaSidebarBackground = json.micaSidebarBackground === true || json.micaSidebarBackground === "true"
                         }
 
                     } catch (e) {
@@ -733,6 +737,7 @@ ShellRoot {
                 projectPath: root.projectPath
                 launcherFunction: root.openLauncher
                 screenshotFunction: root.takeScreenshot
+                wallpaperPath: root.currentWallpaperPath
             }
         }
     }

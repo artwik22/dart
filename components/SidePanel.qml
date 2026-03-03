@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
 import Quickshell.Services.SystemTray
+import Qt5Compat.GraphicalEffects
 import "."
 
 PanelWindow {
@@ -14,6 +15,7 @@ PanelWindow {
     required property string panelPosition
     property var primaryScreen: null
     property string projectPath: ""
+    property string wallpaperPath: ""
     
     property var sidePanelRoot: sidePanel
     property bool isHorizontal: panelPosition === "top" || panelPosition === "bottom"
@@ -66,6 +68,7 @@ PanelWindow {
     color: "transparent"
     property var sharedData: null
     property bool dynamicBackground: !!(sharedData && sharedData.dynamicSidebarBackground)
+    property bool micaBackground: !!(sharedData && sharedData.micaSidebarBackground)
 
     property bool panelActive: !!(sharedData && (sharedData.sidebarVisible === undefined || sharedData.sidebarVisible) && sharedData.sidebarPosition === panelPosition && !(sharedData.sidebarHiddenByFullscreen === true))
     property real panelProgress: panelActive ? 1.0 : 0.0
@@ -110,10 +113,42 @@ PanelWindow {
         anchors.top: panelPosition === "bottom" ? undefined : parent.top
         anchors.bottom: panelPosition === "bottom" ? parent.bottom : undefined
 
+        // Mica Blur Background Layer
+        Item {
+            anchors.fill: parent
+            clip: true
+            z: -2
+
+            Image {
+                id: wallpaperImage
+                asynchronous: true
+                sourceSize.width: screen ? screen.width / 4 : 480
+                sourceSize.height: screen ? screen.height / 4 : 270
+                
+                // Absolute positioning mapped to screen to make the wallpaper portion align with desktop
+                x: sidePanel.panelPosition === "right" ? -(screen.width - sidePanelRect.width) : 0
+                y: sidePanel.panelPosition === "bottom" ? -(screen.height - sidePanelRect.height) : 0
+                width: screen ? screen.width : 1920
+                height: screen ? screen.height : 1080
+
+                source: sidePanel.wallpaperPath ? (sidePanel.wallpaperPath.startsWith("/") ? "file://" + sidePanel.wallpaperPath : sidePanel.wallpaperPath) : ""
+                fillMode: Image.PreserveAspectCrop
+                visible: false // Hidden because FastBlur will render it
+            }
+
+            FastBlur {
+                anchors.fill: wallpaperImage
+                source: wallpaperImage
+                radius: 64
+                transparentBorder: false
+                visible: sidePanel.wallpaperPath !== "" && sidePanel.micaBackground
+            }
+        }
+
         gradient: Gradient {
             orientation: !isHorizontal ? Gradient.Vertical : Gradient.Horizontal
-            GradientStop { position: 0.0; color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0d0d0d" }
-            GradientStop { position: 1.0; color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#151515" }
+            GradientStop { position: 0.0; color: (sharedData && sharedData.colorBackground) ? Qt.rgba(sharedData.colorBackground.r, sharedData.colorBackground.g, sharedData.colorBackground.b, sidePanel.micaBackground ? 0.75 : 1.0) : Qt.rgba(0.05, 0.05, 0.05, sidePanel.micaBackground ? 0.75 : 1.0) }
+            GradientStop { position: 1.0; color: (sharedData && sharedData.colorSecondary) ? Qt.rgba(sharedData.colorSecondary.r, sharedData.colorSecondary.g, sharedData.colorSecondary.b, sidePanel.micaBackground ? 0.75 : 1.0) : Qt.rgba(0.08, 0.08, 0.08, sidePanel.micaBackground ? 0.75 : 1.0) }
         }
         radius: 0
         enabled: false
@@ -136,11 +171,43 @@ PanelWindow {
             anchors.fill: parent
             z: -1
             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
+            clip: true
+            
+            Item {
+                anchors.fill: parent
+                z: -2
+                
+                Image {
+                    id: islandWallpaperImage
+                    asynchronous: true
+                    sourceSize.width: screen ? screen.width / 4 : 480
+                    sourceSize.height: screen ? screen.height / 4 : 270
+                    
+                    // We need to map coordinates globally so it aligns with the wallpaper underneath
+                    // Approximate mapping assuming standard island layouts
+                    x: sidePanel.panelPosition === "right" ? -(screen.width - 40) : -40
+                    y: sidePanel.panelPosition === "bottom" ? -(screen.height - 40) : -40
+                    width: screen ? screen.width : 1920
+                    height: screen ? screen.height : 1080
+
+                    source: sidePanel.wallpaperPath ? (sidePanel.wallpaperPath.startsWith("/") ? "file://" + sidePanel.wallpaperPath : sidePanel.wallpaperPath) : ""
+                    fillMode: Image.PreserveAspectCrop
+                    visible: false
+                }
+
+                FastBlur {
+                    anchors.fill: islandWallpaperImage
+                    source: islandWallpaperImage
+                    radius: 64
+                    transparentBorder: false
+                    visible: sidePanel.wallpaperPath !== "" && sidePanel.micaBackground
+                }
+            }
             
             gradient: Gradient {
                 orientation: !isHorizontal ? Gradient.Vertical : Gradient.Horizontal
-                GradientStop { position: 0.0; color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0d0d0d" }
-                GradientStop { position: 1.0; color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#151515" }
+                GradientStop { position: 0.0; color: (sharedData && sharedData.colorBackground) ? Qt.rgba(sharedData.colorBackground.r, sharedData.colorBackground.g, sharedData.colorBackground.b, sidePanel.micaBackground ? 0.75 : 1.0) : Qt.rgba(0.05, 0.05, 0.05, sidePanel.micaBackground ? 0.75 : 1.0) }
+                GradientStop { position: 1.0; color: (sharedData && sharedData.colorSecondary) ? Qt.rgba(sharedData.colorSecondary.r, sharedData.colorSecondary.g, sharedData.colorSecondary.b, sidePanel.micaBackground ? 0.75 : 1.0) : Qt.rgba(0.08, 0.08, 0.08, sidePanel.micaBackground ? 0.75 : 1.0) }
             }
             border.width: 1
             border.color: Qt.rgba(1,1,1,0.05)
