@@ -266,6 +266,24 @@ PanelWindow {
                 }
             }
         }
+
+        // Separator between Clock and Workspaces (Vertical)
+        Item {
+            id: clockWorkspaceSepV
+            width: parent.width
+            height: 14
+            anchors.top: sidePanelClockColumn.bottom
+            anchors.topMargin: 4
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: !isHorizontal && sidePanelWorkspaceColumnContainer.mode === "top"
+
+            Rectangle {
+                width: 14
+                height: 1
+                anchors.centerIn: parent
+                color: Qt.rgba(1, 1, 1, 0.1)
+            }
+        }
         
         // Shared loader for Clock + Workspaces (Horizontal)
         Loader { 
@@ -399,8 +417,8 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             
             // Mode: Top
-            anchors.top: mode === "top" ? sidePanelClockColumn.bottom : undefined
-            anchors.topMargin: mode === "top" ? 24 : 0
+            anchors.top: mode === "top" ? clockWorkspaceSepV.bottom : undefined
+            anchors.topMargin: mode === "top" ? 4 : 0
             
             // Mode: Center
             anchors.verticalCenter: mode === "center" ? parent.verticalCenter : undefined
@@ -490,13 +508,31 @@ PanelWindow {
             }
         }
         
+        // Separator between Clock and Workspaces (Horizontal)
+        Item {
+            id: clockWorkspaceSepH
+            width: 14
+            height: parent.height
+            anchors.left: sidePanelClockRow.right
+            anchors.leftMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
+            visible: isHorizontal
+
+            Rectangle {
+                width: 1
+                height: 14
+                anchors.centerIn: parent
+                color: Qt.rgba(1, 1, 1, 0.1)
+            }
+        }
+
         Item {
             id: sidePanelWorkspaceRowContainer
             width: sidePanelWorkspaceRow.width // Dynamic width
             height: parent.height
             visible: isHorizontal
-            anchors.left: sidePanelClockRow.right
-            anchors.leftMargin: 24
+            anchors.left: clockWorkspaceSepH.right
+            anchors.leftMargin: 4
             anchors.verticalCenter: parent.verticalCenter
             z: 50
             
