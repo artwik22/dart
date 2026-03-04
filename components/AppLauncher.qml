@@ -1419,10 +1419,11 @@ PanelWindow {
         opacity: launcherShowProgress
         enabled: launcherShowProgress > 0.02
         focus: launcherShowProgress > 0.02
-        // scale: 1.0 // Removed scale animation
-        transformOrigin: Item.Bottom
-        
-        // Window movement handles the slide animation
+        scale: 0.92 + (launcherShowProgress * 0.08)
+        transformOrigin: Item.Center
+        transform: Translate {
+            y: (1.0 - launcherShowProgress) * 30
+        }
 
 
 
@@ -2032,6 +2033,7 @@ PanelWindow {
                                 Rectangle {
                                     width: 40
                                     height: 40
+                                    anchors.verticalCenter: parent.verticalCenter
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (packagesBtn.containsMouse || highlightedModeIndex === 1) ? colorPrimary : colorSecondary
                                     visible: currentMode !== 3 && currentMode !== 4
@@ -2062,6 +2064,7 @@ PanelWindow {
                                 Rectangle {
                                     width: 40
                                     height: 40
+                                    anchors.verticalCenter: parent.verticalCenter
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p2Btn.containsMouse || highlightedModeIndex === 2) ? colorPrimary : colorSecondary
                                     visible: currentMode !== 3 && currentMode !== 4
@@ -2094,6 +2097,7 @@ PanelWindow {
                                 Rectangle {
                                     width: 40
                                     height: 40
+                                    anchors.verticalCenter: parent.verticalCenter
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p3Btn.containsMouse || highlightedModeIndex === 3) ? colorPrimary : colorSecondary
                                     visible: currentMode !== 3 && currentMode !== 4
@@ -2126,6 +2130,7 @@ PanelWindow {
                                 Rectangle {
                                     width: 40
                                     height: 40
+                                    anchors.verticalCenter: parent.verticalCenter
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p4Btn.containsMouse || highlightedModeIndex === 4) ? colorPrimary : colorSecondary
                                     visible: currentMode !== 3 && currentMode !== 4
