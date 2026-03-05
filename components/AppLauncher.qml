@@ -417,7 +417,11 @@ PanelWindow {
         value: (sharedData && sharedData.launcherVisible) ? 1.0 : 0.0
     }
     Behavior on launcherShowProgress {
-        NumberAnimation { duration: 500; easing.type: Easing.OutExpo }
+        NumberAnimation { 
+            duration: 350
+            easing.type: Easing.OutBack
+            easing.overshoot: 1.15
+        }
     }
 
     visible: launcherShowProgress > 0.0
@@ -1419,10 +1423,10 @@ PanelWindow {
         opacity: launcherShowProgress
         enabled: launcherShowProgress > 0.02
         focus: launcherShowProgress > 0.02
-        scale: 0.92 + (launcherShowProgress * 0.08)
+        scale: 0.85 + (launcherShowProgress * 0.15)
         transformOrigin: Item.Center
         transform: Translate {
-            y: (1.0 - launcherShowProgress) * 30
+            y: (1.0 - launcherShowProgress) * 50
         }
 
 
@@ -1767,29 +1771,23 @@ PanelWindow {
                     anchors.fill: parent
                     spacing: 9
                             
-                                Row {
+                                Item {
                                 width: parent.width
                                 height: 48
-                                spacing: 12
                                 
                                 opacity: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 1 : 0
-                                scale: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 1 : 0.9
-                                transform: Translate {
-                                    y: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 0 : 20
-                                }
-
-                                Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
-                                Behavior on scale { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
-                                Behavior on transform { PropertyAnimation { property: "y"; duration: 600; easing.type: Easing.OutBack } }
+                                
+                                Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
                                  Rectangle {
                                     id: searchBox
+                                    anchors.left: parent.left
                                     width: (currentMode === 3 || currentMode === 4) ? parent.width : (parent.width - (40 * 4 + 12 * 4))
                                     height: 48
                                     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#111111"
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     
-                                    Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                                    Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutQuart } }
                                     
                                     scale: searchInput.activeFocus ? 1.01 : 1.0
                                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
@@ -2030,17 +2028,28 @@ PanelWindow {
                                 }
                                 
                                 // Quick Actions (Icons on the right)
+                                Row {
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 12
+                                    
                                 Rectangle {
                                     width: 40
                                     height: 40
                                     anchors.verticalCenter: parent.verticalCenter
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (packagesBtn.containsMouse || highlightedModeIndex === 1) ? colorPrimary : colorSecondary
-                                    visible: currentMode !== 3 && currentMode !== 4
+                                    visible: true
+                                    opacity: (currentMode !== 3 && currentMode !== 4) ? 1.0 : 0.0
+                                    enabled: opacity > 0
                                     
                                     scale: packagesBtn.containsMouse ? 1.1 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                    Behavior on scale { 
+                                        enabled: opacity === 1.0
+                                        NumberAnimation { duration: 200; easing.type: Easing.OutBack } 
+                                    }
                                     Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
                                     
                                     Text {
                                         anchors.centerIn: parent
@@ -2067,11 +2076,17 @@ PanelWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p2Btn.containsMouse || highlightedModeIndex === 2) ? colorPrimary : colorSecondary
-                                    visible: currentMode !== 3 && currentMode !== 4
+                                    visible: true
+                                    opacity: (currentMode !== 3 && currentMode !== 4) ? 1.0 : 0.0
+                                    enabled: opacity > 0
                                     
                                     scale: p2Btn.containsMouse ? 1.1 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                    Behavior on scale { 
+                                        enabled: opacity === 1.0
+                                        NumberAnimation { duration: 200; easing.type: Easing.OutBack } 
+                                    }
                                     Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
                                     
                                     Text {
                                         anchors.centerIn: parent
@@ -2100,11 +2115,17 @@ PanelWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p3Btn.containsMouse || highlightedModeIndex === 3) ? colorPrimary : colorSecondary
-                                    visible: currentMode !== 3 && currentMode !== 4
+                                    visible: true
+                                    opacity: (currentMode !== 3 && currentMode !== 4) ? 1.0 : 0.0
+                                    enabled: opacity > 0
                                     
                                     scale: p3Btn.containsMouse ? 1.1 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                    Behavior on scale { 
+                                        enabled: opacity === 1.0
+                                        NumberAnimation { duration: 200; easing.type: Easing.OutBack } 
+                                    }
                                     Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
                                     
                                     Text {
                                         anchors.centerIn: parent
@@ -2133,11 +2154,17 @@ PanelWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p4Btn.containsMouse || highlightedModeIndex === 4) ? colorPrimary : colorSecondary
-                                    visible: currentMode !== 3 && currentMode !== 4
+                                    visible: true
+                                    opacity: (currentMode !== 3 && currentMode !== 4) ? 1.0 : 0.0
+                                    enabled: opacity > 0
                                     
                                     scale: p4Btn.containsMouse ? 1.1 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                    Behavior on scale { 
+                                        enabled: opacity === 1.0
+                                        NumberAnimation { duration: 200; easing.type: Easing.OutBack } 
+                                    }
                                     Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
                                     
                                     Text {
                                         anchors.centerIn: parent
@@ -2155,6 +2182,7 @@ PanelWindow {
                                             selectedIndex = 0
                                         }
                                     }
+                                }
                                 }
                             }
                             
@@ -2567,30 +2595,30 @@ PanelWindow {
                         
                         opacity: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 1 : 0
                         scale: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 
-                            (selectedIndex === index ? 1.02 : (packageOptionItemMouseArea.containsMouse ? 1.01 : 1.0)) : 0.8
+                            (selectedIndex === index ? 1.02 : (packageOptionItemMouseArea.containsMouse ? 1.01 : 1.0)) : 0.95
                         
                         transform: Translate {
-                            y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 0 : 40
+                            y: (sharedData && sharedData.launcherVisible && currentMode === 1 && currentPackageMode === -1) ? 0 : 15
                         }
 
                         Behavior on opacity {
                             SequentialAnimation {
-                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 20, 150)) }
+                                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
                             }
                         }
                         
                         Behavior on scale {
                             SequentialAnimation {
-                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 20, 150)) }
+                                NumberAnimation { duration: 250; easing.type: Easing.OutQuart }
                             }
                         }
                         
                         Behavior on transform {
                             SequentialAnimation {
-                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 20, 150)) }
+                                PropertyAnimation { property: "y"; duration: 280; easing.type: Easing.OutQuart }
                             }
                         }
 
@@ -3848,27 +3876,27 @@ PanelWindow {
                         opacity: (sharedData && sharedData.launcherVisible && currentMode === 5) ? 1 : 0
                         
                         transform: Translate {
-                            y: (sharedData && sharedData.launcherVisible && currentMode === 5) ? 0 : 40
+                            y: (sharedData && sharedData.launcherVisible && currentMode === 5) ? 0 : 15
                         }
 
                         Behavior on opacity {
                             SequentialAnimation {
-                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 20, 150)) }
+                                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
                             }
                         }
                         
                         Behavior on scale {
                             SequentialAnimation {
-                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                NumberAnimation { duration: 600; easing.type: Easing.OutBack }
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 20, 150)) }
+                                NumberAnimation { duration: 250; easing.type: Easing.OutQuart }
                             }
                         }
                         
                         Behavior on transform {
                             SequentialAnimation {
-                                PauseAnimation { duration: Math.max(0, Math.min(index * 40, 400)) }
-                                PropertyAnimation { property: "y"; duration: 700; easing.type: Easing.OutBack }
+                                PauseAnimation { duration: Math.max(0, Math.min(index * 20, 150)) }
+                                PropertyAnimation { property: "y"; duration: 280; easing.type: Easing.OutQuart }
                             }
                         }
 
