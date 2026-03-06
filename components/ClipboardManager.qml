@@ -305,7 +305,7 @@ PanelWindow {
     // Monitor clipboard changes
     Timer {
         id: clipboardMonitorTimer
-        interval: 500  // Check every 500ms
+        interval: 2000  // Check every 2s – clipboard changes are infrequent
         running: true
         repeat: true
         onTriggered: checkClipboard()

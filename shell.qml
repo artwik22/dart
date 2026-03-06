@@ -441,41 +441,33 @@ ShellRoot {
         xhr.send()
     }
     
-    // High-frequency timer for commands (polling fallback) - 100ms for instant response
+    // Unified command + signal check timer – handles commands, wallpaper signals, and color change signals from Fuse
     Timer {
         id: commandCheckTimer
-        interval: 100
+        interval: 500
         running: true
         repeat: true
         onTriggered: {
-            if (root.commandHandlerBusy) return
-            
-            var cmdXhr = new XMLHttpRequest()
-            cmdXhr.open("GET", "file:///tmp/quickshell_command")
-            cmdXhr.onreadystatechange = function() {
-                if (cmdXhr.readyState === XMLHttpRequest.DONE && (cmdXhr.status === 200 || cmdXhr.status === 0)) {
-                    var cmd = (cmdXhr.responseText || "").trim()
-                    if (cmd.length > 0) {
-                        root.commandHandlerBusy = true
-                        root.handleRemoteCommand(cmd)
-                        // Clear command file instantly
-                        processHelperClear.runCommand(['sh', '-c', ': > /tmp/quickshell_command'], function() {
-                            root.commandHandlerBusy = false
-                        })
+            // 1) Check for remote commands (launcher, menu, etc.)
+            if (!root.commandHandlerBusy) {
+                var cmdXhr = new XMLHttpRequest()
+                cmdXhr.open("GET", "file:///tmp/quickshell_command")
+                cmdXhr.onreadystatechange = function() {
+                    if (cmdXhr.readyState === XMLHttpRequest.DONE && (cmdXhr.status === 200 || cmdXhr.status === 0)) {
+                        var cmd = (cmdXhr.responseText || "").trim()
+                        if (cmd.length > 0) {
+                            root.commandHandlerBusy = true
+                            root.handleRemoteCommand(cmd)
+                            processHelperClear.runCommand(['sh', '-c', ': > /tmp/quickshell_command'], function() {
+                                root.commandHandlerBusy = false
+                            })
+                        }
                     }
                 }
+                cmdXhr.send()
             }
-            cmdXhr.send()
-        }
-    }
 
-    // Slower timer for non-critical external signals (e.g. wallpaper)
-    Timer {
-        id: wallpaperCheckTimer
-        interval: 5000 // 5 seconds is plenty for wallpaper
-        running: true
-        repeat: true
-        onTriggered: {
+            // 2) Check for wallpaper change signal from Fuse
             var wallXhr = new XMLHttpRequest()
             wallXhr.open("GET", "file:///tmp/quickshell_wallpaper_path")
             wallXhr.onreadystatechange = function() {
@@ -488,178 +480,13 @@ ShellRoot {
                 }
             }
             wallXhr.send()
-        }
-    }
-    
-    // Current wallpaper path - shared across all screens
-    property string currentWallpaperPath: ""
-    // Note: colorChangeWatcher is handled by colorCheckTimer below
-    
-    // Timer do monitorowania zmiany kolorów i ustawień (colors.json + ponownie sygnał)
-    Timer {
-        id: colorCheckTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 10000 : 6000
-        running: true
-        repeat: true
-        
-        onTriggered: {
-            // Sprawdź czy colors.json się zmienił
-            if (root.colorConfigPath) {
-                var xhr = new XMLHttpRequest()
-                xhr.open("GET", "file://" + root.colorConfigPath + "?_=" + Date.now())
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === XMLHttpRequest.DONE) {
-                        if (xhr.status === 200 || xhr.status === 0) {
-                            try {
-                                var json = JSON.parse(xhr.responseText)
-                                var changed = false
-                                var c = root.getResolvedColors(json)
-                                if (c) {
-                                    if (c.background && c.background !== sharedData.colorBackground) { sharedData.colorBackground = c.background; changed = true }
-                                    if (c.primary && c.primary !== sharedData.colorPrimary) { sharedData.colorPrimary = c.primary; changed = true }
-                                    if (c.secondary && c.secondary !== sharedData.colorSecondary) { sharedData.colorSecondary = c.secondary; changed = true }
-                                    if (c.text && c.text !== sharedData.colorText) { sharedData.colorText = c.text; changed = true }
-                                    if (c.accent && c.accent !== sharedData.colorAccent) { sharedData.colorAccent = c.accent; changed = true }
-                                }
-                                
-                                // Enable live reloading for sidebar position to support Fuse changes immediately
-                                if (json.sidebarPosition && (json.sidebarPosition === "left" || json.sidebarPosition === "top" || json.sidebarPosition === "right" || json.sidebarPosition === "bottom")) {
-                                    if (json.sidebarPosition !== sharedData.sidebarPosition) {
-                                        sharedData.sidebarPosition = json.sidebarPosition
-                                        changed = true
-                                    }
-                                }
-                                
-                                if (json.dashboardTileLeft === "battery" || json.dashboardTileLeft === "network") {
-                                    if (json.dashboardTileLeft !== sharedData.dashboardTileLeft) {
-                                        sharedData.dashboardTileLeft = json.dashboardTileLeft
-                                        changed = true
-                                    }
-                                }
-                                if (json.dashboardPosition && (json.dashboardPosition === "left" || json.dashboardPosition === "top" || json.dashboardPosition === "right" || json.dashboardPosition === "bottom")) {
-                                    if (json.dashboardPosition !== sharedData.dashboardPosition) {
-                                        sharedData.dashboardPosition = json.dashboardPosition
-                                        changed = true
-                                    }
-                                }
-                                if (json.sidepanelContent === "calendar" || json.sidepanelContent === "github") {
-                                    if (json.sidepanelContent !== sharedData.sidepanelContent) {
-                                        sharedData.sidepanelContent = json.sidepanelContent
-                                        changed = true
-                                    }
-                                }
-                                if (json.dashboardResource1 && json.dashboardResource1 !== sharedData.dashboardResource1) {
-                                    sharedData.dashboardResource1 = json.dashboardResource1
-                                    changed = true
-                                }
-                                if (json.dashboardResource2 && json.dashboardResource2 !== sharedData.dashboardResource2) {
-                                    sharedData.dashboardResource2 = json.dashboardResource2
-                                    changed = true
-                                }
-                                if (json.githubUsername && String(json.githubUsername) !== sharedData.githubUsername) {
-                                    sharedData.githubUsername = String(json.githubUsername)
-                                    changed = true
-                                }
-                                if (json.notificationPosition && json.notificationPosition !== sharedData.notificationPosition) {
-                                    sharedData.notificationPosition = json.notificationPosition
-                                    changed = true
-                                }
-                                if (json.notificationRounding && json.notificationRounding !== sharedData.notificationRounding) {
-                                    sharedData.notificationRounding = json.notificationRounding
-                                    changed = true
-                                }
-                                if (json.quickshellBorderRadius !== undefined) {
-                                    var qbr = parseInt(json.quickshellBorderRadius)
-                                    if (!isNaN(qbr) && qbr !== sharedData.quickshellBorderRadius) {
-                                        sharedData.quickshellBorderRadius = qbr
-                                        changed = true
-                                    }
-                                }
-                                if (json.floatingDashboard !== undefined) {
-                                    var fd = json.floatingDashboard === true || json.floatingDashboard === "true"
-                                    if (fd !== sharedData.floatingDashboard) {
-                                        sharedData.floatingDashboard = fd
-                                        changed = true
-                                    }
-                                }
-                                
-                                // Lockscreen Settings Updates
-                                if (json.lockscreenMediaEnabled !== undefined) {
-                                    var v = json.lockscreenMediaEnabled === true || json.lockscreenMediaEnabled === "true"
-                                    if (v !== sharedData.lockscreenMediaEnabled) { sharedData.lockscreenMediaEnabled = v; changed = true }
-                                }
-                                if (json.lockscreenWeatherEnabled !== undefined) {
-                                    var v = json.lockscreenWeatherEnabled === true || json.lockscreenWeatherEnabled === "true"
-                                    if (v !== sharedData.lockscreenWeatherEnabled) { sharedData.lockscreenWeatherEnabled = v; changed = true }
-                                }
-                                if (json.lockscreenBatteryEnabled !== undefined) {
-                                    var v = json.lockscreenBatteryEnabled === true || json.lockscreenBatteryEnabled === "true"
-                                    if (v !== sharedData.lockscreenBatteryEnabled) { sharedData.lockscreenBatteryEnabled = v; changed = true }
-                                }
-                                if (json.lockscreenCalendarEnabled !== undefined) {
-                                    var v = json.lockscreenCalendarEnabled === true || json.lockscreenCalendarEnabled === "true"
-                                    if (v !== sharedData.lockscreenCalendarEnabled) { sharedData.lockscreenCalendarEnabled = v; changed = true }
-                                }
-                                if (json.lockscreenNetworkEnabled !== undefined) {
-                                    var v = json.lockscreenNetworkEnabled === true || json.lockscreenNetworkEnabled === "true"
-                                    if (v !== sharedData.lockscreenNetworkEnabled) { sharedData.lockscreenNetworkEnabled = v; changed = true }
-                                }
-                                
-                                if (json.sidebarStyle && (json.sidebarStyle === "dots" || json.sidebarStyle === "lines")) {
-                                    if (json.sidebarStyle !== sharedData.sidebarStyle) {
-                                        sharedData.sidebarStyle = json.sidebarStyle
-                                        changed = true
-                                    }
-                                }
-                                
-                                if (json.sidebarBatteryEnabled !== undefined) {
-                                    var v = json.sidebarBatteryEnabled === true || json.sidebarBatteryEnabled === "true"
-                                    if (v !== sharedData.sidebarBatteryEnabled) { 
-                                        sharedData.sidebarBatteryEnabled = v; 
-                                        changed = true;
-                                    }
-                                }
-                                
-                                if (json.clockBlinkColon !== undefined) {
-                                    var v = json.clockBlinkColon === true || json.clockBlinkColon === "true"
-                                    if (v !== sharedData.clockBlinkColon) { sharedData.clockBlinkColon = v; changed = true }
-                                }
-                                
-                                if (json.sidebarWorkspaceMode && json.sidebarWorkspaceMode !== sharedData.sidebarWorkspaceMode) {
-                                    sharedData.sidebarWorkspaceMode = json.sidebarWorkspaceMode
-                                    changed = true
-                                }
-                                
-                                if (json.dynamicSidebarBackground !== undefined) {
-                                    var dsb = json.dynamicSidebarBackground === true || json.dynamicSidebarBackground === "true"
-                                    if (dsb !== sharedData.dynamicSidebarBackground) {
-                                        sharedData.dynamicSidebarBackground = dsb
-                                        changed = true
-                                    }
-                                }
 
-                                // Note: We don't auto-reload sidebarVisible from file watcher
-                                // because user toggles it directly in the UI. Only load it on startup
-                                // to avoid race condition with Dashboard save function
-                                
-                                if (changed) {
-                                }
-                            } catch (e) {
-                                console.error("QML LiveReload Error: " + e);
-                            }
-                        }
-                    }
-                }
-                xhr.send()
-            }
-            
-            // Sprawdź czy jest plik z poleceniem do przeładowania (Fuse notify_color_change)
-            // Cache-busting: ?_=timestamp zapobiega zwracaniu cache’owanej treści przez file://
-            var cmdXhr = new XMLHttpRequest()
-            cmdXhr.open("GET", "file:///tmp/quickshell_color_change?_=" + Date.now())
-            cmdXhr.onreadystatechange = function() {
-                if (cmdXhr.readyState === XMLHttpRequest.DONE && (cmdXhr.status === 200 || cmdXhr.status === 0)) {
-                    var raw = (cmdXhr.responseText || "").trim()
+            // 3) Check for color change signal from Fuse
+            var colorXhr = new XMLHttpRequest()
+            colorXhr.open("GET", "file:///tmp/quickshell_color_change?_=" + Date.now())
+            colorXhr.onreadystatechange = function() {
+                if (colorXhr.readyState === XMLHttpRequest.DONE && (colorXhr.status === 200 || colorXhr.status === 0)) {
+                    var raw = (colorXhr.responseText || "").trim()
                     if (raw.length > 0) {
                         var line0 = (raw.split("\n")[0] || "").trim()
                         var pathFromTrigger = (line0.length > 0 && (line0.indexOf("colors.json") >= 0 || line0[0] === "/")) ? line0 : ""
@@ -668,14 +495,17 @@ ShellRoot {
                     }
                 }
             }
-            cmdXhr.send()
+            colorXhr.send()
         }
     }
+    
+    // Current wallpaper path - shared across all screens
+    property string currentWallpaperPath: ""
     
     // Centralized System Status Timer
     Timer {
         id: statusRefreshTimer
-        interval: sharedData.lowPerformanceMode ? 10000 : 6000
+        interval: sharedData.lowPerformanceMode ? 30000 : 15000
         running: true
         repeat: true
         triggeredOnStart: true

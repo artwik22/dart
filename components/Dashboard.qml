@@ -2541,7 +2541,7 @@ PanelWindow {
     // Monitor clipboard changes – only when dashboard is open and Clipboard tab is active
     Timer {
         id: dashboardClipboardMonitorTimer
-        interval: 500
+        interval: 2000
         running: (sharedData && sharedData.menuVisible) && (currentTab === 1)
         repeat: true
         onTriggered: dashboardRoot.checkClipboard()
@@ -2864,7 +2864,7 @@ PanelWindow {
     // ============ TIMERS ============
     Timer {
         id: dateTimer
-        interval: 1000
+        interval: 15000
         repeat: true
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateDate()
@@ -2926,7 +2926,7 @@ PanelWindow {
 
     Timer {
         id: ramTimer
-        interval: 1000
+        interval: 3000
         repeat: true
         running: (sharedData && sharedData.menuVisible)
         function readRam() {
@@ -2960,7 +2960,7 @@ PanelWindow {
         id: cpuTimer
         interval: 1000
         repeat: true
-        running: (sharedData && sharedData.menuVisible)
+        running: (sharedData && sharedData.menuVisible) && (currentTab === 0 || currentTab === 3)
 
         property int lastIdle: 0
         property int lastTotal: 0
@@ -3001,7 +3001,7 @@ PanelWindow {
         id: gpuTimer
         interval: 1000
         repeat: true
-        running: (sharedData && sharedData.menuVisible)
+        running: (sharedData && sharedData.menuVisible) && (currentTab === 3)
         onTriggered: readGpu()
     }
     
@@ -3222,12 +3222,12 @@ PanelWindow {
         xhr.send()
     }
     
-    // Performance timers – only when dashboard is open
+    // Performance timers – only when dashboard is open AND performance tab is active
     Timer {
         id: diskUsageTimer
         interval: 5000
         repeat: true
-        running: (sharedData && sharedData.menuVisible)
+        running: (sharedData && sharedData.menuVisible) && (currentTab === 3)
         onTriggered: updateDiskUsage()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateDiskUsage()
     }
@@ -3236,7 +3236,7 @@ PanelWindow {
         id: topProcessesTimer
         interval: 3000
         repeat: true
-        running: (sharedData && sharedData.menuVisible)
+        running: (sharedData && sharedData.menuVisible) && (currentTab === 3)
         onTriggered: updateTopProcesses()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateTopProcesses()
     }
@@ -3245,7 +3245,7 @@ PanelWindow {
         id: cpuTempTimer
         interval: 5000
         repeat: true
-        running: (sharedData && sharedData.menuVisible)
+        running: (sharedData && sharedData.menuVisible) && (currentTab === 3)
         onTriggered: updateCpuTemp()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateCpuTemp()
     }
@@ -3254,7 +3254,7 @@ PanelWindow {
         id: gpuTempTimer
         interval: 5000
         repeat: true
-        running: (sharedData && sharedData.menuVisible)
+        running: (sharedData && sharedData.menuVisible) && (currentTab === 3)
         onTriggered: updateGpuTemp()
         Component.onCompleted: if (sharedData && sharedData.menuVisible) updateGpuTemp()
     }
@@ -3363,22 +3363,22 @@ PanelWindow {
         xhr.send()
     }
     
-    // Timer do odczytu danych z cava (33ms≈30 FPS; 50ms gdy low-perf)
+    // Timer do odczytu danych z cava (100ms≈10 FPS; 200ms gdy low-perf) – only on tab 0 where visualizer is visible
     Timer {
         id: cavaDataTimer
-        interval: (sharedData && sharedData.lowPerformanceMode) ? 50 : 33
+        interval: (sharedData && sharedData.lowPerformanceMode) ? 200 : 100
         repeat: true
-        running: cavaRunning
+        running: cavaRunning && (currentTab === 0)
         onTriggered: readCavaData()
     }
     
     // Timer do sprawdzania czy cava działa
-    // Timer do sprawdzania czy cava działa - only when visible
+    // Timer do sprawdzania czy cava działa - only on tab 0
     Timer {
         id: cavaCheckTimer
         interval: 5000  // Co 5 sekund
         repeat: true
-        running: (sharedData && sharedData.menuVisible)
+        running: (sharedData && sharedData.menuVisible) && (currentTab === 0)
         onTriggered: {
             if (cavaRunning) {
                 // Check if process is actually running
