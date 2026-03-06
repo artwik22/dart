@@ -218,7 +218,7 @@ PanelWindow {
 
                 Item {
                     anchors.centerIn: parent
-                    width: (4 * 32) + (3 * 32) // 4 items * 32px + 3 spacings * 32px = 224px
+                    width: (5 * 32) + (4 * 32) // 5 items * 32px + 4 spacings * 32px = 288px
                     height: 32
                     
                     // Sliding Active Indicator Pill
@@ -249,7 +249,8 @@ PanelWindow {
                                 { icon: "󰕮", tooltip: "Dashboard" },
                                 { icon: "󰨸", tooltip: "Clipboard" },
                                 { icon: "󰂚", tooltip: "Notifications" },
-                                { icon: "󰓅", tooltip: "Performance" }
+                                { icon: "󰓅", tooltip: "Performance" },
+                                { icon: "󰚩", tooltip: "AI Chat" }
                             ]
                             
                             Item {
@@ -2455,6 +2456,32 @@ PanelWindow {
                         }
                     } // performanceTabContent
                 } // performanceTab
+                
+                // ============ TAB 4: AI CHAT ============
+                Item {
+                    id: aiChatTab
+                    anchors.fill: parent
+                    visible: currentTab === 4
+                    opacity: currentTab === 4 ? 1.0 : 0.0
+                    x: currentTab === 4 ? 0 : (currentTab < 4 ? -parent.width * 0.3 : parent.width * 0.3)
+                    scale: currentTab === 4 ? 1.0 : 0.95
+                    
+                    Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                    Behavior on x { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                    Behavior on scale { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+
+                    z: 5
+
+                    Item {
+                        anchors.fill: parent
+                        anchors.margins: 12
+
+                        AiChatMenu {
+                            anchors.fill: parent
+                            sharedData: dashboardRoot.sharedData
+                        }
+                    }
+                } // aiChatTab
             } // contentArea
         } // dashboardColumn
     } // dashboardBackground
@@ -3070,7 +3097,6 @@ PanelWindow {
         onTriggered: updateNetwork()
         Component.onCompleted: if ((sharedData && sharedData.menuVisible) && ((sharedData && sharedData.dashboardTileLeft === "network") || (currentTab === 3))) updateNetwork()
     }
-    
     
     // ============ PERFORMANCE TAB FUNCTIONS ============
     function updateDiskUsage() {
