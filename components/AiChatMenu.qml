@@ -144,6 +144,69 @@ Rectangle {
         id: chatModel
     }
 
+    ListModel {
+        id: attachmentModel
+    }
+
+    function runAndRead(cmd, callback) {
+        if (!sharedData || !sharedData.runCommand) return
+        var tmp = "/tmp/qs_ai_" + Math.random().toString(36).substring(7)
+        sharedData.runCommand(['sh', '-c', cmd + " > " + tmp + " 2>/dev/null"], function() {
+            var xhr = new XMLHttpRequest()
+            xhr.open("GET", "file://" + tmp)
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    var out = (xhr.responseText || "").trim()
+                    if (typeof callback === "function") callback(out)
+                    sharedData.runCommand(['rm', '-f', tmp])
+                }
+            }
+            xhr.send()
+        })
+    }
+
+    function openFilePicker() {
+        // We use zenity for file selection
+        runAndRead("zenity --file-selection --title='Select File to AI Chat'", function(path) {
+            if (path && path.length > 0) {
+                addAttachment(path)
+            }
+        })
+    }
+
+    function addAttachment(path) {
+        var fileName = path.split('/').pop()
+        var ext = fileName.split('.').pop().toLowerCase()
+        
+        var isImage = ["jpg", "jpeg", "png", "webp", "gif"].indexOf(ext) !== -1
+        
+        if (isImage) {
+            // Read image as base64
+            runAndRead("base64 -w0 '" + path.replace(/'/g, "'\\''") + "'", function(base64Data) {
+                if (base64Data) {
+                    attachmentModel.append({
+                        name: fileName,
+                        path: path,
+                        type: "image",
+                        content: base64Data
+                    })
+                }
+            })
+        } else {
+            // Read as text
+            runAndRead("cat '" + path.replace(/'/g, "'\\''") + "'", function(textContent) {
+                if (textContent !== undefined) {
+                    attachmentModel.append({
+                        name: fileName,
+                        path: path,
+                        type: "text",
+                        content: textContent
+                    })
+                }
+            })
+        }
+    }
+
     // Search SearXNG and return results as context string + structured sources
     function searchWeb(query, callback) {
         if (!searxngEndpoint || searxngEndpoint.trim().length === 0) {
@@ -184,29 +247,56 @@ Rectangle {
     }
 
     function sendMessage(text) {
-        if (!text || text.trim() === " ") return;
+        if (!text && attachmentModel.count === 0) return;
+        var msgText = text || "";
         
-        chatModel.append({ role: "user", message: text, thought: "", sources: "" });
+        var images = [];
+        var textContext = "";
+        var attachmentNames = [];
+        
+        for (var i = 0; i < attachmentModel.count; i++) {
+            var att = attachmentModel.get(i);
+            attachmentNames.push(att.name);
+            if (att.type === "image") {
+                images.push(att.content);
+            } else if (att.type === "text") {
+                textContext += "\n--- File: " + att.name + " ---\n" + att.content + "\n";
+            }
+        }
+        
+        var userDisplayMsg = msgText;
+        if (attachmentNames.length > 0) {
+            userDisplayMsg += "\n\n📎 Attached: " + attachmentNames.join(", ");
+        }
+
+        chatModel.append({ role: "user", message: userDisplayMsg, thought: "", sources: "" });
         chatListView.positionViewAtEnd();
         messageInput.text = "";
         
         isLoading = true;
         
+        var promptToSend = msgText;
+        if (textContext.length > 0) {
+            promptToSend = "The user attached some files for context:\n" + textContext + "\n\nUser message: " + msgText;
+        }
+
         // If web search is enabled, search first then send augmented prompt
         if (webSearchEnabled && searxngEndpoint.trim().length > 0) {
-            searchWeb(text, function(webContext, sources) {
-                var augmentedPrompt = text;
+            searchWeb(msgText, function(webContext, sources) {
+                var augmentedPrompt = promptToSend;
                 if (webContext.length > 0) {
-                    augmentedPrompt = "The user asked: " + text + "\n\nHere are relevant web search results for context:\n\n" + webContext + "\nUse these search results to provide an accurate, up-to-date answer. Cite sources when relevant.";
+                    augmentedPrompt = "Context from web search:\n" + webContext + "\n\n" + promptToSend;
                 }
-                sendToOllama(augmentedPrompt, sources);
+                sendToOllama(augmentedPrompt, sources, images);
             });
         } else {
-            sendToOllama(text, []);
+            sendToOllama(promptToSend, [], images);
         }
+        
+        attachmentModel.clear();
     }
 
-    function sendToOllama(prompt, sources) {
+    function sendToOllama(prompt, sources, images) {
         if (currentXhr) {
             currentXhr.abort();
         }
@@ -221,6 +311,10 @@ Rectangle {
             prompt: prompt,
             stream: true
         };
+
+        if (images && images.length > 0) {
+            payload.images = images;
+        }
         
         if (systemPrompt && systemPrompt.trim().length > 0) {
             payload.system = systemPrompt.trim();
@@ -318,10 +412,11 @@ Rectangle {
             }
 
             Item {
-                Layout.fillWidth: true
+                Layout.preferredWidth: modelSelectorRow.implicitWidth
                 Layout.preferredHeight: 32
                 
                 RowLayout {
+                    id: modelSelectorRow
                     anchors.fill: parent
                     spacing: 4
                     
@@ -341,8 +436,6 @@ Rectangle {
                         font.pixelSize: 12
                         visible: !isSettingsOpen
                     }
-
-                    Item { Layout.fillWidth: true }
                 }
 
                 MouseArea {
@@ -393,6 +486,8 @@ Rectangle {
                     }
                 }
             }
+
+            Item { Layout.fillWidth: true }
 
             Rectangle {
                 Layout.preferredWidth: 28
@@ -914,6 +1009,70 @@ Rectangle {
                 Text { text: "Thinking..."; color: Qt.rgba(1,1,1,0.4); font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter; leftPadding: 2 }
             }
 
+            // ── Attachments List ──
+            Flow {
+                Layout.fillWidth: true
+                spacing: 6
+                visible: attachmentModel.count > 0
+                Layout.leftMargin: 4; Layout.rightMargin: 4
+                Layout.bottomMargin: 4
+
+                Repeater {
+                    model: attachmentModel
+                    delegate: Rectangle {
+                        width: Math.min(attLabel.implicitWidth + 30, 200)
+                        height: 28
+                        radius: 14
+                        color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.15)
+                        border.width: 1
+                        border.color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.3)
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8; anchors.rightMargin: 4
+                            spacing: 4
+
+                            Text {
+                                text: model.type === "image" ? "󰋩" : "󰈔"
+                                color: dsAccent
+                                font.pixelSize: 12
+                            }
+
+                            Text {
+                                id: attLabel
+                                Layout.fillWidth: true
+                                text: model.name
+                                color: "#ffffff"
+                                font.pixelSize: 11
+                                elide: Text.ElideRight
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                            Rectangle {
+                                Layout.preferredWidth: 20; Layout.preferredHeight: 20
+                                radius: 10
+                                color: removeMa.containsMouse ? Qt.rgba(255,1,1,0.2) : "transparent"
+                                
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰅖"
+                                    color: removeMa.containsMouse ? "#ff4646" : Qt.rgba(1,1,1,0.4)
+                                    font.pixelSize: 10
+                                }
+
+                                MouseArea {
+                                    id: removeMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: attachmentModel.remove(index)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // ── Input Field ──
             Rectangle {
                 Layout.fillWidth: true
@@ -939,6 +1098,31 @@ Rectangle {
                             visible: !messageInput.text && !messageInput.activeFocus
                         }
                         Keys.onReturnPressed: { if (!isLoading) aiChatRoot.sendMessage(text); }
+                    }
+
+                    // ── Attachment button ──
+                    Rectangle {
+                        Layout.preferredWidth: 32; Layout.preferredHeight: 32
+                        radius: dsSmallRadius
+                        color: attachmentMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent; text: "󰈔"
+                            color: Qt.rgba(1,1,1,0.5)
+                            font.pixelSize: 15
+                        }
+                        MouseArea {
+                            id: attachmentMa
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            hoverEnabled: true
+                            onClicked: aiChatRoot.openFilePicker()
+                        }
+                        ToolTip {
+                            text: "Attach File"
+                            visible: attachmentMa.containsMouse
+                            delay: 500
+                        }
                     }
 
                     // ── Web search toggle ──

@@ -25,6 +25,7 @@ Dart transforms your Wayland desktop into a modern, fully-featured environment. 
     - **Clipboard**: History tracking with smart deduplication and instant copy-back.
     - **Notifications**: D-Bus compliant center with history and urgency-based styling.
     - **Performance**: Real-time CPU, RAM, GPU, and Network graphs with historical tracking.
+    - **AI Chat**: Local LLM chat powered by Ollama with file attachments, vision model support, and SearXNG web search.
 - **System Management**:
     - **WiFi**: Integrated scanner and connection manager (nmcli-based).
     - **Bluetooth**: Device discovery, pairing, and connection management.
@@ -32,6 +33,12 @@ Dart transforms your Wayland desktop into a modern, fully-featured environment. 
 - **Smart Launcher**: Application filtering with math calculation (`= 2+2`) and web search shortcuts (`!y`, `!g`, `!r`).
 - **Lock Screen**: Minimalist overlay with password verification, media controls, and widget toggles.
 - **Media Controls**: Playback control, metadata display, and **cava** audio visualization.
+- **AI Chat (Ollama)**:
+    - Chat with local LLMs directly from the dashboard.
+    - **File Attachments**: Attach images (vision models) and text files as context.
+    - **Web Search**: Optional SearXNG integration for real-time web-augmented answers.
+    - **Thinking Support**: Displays `<think>` blocks from reasoning models (e.g., DeepSeek).
+    - Configurable endpoint, model selection, and system prompt.
 
 ---
 
@@ -48,6 +55,9 @@ Dart transforms your Wayland desktop into a modern, fully-featured environment. 
 - `pactl`: Audio management.
 - `networkmanager`: WiFi management.
 - `bluez`: Bluetooth management.
+- `ollama`: Local LLM backend for AI Chat.
+- `zenity`: File picker dialog for AI Chat attachments.
+- `SearXNG`: Self-hosted search engine for AI web search.
 
 ---
 
@@ -93,7 +103,7 @@ Edit `~/.config/alloy/colors.json` for granular tweaks:
 - `sidebarStyle`: `"dots"` or `"lines"`.
 - `sidebarWorkspaceMode`: `"top"`, `"center"`, or `"bottom"`.
 - `quickshellBorderRadius`: Integer value for global UI rounding.
-- `notificationPosition`: `"top-right"`, `"top-left"`, `"top"`, `"bottom-right"`, `"bottom-left"`, `"bottom"`.
+- `notificationPosition`: `"top-right"`, `"top-left"`, `"top"`, `"bottom-right"`, `"bottom-left"`, `"bottom"`. 
 - `notificationRounding`: `"none"`, `"standard"`, `"pill"`.
 - `lockscreenMediaEnabled`: `true`/`false`.
 - `weatherLocation`: Location for wttr.in data.
