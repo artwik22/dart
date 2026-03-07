@@ -17,6 +17,10 @@ Rectangle {
     property bool settingsLoaded: false
     property string searxngEndpoint: ""
     property bool webSearchEnabled: false
+    property string systemPrompt: ""
+    property var currentXhr: null
+    property string historyFilePath: "/home/iartwik/.config/alloy/dart_ai_history.json"
+    property bool historyLoaded: false
 
     // Load saved settings synchronously at startup
     Component.onCompleted: {
@@ -38,6 +42,9 @@ Rectangle {
                 if (parsed.webSearch !== undefined) {
                     webSearchEnabled = parsed.webSearch === true;
                 }
+                if (parsed.systemPrompt !== undefined) {
+                    systemPrompt = parsed.systemPrompt;
+                }
                 console.log("AI Settings Loaded: " + aiEndpoint + " | " + aiModel);
             }
         } catch(e) {
@@ -45,6 +52,24 @@ Rectangle {
         }
         settingsLoaded = true;
         fetchModels();
+
+        // Load chat history synchronously
+        try {
+            var xhrHist = new XMLHttpRequest();
+            xhrHist.open("GET", "file://" + historyFilePath, false);
+            xhrHist.send();
+            if (xhrHist.status === 200 && xhrHist.responseText) {
+                var parsedHist = JSON.parse(xhrHist.responseText);
+                if (Array.isArray(parsedHist)) {
+                    for (var i = 0; i < parsedHist.length; i++) {
+                        chatModel.append(parsedHist[i]);
+                    }
+                }
+            }
+        } catch(e) {
+            console.log("No AI History found or parse error: " + e);
+        }
+        historyLoaded = true;
     }
 
     function fetchModels() {
@@ -88,7 +113,7 @@ Rectangle {
     function saveSettings() {
         if (!settingsLoaded) return; // Don't save during initial load
         if (sharedData && sharedData.runCommand) {
-            var conf = JSON.stringify({endpoint: aiEndpoint, model: aiModel, searxng: searxngEndpoint, webSearch: webSearchEnabled});
+            var conf = JSON.stringify({endpoint: aiEndpoint, model: aiModel, searxng: searxngEndpoint, webSearch: webSearchEnabled, systemPrompt: systemPrompt});
             // We must escape internal double quotes for the bash command
             var escapedConf = conf.replace(/"/g, '\\"');
             sharedData.runCommand(['sh', '-c', 'echo "' + escapedConf + '" > ' + settingsFilePath]);
@@ -96,14 +121,33 @@ Rectangle {
         }
     }
 
+    function saveHistory() {
+        if (!historyLoaded) return;
+        if (sharedData && sharedData.runCommand) {
+            var historyArr = [];
+            for (var i = 0; i < chatModel.count; i++) {
+                var item = chatModel.get(i);
+                historyArr.push({
+                    role: item.role,
+                    message: item.message,
+                    thought: item.thought,
+                    sources: item.sources
+                });
+            }
+            var conf = JSON.stringify(historyArr);
+            var escapedConf = conf.replace(/'/g, "'\\''");
+            sharedData.runCommand(['sh', '-c', 'echo \'' + escapedConf + '\' > ' + historyFilePath]);
+        }
+    }
+
     ListModel {
         id: chatModel
     }
 
-    // Search SearXNG and return results as context string
+    // Search SearXNG and return results as context string + structured sources
     function searchWeb(query, callback) {
         if (!searxngEndpoint || searxngEndpoint.trim().length === 0) {
-            callback("");
+            callback("", []);
             return;
         }
         var url = searxngEndpoint.replace(/\/$/, "") + "/search?q=" + encodeURIComponent(query) + "&format=json&categories=general&language=auto&engines=google,duckduckgo,brave,wikipedia";
@@ -115,6 +159,7 @@ Rectangle {
                     try {
                         var data = JSON.parse(xhr.responseText);
                         var context = "";
+                        var sources = [];
                         var results = data.results || [];
                         var count = Math.min(results.length, 5);
                         for (var i = 0; i < count; i++) {
@@ -122,15 +167,16 @@ Rectangle {
                             context += "[" + (i+1) + "] " + (r.title || "") + "\n";
                             context += (r.url || "") + "\n";
                             context += (r.content || "") + "\n\n";
+                            sources.push({ index: i+1, title: r.title || "", url: r.url || "" });
                         }
-                        callback(context.trim());
+                        callback(context.trim(), sources);
                     } catch(e) {
                         console.log("SearXNG parse error: " + e);
-                        callback("");
+                        callback("", []);
                     }
                 } else {
                     console.log("SearXNG HTTP error: " + xhr.status);
-                    callback("");
+                    callback("", []);
                 }
             }
         };
@@ -140,7 +186,7 @@ Rectangle {
     function sendMessage(text) {
         if (!text || text.trim() === " ") return;
         
-        chatModel.append({ role: "user", message: text, thought: "" });
+        chatModel.append({ role: "user", message: text, thought: "", sources: "" });
         chatListView.positionViewAtEnd();
         messageInput.text = "";
         
@@ -148,20 +194,25 @@ Rectangle {
         
         // If web search is enabled, search first then send augmented prompt
         if (webSearchEnabled && searxngEndpoint.trim().length > 0) {
-            searchWeb(text, function(webContext) {
+            searchWeb(text, function(webContext, sources) {
                 var augmentedPrompt = text;
                 if (webContext.length > 0) {
                     augmentedPrompt = "The user asked: " + text + "\n\nHere are relevant web search results for context:\n\n" + webContext + "\nUse these search results to provide an accurate, up-to-date answer. Cite sources when relevant.";
                 }
-                sendToOllama(augmentedPrompt);
+                sendToOllama(augmentedPrompt, sources);
             });
         } else {
-            sendToOllama(text);
+            sendToOllama(text, []);
         }
     }
 
-    function sendToOllama(prompt) {
+    function sendToOllama(prompt, sources) {
+        if (currentXhr) {
+            currentXhr.abort();
+        }
+
         var xhr = new XMLHttpRequest();
+        currentXhr = xhr;
         xhr.open("POST", aiEndpoint + "/api/generate");
         xhr.setRequestHeader("Content-Type", "application/json");
         
@@ -171,7 +222,12 @@ Rectangle {
             stream: true
         };
         
-        chatModel.append({ role: "assistant", message: "", thought: "" });
+        if (systemPrompt && systemPrompt.trim().length > 0) {
+            payload.system = systemPrompt.trim();
+        }
+        
+        var sourcesJson = (sources && sources.length > 0) ? JSON.stringify(sources) : "";
+        chatModel.append({ role: "assistant", message: "", thought: "", sources: sourcesJson });
         var messageIndex = chatModel.count - 1;
         var fullRawText = "";
         var processedLength = 0;
@@ -179,6 +235,7 @@ Rectangle {
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 isLoading = false;
+                saveHistory();
             }
             
             if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
@@ -267,6 +324,39 @@ Rectangle {
                 font.pixelSize: 14
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
+                radius: dsSmallRadius
+                color: clearMa.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent"
+                Behavior on color { ColorAnimation { duration: 150 } }
+                visible: !isSettingsOpen
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰆴"
+                    color: chatModel.count > 0 ? Qt.rgba(1,1,1,0.5) : Qt.rgba(1,1,1,0.2)
+                    font.pixelSize: 14
+                }
+                MouseArea {
+                    id: clearMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: chatModel.count > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    onClicked: {
+                        if (chatModel.count > 0) {
+                            chatModel.clear();
+                            if (isLoading && currentXhr) {
+                                currentXhr.abort();
+                                isLoading = false;
+                            }
+                            saveHistory();
+                        }
+                    }
+                }
+                ToolTip { text: "New Chat (Clear History)"; visible: clearMa.containsMouse; delay: 400 }
             }
 
             Rectangle {
@@ -403,6 +493,48 @@ Rectangle {
                 }
             }
 
+            Text { text: "System Prompt"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 12; font.weight: Font.Medium; Layout.topMargin: 4 }
+            Rectangle {
+                Layout.fillWidth: true
+                height: 80
+                radius: dsSmallRadius
+                color: Qt.rgba(1,1,1,0.06)
+                border.width: systemPromptEdit.activeFocus ? 1 : 0
+                border.color: dsAccent
+
+                Flickable {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    contentWidth: width
+                    contentHeight: systemPromptEdit.implicitHeight
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    TextEdit {
+                        id: systemPromptEdit
+                        width: parent.width
+                        text: systemPrompt
+                        color: "#ffffff"
+                        font.pixelSize: 13
+                        wrapMode: Text.Wrap
+                        selectByMouse: true
+                        onTextChanged: { systemPrompt = text; sysPromptSaveTimer.restart() }
+
+                        Text {
+                            text: "Type custom system prompt here...\ne.g. Zawsze odpowiadaj po polsku."
+                            color: Qt.rgba(1,1,1,0.2)
+                            font.pixelSize: 13
+                            visible: !systemPromptEdit.text && !systemPromptEdit.activeFocus
+                        }
+                    }
+                }
+                Timer {
+                    id: sysPromptSaveTimer
+                    interval: 1500
+                    onTriggered: saveSettings()
+                }
+            }
+
             Item { Layout.fillHeight: true }
         }
 
@@ -463,8 +595,16 @@ Rectangle {
                     visible: chatModel.count > 0
 
                 delegate: Column {
+                    id: chatDelegate
                     width: ListView.view.width
                     spacing: 4
+
+                    property var parsedSources: {
+                        if (!model.sources) return [];
+                        try {
+                            return JSON.parse(model.sources);
+                        } catch(e) { return []; }
+                    }
 
                     property bool hasContent: (model.message ? model.message.length > 0 : false) || (model.thought ? model.thought.length > 0 : false)
                     visible: hasContent
@@ -544,7 +684,13 @@ Rectangle {
                             TextEdit {
                                 id: messageText
                                 width: parent.width
-                                text: model.message
+                                property string rawMessage: model.message ? model.message : ""
+                                text: {
+                                    if (!rawMessage) return "";
+                                    // Parse citation tags like [^1^], [1], [^1] into HTML superscripts
+                                    var formattedText = rawMessage.replace(/\[\^?(\d+)\^?\]/g, "<sup>[$1]</sup>");
+                                    return formattedText;
+                                }
                                 color: "#ffffff"
                                 selectedTextColor: "#ffffff"
                                 selectionColor: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.4)
@@ -553,7 +699,111 @@ Rectangle {
                                 textFormat: Text.MarkdownText
                                 readOnly: true
                                 selectByMouse: true
-                                visible: model.message ? (model.message.length > 0) : false
+                                visible: rawMessage.length > 0
+                            }
+
+                            // ── Source links ──
+                            Flow {
+                                id: sourcesFlow
+                                width: parent.width
+                                spacing: 6
+                                visible: chatDelegate.parsedSources.length > 0
+
+                                Rectangle {
+                                    width: parent.width; height: 1; color: Qt.rgba(1,1,1,0.08)
+                                    visible: sourcesFlow.visible
+                                }
+
+                                Text {
+                                    text: "󰖟 Sources"
+                                    font.pixelSize: 10
+                                    font.weight: Font.Bold
+                                    color: Qt.rgba(1,1,1,0.35)
+                                    width: parent.width
+                                }
+
+                                Repeater {
+                                    model: chatDelegate.parsedSources
+                                    delegate: Rectangle {
+                                        width: sourceLabel.implicitWidth + 20
+                                        height: 26
+                                        radius: 13
+                                        color: sourceMa.containsMouse ? Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.2) : Qt.rgba(1,1,1,0.06)
+                                        border.width: sourceMa.containsMouse ? 1 : 0
+                                        border.color: dsAccent
+                                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                                        Text {
+                                            id: sourceLabel
+                                            anchors.centerIn: parent
+                                            text: "[" + modelData.index + "] " + (modelData.title.length > 25 ? modelData.title.substring(0, 25) + "…" : modelData.title)
+                                            font.pixelSize: 10
+                                            font.weight: Font.Medium
+                                            color: sourceMa.containsMouse ? dsAccent : Qt.rgba(1,1,1,0.6)
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                        }
+
+                                        MouseArea {
+                                            id: sourceMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: Qt.openUrlExternally(modelData.url)
+                                        }
+
+                                        ToolTip {
+                                            text: modelData.url
+                                            visible: sourceMa.containsMouse
+                                            delay: 400
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── Message Actions ──
+                            RowLayout {
+                                width: parent.width
+                                spacing: 6
+                                visible: model.role === "assistant" && model.message && model.message.length > 0
+
+                                Item { Layout.fillWidth: true } // spacer
+                                
+                                Rectangle {
+                                    width: 26; height: 26
+                                    radius: dsSmallRadius
+                                    color: copyMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    
+                                    property bool copied: false
+                                    
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: parent.copied ? "󰄬" : "󰅍"
+                                        color: parent.copied ? "#4aff80" : Qt.rgba(1,1,1,0.4)
+                                        font.pixelSize: 13
+                                    }
+                                    MouseArea {
+                                        id: copyMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            var textToCopy = model.message;
+                                            var esc = textToCopy.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$").replace(/`/g, "\\`");
+                                            if (sharedData && sharedData.runCommand) {
+                                                sharedData.runCommand(['sh', '-c', 'echo -n "' + esc + '" > /tmp/quickshell_clipboard_copy && cat /tmp/quickshell_clipboard_copy | wl-copy']);
+                                            }
+                                            parent.copied = true;
+                                            copyResetTimer.start();
+                                        }
+                                    }
+                                    Timer {
+                                        id: copyResetTimer
+                                        interval: 2000
+                                        onTriggered: parent.copied = false
+                                    }
+                                    ToolTip { text: parent.copied ? "Copied!" : "Copy"; visible: copyMa.containsMouse; delay: 400 }
+                                }
                             }
                         }
                     }
@@ -651,23 +901,48 @@ Rectangle {
                         }
                     }
 
-                    // ── Send button ──
+                    // ── Send/Stop button ──
                     Rectangle {
+                        id: actionButton
                         Layout.preferredWidth: 32; Layout.preferredHeight: 32
                         radius: dsSmallRadius
-                        color: (messageInput.text.trim().length > 0 && !isLoading) ? dsAccent : Qt.rgba(1,1,1,0.06)
-                        opacity: (messageInput.text.trim().length > 0 && !isLoading) ? 1.0 : 0.4
+                        
+                        property bool activeSend: messageInput.text.trim().length > 0 && !isLoading
+                        property bool activeStop: isLoading
+                        
+                        color: actionButton.activeSend ? dsAccent : (actionButton.activeStop ? Qt.rgba(255, 70, 70, 0.2) : Qt.rgba(1,1,1,0.06))
+                        opacity: (actionButton.activeSend || actionButton.activeStop) ? 1.0 : 0.4
+                        border.width: actionButton.activeStop ? 1 : 0
+                        border.color: actionButton.activeStop ? "#ff4646" : "transparent"
+                        
                         Behavior on color { ColorAnimation { duration: 150 } }
                         Behavior on opacity { NumberAnimation { duration: 150 } }
 
                         Text {
-                            anchors.centerIn: parent; text: "󰒊"
-                            color: (messageInput.text.trim().length > 0 && !isLoading) ? "#000000" : "#ffffff"
-                            font.pixelSize: 15
+                            anchors.centerIn: parent
+                            text: actionButton.activeStop ? "󰓛" : "󰒊"
+                            color: actionButton.activeSend ? (sharedData && sharedData.colorBackground ? sharedData.colorBackground : "#000000") : (actionButton.activeStop ? "#ff4646" : "#ffffff")
+                            font.pixelSize: actionButton.activeStop ? 16 : 15
                         }
                         MouseArea {
+                            id: actionMa
                             anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                            onClicked: { if (!isLoading) aiChatRoot.sendMessage(messageInput.text); }
+                            onClicked: { 
+                                if (actionButton.activeSend) {
+                                    aiChatRoot.sendMessage(messageInput.text); 
+                                } else if (actionButton.activeStop) {
+                                    if (currentXhr) {
+                                        currentXhr.abort();
+                                    }
+                                    isLoading = false;
+                                    saveHistory();
+                                }
+                            }
+                        }
+                        ToolTip {
+                            text: "Stop generation"
+                            visible: actionButton.activeStop && actionMa.containsMouse
+                            delay: 400
                         }
                     }
                 }
