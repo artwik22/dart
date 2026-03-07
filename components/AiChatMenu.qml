@@ -317,13 +317,81 @@ Rectangle {
                 }
             }
 
-            Text {
+            Item {
                 Layout.fillWidth: true
-                text: isSettingsOpen ? "Settings" : aiModel
-                color: "#ffffff"
-                font.pixelSize: 14
-                font.weight: Font.DemiBold
-                elide: Text.ElideRight
+                Layout.preferredHeight: 32
+                
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: 4
+                    
+                    Text {
+                        id: modelDisplayName
+                        text: isSettingsOpen ? "Settings" : aiModel
+                        color: "#ffffff"
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
+                        elide: Text.ElideRight
+                        Layout.maximumWidth: aiChatRoot.width * 0.6
+                    }
+
+                    Text {
+                        text: "󰅀"
+                        color: Qt.rgba(1,1,1,0.5)
+                        font.pixelSize: 12
+                        visible: !isSettingsOpen
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
+
+                MouseArea {
+                    id: modelSelectorMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    visible: !isSettingsOpen
+                    onClicked: {
+                        fetchModels(); // Refresh models before opening
+                        modelMenu.open();
+                    }
+                }
+
+                Menu {
+                    id: modelMenu
+                    y: 32
+                    width: 200
+                    
+                    background: Rectangle {
+                        color: dsSurface
+                        border.color: Qt.rgba(1,1,1,0.1)
+                        border.width: 1
+                        radius: dsSmallRadius
+                    }
+
+                    Repeater {
+                        model: availableModels
+                        delegate: MenuItem {
+                            width: parent.width
+                            height: 36
+                            contentItem: Text {
+                                text: modelData
+                                color: highlighted ? dsAccent : "#ffffff"
+                                font.pixelSize: 13
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 12
+                            }
+                            background: Rectangle {
+                                color: highlighted ? Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.1) : "transparent"
+                                radius: 4
+                            }
+                            onTriggered: {
+                                aiModel = modelData;
+                                saveSettings();
+                            }
+                        }
+                    }
+                }
             }
 
             Rectangle {
