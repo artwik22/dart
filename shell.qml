@@ -63,6 +63,8 @@ ShellRoot {
         property bool dashboardLoaded: false
         property bool launcherLoaded: false
         property bool clipboardLoaded: false
+        property bool overviewVisible: false
+        property bool overviewLoaded: false
 
         // Color theme properties
         property string colorBackground: "#0a0a0a"
@@ -391,6 +393,14 @@ ShellRoot {
             sharedData.lockScreenVisible = true
         } else if (cmd === "hideLockScreen") {
             sharedData.lockScreenVisible = false
+        } else if (cmd === "toggleWorkspaceOverview") {
+            root.toggleWorkspaceOverview()
+        }
+    }
+    
+    function toggleWorkspaceOverview() {
+        if (sharedData) {
+            sharedData.overviewVisible = !sharedData.overviewVisible
         }
     }
     
@@ -676,6 +686,21 @@ ShellRoot {
                 required property var modelData
                 screen: modelData
                 sharedData: root.sharedData
+            }
+        }
+    }
+
+    // Workspace Overview - Full-screen grid
+    Loader {
+        id: workspaceOverviewLoader
+        asynchronous: true
+        active: root.sharedData.overviewVisible || root.sharedData.overviewLoaded
+        onStatusChanged: if (status === Loader.Ready) root.sharedData.overviewLoaded = true
+        sourceComponent: Component {
+            WorkspaceOverview {
+                id: workspaceOverviewInstance
+                sharedData: root.sharedData
+                projectPath: root.projectPath
             }
         }
     }

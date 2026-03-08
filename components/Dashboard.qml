@@ -2133,13 +2133,29 @@ PanelWindow {
                             Layout.fillWidth: true
                             spacing: 0
                             
-                            Text {
-                                text: "PERFORMANCE"
-                                font.pixelSize: 32
-                                font.weight: Font.Black
-                                font.family: "Inter, Roboto, sans-serif"
-                                color: (sharedData && sharedData.colorText) || "#ffffff"
-                                font.letterSpacing: -1
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    text: "PERFORMANCE"
+                                    font.pixelSize: 32
+                                    font.weight: Font.Black
+                                    font.family: "Inter, Roboto, sans-serif"
+                                    color: (sharedData && sharedData.colorText) || "#ffffff"
+                                    font.letterSpacing: -1
+                                }
+                                Item { Layout.fillWidth: true }
+                                Rectangle {
+                                    Layout.preferredWidth: 32
+                                    Layout.preferredHeight: 32
+                                    radius: 8
+                                    color: Qt.rgba(1, 1, 1, 0.05)
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "󰓅"
+                                        font.pixelSize: 18
+                                        color: (sharedData && sharedData.colorAccent) || "#00ff41"
+                                    }
+                                }
                             }
                             
                             Rectangle {
@@ -2173,14 +2189,21 @@ PanelWindow {
                             // CPU Metric Card
                             Rectangle {
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: 100
-                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0
+                                Layout.preferredHeight: 110
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
                                 color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                border.width: 1
+                                border.color: Qt.rgba(1,1,1,0.05)
 
                                 ColumnLayout {
-                                    anchors.fill: parent; anchors.margins: 12; spacing: 0
-                                    Text { text: "CPU"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    anchors.fill: parent; anchors.margins: 14; spacing: 0
                                     RowLayout {
+                                        spacing: 6
+                                        Text { text: "󰻠"; font.pixelSize: 12; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                        Text { text: "CPU"; font.pixelSize: 11; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6) }
+                                    }
+                                    RowLayout {
+                                        Layout.topMargin: 4
                                         Text { 
                                             text: cpuUsageValue + "%"
                                             font.pixelSize: 28; font.weight: Font.Black
@@ -2188,25 +2211,26 @@ PanelWindow {
                                         }
                                         Item { Layout.fillWidth: true }
                                         Text { 
-                                            text: cpuTempValue + "°C"
+                                            text: cpuTempValue > 0 ? cpuTempValue + "°C" : "--"
                                             font.pixelSize: 14; font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorAccent) || "#00ff41" 
+                                            color: cpuTempValue > 80 ? "#ff4444" : ((sharedData && sharedData.colorAccent) || "#00ff41") 
                                         }
                                     }
                                     Item { Layout.fillHeight: true }
                                     Canvas {
                                         id: cpuChart
-                                        Layout.fillWidth: true; Layout.preferredHeight: 30
+                                        Layout.fillWidth: true; Layout.preferredHeight: 35
                                         onPaint: {
                                             var ctx = getContext("2d"); ctx.reset();
                                             var hist = dashboardRoot.getResourceHistory("cpu");
                                             if (!hist || hist.length < 2) return;
                                             var w = width; var h = height; var step = w / (hist.length - 1);
                                             var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            ctx.lineJoin = "round"; ctx.lineCap = "round";
                                             
                                             // Area Fill
                                             var grad = ctx.createLinearGradient(0, 0, 0, h);
-                                            grad.addColorStop(0, Qt.alpha(color, 0.2));
+                                            grad.addColorStop(0, Qt.alpha(color, 0.3));
                                             grad.addColorStop(1, "transparent");
                                             ctx.fillStyle = grad;
                                             ctx.beginPath();
@@ -2217,7 +2241,7 @@ PanelWindow {
                                             // Stroke Line
                                             ctx.beginPath();
                                             for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
-                                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                                            ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
                                         }
                                         Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) cpuChart.requestPaint() } }
                                     }
@@ -2226,13 +2250,21 @@ PanelWindow {
 
                             // RAM Metric Card
                             Rectangle {
-                                Layout.fillWidth: true; Layout.preferredHeight: 100
-                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                Layout.fillWidth: true; Layout.preferredHeight: 110
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
+                                color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                border.width: 1
+                                border.color: Qt.rgba(1,1,1,0.05)
 
                                 ColumnLayout {
-                                    anchors.fill: parent; anchors.margins: 12; spacing: 0
-                                    Text { text: "RAM"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    anchors.fill: parent; anchors.margins: 14; spacing: 0
                                     RowLayout {
+                                        spacing: 6
+                                        Text { text: "󰍛"; font.pixelSize: 12; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                        Text { text: "RAM"; font.pixelSize: 11; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6) }
+                                    }
+                                    RowLayout {
+                                        Layout.topMargin: 4
                                         Text { 
                                             text: ramUsageValue + "%"
                                             font.pixelSize: 28; font.weight: Font.Black
@@ -2242,23 +2274,24 @@ PanelWindow {
                                         Text { 
                                             text: ramTotalGB + "G"
                                             font.pixelSize: 14; font.weight: Font.Bold
-                                            color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) 
+                                            color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.5) 
                                         }
                                     }
                                     Item { Layout.fillHeight: true }
                                     Canvas {
                                         id: ramChart
-                                        Layout.fillWidth: true; Layout.preferredHeight: 30
+                                        Layout.fillWidth: true; Layout.preferredHeight: 35
                                         onPaint: {
                                             var ctx = getContext("2d"); ctx.reset();
                                             var hist = dashboardRoot.getResourceHistory("ram");
                                             if (!hist || hist.length < 2) return;
                                             var w = width; var h = height; var step = w / (hist.length - 1);
                                             var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            ctx.lineJoin = "round"; ctx.lineCap = "round";
                                             
                                             // Area Fill
                                             var grad = ctx.createLinearGradient(0, 0, 0, h);
-                                            grad.addColorStop(0, Qt.alpha(color, 0.2));
+                                            grad.addColorStop(0, Qt.alpha(color, 0.3));
                                             grad.addColorStop(1, "transparent");
                                             ctx.fillStyle = grad;
                                             ctx.beginPath();
@@ -2269,22 +2302,30 @@ PanelWindow {
                                             // Stroke Line
                                             ctx.beginPath();
                                             for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
-                                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                                            ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
                                         }
                                         Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) ramChart.requestPaint() } }
                                     }
                                 }
                             }
 
-                            // GPU Metric Card (NEW)
+                            // GPU Metric Card
                             Rectangle {
-                                Layout.fillWidth: true; Layout.preferredHeight: 100
-                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                Layout.fillWidth: true; Layout.preferredHeight: 110
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
+                                color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                border.width: 1
+                                border.color: Qt.rgba(1,1,1,0.05)
 
                                 ColumnLayout {
-                                    anchors.fill: parent; anchors.margins: 12; spacing: 0
-                                    Text { text: "GPU"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    anchors.fill: parent; anchors.margins: 14; spacing: 0
                                     RowLayout {
+                                        spacing: 6
+                                        Text { text: "󰢮"; font.pixelSize: 12; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                        Text { text: "GPU"; font.pixelSize: 11; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6) }
+                                    }
+                                    RowLayout {
+                                        Layout.topMargin: 4
                                         Text { 
                                             text: gpuUsageValue + "%"
                                             font.pixelSize: 28; font.weight: Font.Black
@@ -2292,25 +2333,26 @@ PanelWindow {
                                         }
                                         Item { Layout.fillWidth: true }
                                         Text { 
-                                            text: gpuTempValue + "°C"
+                                            text: gpuTempValue > 0 ? gpuTempValue + "°C" : "--"
                                             font.pixelSize: 14; font.weight: Font.Bold
-                                            color: (sharedData && sharedData.colorAccent) || "#00ff41" 
+                                            color: gpuTempValue > 80 ? "#ff4444" : ((sharedData && sharedData.colorAccent) || "#00ff41") 
                                         }
                                     }
                                     Item { Layout.fillHeight: true }
                                     Canvas {
                                         id: gpuChart
-                                        Layout.fillWidth: true; Layout.preferredHeight: 30
+                                        Layout.fillWidth: true; Layout.preferredHeight: 35
                                         onPaint: {
                                             var ctx = getContext("2d"); ctx.reset();
                                             var hist = dashboardRoot.getResourceHistory("gpu");
                                             if (!hist || hist.length < 2) return;
                                             var w = width; var h = height; var step = w / (hist.length - 1);
                                             var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            ctx.lineJoin = "round"; ctx.lineCap = "round";
                                             
                                             // Area Fill
                                             var grad = ctx.createLinearGradient(0, 0, 0, h);
-                                            grad.addColorStop(0, Qt.alpha(color, 0.2));
+                                            grad.addColorStop(0, Qt.alpha(color, 0.3));
                                             grad.addColorStop(1, "transparent");
                                             ctx.fillStyle = grad;
                                             ctx.beginPath();
@@ -2321,7 +2363,7 @@ PanelWindow {
                                             // Stroke Line
                                             ctx.beginPath();
                                             for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (hist[j]/100)*h);
-                                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                                            ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
                                         }
                                         Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) gpuChart.requestPaint() } }
                                     }
@@ -2330,25 +2372,33 @@ PanelWindow {
 
                             // DISK Metric Card
                             Rectangle {
-                                Layout.fillWidth: true; Layout.preferredHeight: 100
-                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                Layout.fillWidth: true; Layout.preferredHeight: 110
+                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
+                                color: (sharedData && sharedData.colorSecondary) || "#141414"
+                                border.width: 1
+                                border.color: Qt.rgba(1,1,1,0.05)
 
                                 ColumnLayout {
-                                    anchors.fill: parent; anchors.margins: 12; spacing: 8
-                                    Text { text: "DISK"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    anchors.fill: parent; anchors.margins: 14; spacing: 8
+                                    RowLayout {
+                                        spacing: 6
+                                        Layout.fillWidth: true
+                                        Text { text: "󰋊"; font.pixelSize: 12; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                        Text { text: "DISK"; font.pixelSize: 11; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6) }
+                                    }
                                     Column {
-                                        Layout.fillWidth: true; spacing: 4
+                                        Layout.fillWidth: true; spacing: 8
                                         Repeater {
                                             model: diskUsageModel
                                             delegate: Column {
-                                                width: parent.width; spacing: 1; visible: index < 2
+                                                width: parent.width; spacing: 4; visible: index < 2
                                                 RowLayout {
-                                                    Text { text: modelData.mount.toUpperCase(); font.pixelSize: 9; font.weight: Font.Bold; color: (sharedData && sharedData.colorText) || "#ffffff"; Layout.fillWidth: true }
-                                                    Text { text: modelData.usage + "%"; font.pixelSize: 9; font.weight: Font.Black; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                                    Text { text: modelData.mount.toUpperCase(); font.pixelSize: 10; font.weight: Font.Bold; color: (sharedData && sharedData.colorText) || "#ffffff"; Layout.fillWidth: true }
+                                                    Text { text: modelData.usage + "%"; font.pixelSize: 10; font.weight: Font.Black; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
                                                 }
                                                 Rectangle {
-                                                    width: parent.width; height: 4; color: Qt.rgba(1,1,1,0.05);
-                                                    Rectangle { height: parent.height; width: parent.width * (modelData.usage / 100); color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                                    width: parent.width; height: 6; color: Qt.rgba(1,1,1,0.08); radius: 3
+                                                    Rectangle { height: parent.height; width: parent.width * (modelData.usage / 100); color: (sharedData && sharedData.colorAccent) || "#00ff41"; radius: 3 }
                                                 }
                                             }
                                         }
@@ -2360,21 +2410,29 @@ PanelWindow {
 
                         // --- NETWORK CARD (Full width) ---
                         Rectangle {
-                            Layout.fillWidth: true; Layout.preferredHeight: 60
-                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                            Layout.fillWidth: true; Layout.preferredHeight: 70
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
+                            color: (sharedData && sharedData.colorSecondary) || "#141414"
+                            border.width: 1
+                            border.color: Qt.rgba(1,1,1,0.05)
 
                             RowLayout {
-                                anchors.fill: parent; anchors.margins: 12; spacing: 16
-                                Column {
-                                    Text { text: "NET"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                anchors.fill: parent; anchors.margins: 14; spacing: 16
+                                ColumnLayout {
+                                    spacing: 4
                                     RowLayout {
-                                        spacing: 8
+                                        spacing: 6
+                                        Text { text: "󰈀"; font.pixelSize: 12; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                        Text { text: "NETWORK"; font.pixelSize: 11; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6) }
+                                    }
+                                    RowLayout {
+                                        spacing: 12
                                         Text { 
                                             text: {
                                                 if (networkRxMBs < 0.1) return "↓ " + (networkRxMBs * 1024).toFixed(0) + " KB/s"
                                                 return "↓ " + networkRxMBs.toFixed(1) + " MB/s"
                                             }
-                                            font.pixelSize: 18; font.weight: Font.Black
+                                            font.pixelSize: 16; font.weight: Font.Black
                                             color: (sharedData && sharedData.colorText) || "#ffffff" 
                                         }
                                         Text { 
@@ -2382,8 +2440,8 @@ PanelWindow {
                                                 if (networkTxMBs < 0.1) return "↑ " + (networkTxMBs * 1024).toFixed(0) + " KB/s"
                                                 return "↑ " + networkTxMBs.toFixed(1) + " MB/s"
                                             }
-                                            font.pixelSize: 18; font.weight: Font.Black
-                                            color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) 
+                                            font.pixelSize: 16; font.weight: Font.Black
+                                            color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6) 
                                         }
                                     }
                                 }
@@ -2397,10 +2455,11 @@ PanelWindow {
                                             if (!hist || hist.length < 2) return;
                                             var w = width; var h = height; var step = w / (hist.length - 1);
                                             var color = (sharedData && sharedData.colorAccent) || "#00ff41";
+                                            ctx.lineJoin = "round"; ctx.lineCap = "round";
                                             
                                             // Area Fill
                                             var grad = ctx.createLinearGradient(0, 0, 0, h);
-                                            grad.addColorStop(0, Qt.alpha(color, 0.2));
+                                            grad.addColorStop(0, Qt.alpha(color, 0.3));
                                             grad.addColorStop(1, "transparent");
                                             ctx.fillStyle = grad;
                                             ctx.beginPath();
@@ -2411,7 +2470,7 @@ PanelWindow {
                                             // Stroke Line
                                             ctx.beginPath();
                                             for(var j=0; j<hist.length; j++) ctx.lineTo(j*step, h - (Math.min(hist[j], 20)/20)*h);
-                                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                                            ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
                                         }
                                         Connections { target: dashboardRoot; function onPerfUpdated() { if(currentTab===3) netChart.requestPaint() } }
                                     }
@@ -2422,32 +2481,48 @@ PanelWindow {
                         // --- PROCESSES ---
                         Rectangle {
                             Layout.fillWidth: true; Layout.fillHeight: true;
-                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0; color: (sharedData && sharedData.colorSecondary) || "#141414"
+                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
+                            color: (sharedData && sharedData.colorSecondary) || "#141414"
+                            border.width: 1
+                            border.color: Qt.rgba(1,1,1,0.05)
 
                             ColumnLayout {
-                                anchors.fill: parent; anchors.margins: 12; spacing: 8
+                                anchors.fill: parent; anchors.margins: 14; spacing: 10
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    Text { text: "PROCESSES"; font.pixelSize: 10; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                    RowLayout {
+                                        spacing: 6
+                                        Text { text: "󰒢"; font.pixelSize: 12; color: (sharedData && sharedData.colorAccent) || "#00ff41" }
+                                        Text { text: "TOP PROCESSES"; font.pixelSize: 11; font.weight: Font.Black; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6) }
+                                    }
                                     Item { Layout.fillWidth: true }
-                                    Text { text: "MEM"; font.pixelSize: 8; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.2) }
-                                    Text { text: "CPU"; font.pixelSize: 8; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.2); Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight }
+                                    Text { text: "MEM"; font.pixelSize: 9; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.3) }
+                                    Text { text: "CPU"; font.pixelSize: 9; font.weight: Font.Bold; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.3); Layout.preferredWidth: 35; horizontalAlignment: Text.AlignRight }
                                 }
+                                
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 1
+                                    color: Qt.rgba(1, 1, 1, 0.05)
+                                }
+                                
                                 ListView {
                                     reuseItems: true
                                     Layout.fillWidth: true; Layout.fillHeight: true;
-                                    model: topProcessesModel; interactive: false; clip: true; spacing: 2
+                                    model: topProcessesModel; interactive: false; clip: true; spacing: 4
                                     delegate: Rectangle {
-                                        width: parent.width; height: 24; color: Qt.rgba(1,1,1,0.03)
+                                        width: parent.width; height: 28; radius: 6
+                                        color: index % 2 === 0 ? Qt.rgba(1,1,1,0.02) : "transparent"
+                                        
                                         RowLayout {
                                             anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 8
-                                            Text { text: modelData.name.toUpperCase(); font.pixelSize: 10; font.weight: Font.Bold; color: (sharedData && sharedData.colorText) || "#ffffff"; elide: Text.ElideRight; Layout.fillWidth: true }
-                                            Text { text: modelData.mem + "%"; font.pixelSize: 10; font.weight: Font.Medium; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.4) }
+                                            Text { text: modelData.name.toUpperCase(); font.pixelSize: 11; font.weight: Font.Bold; color: (sharedData && sharedData.colorText) || "#ffffff"; elide: Text.ElideRight; Layout.fillWidth: true }
+                                            Text { text: modelData.mem + "%"; font.pixelSize: 11; font.weight: Font.Medium; color: Qt.alpha((sharedData && sharedData.colorText) || "#ffffff", 0.6) }
                                             Text { 
-                                                text: modelData.cpu + "%"
-                                                font.pixelSize: 10; font.weight: Font.Black
-                                                color: parseFloat(modelData.cpu) > 20 ? ((sharedData && sharedData.colorAccent) || "#00ff41") : "#ffffff"
-                                                Layout.preferredWidth: 30; horizontalAlignment: Text.AlignRight
+                                                text: parseFloat(modelData.cpu).toFixed(1) + "%"
+                                                font.pixelSize: 11; font.weight: Font.Black
+                                                color: parseFloat(modelData.cpu) > 20 ? ((sharedData && sharedData.colorAccent) || "#ff4444") : ((sharedData && sharedData.colorText) || "#ffffff")
+                                                Layout.preferredWidth: 35; horizontalAlignment: Text.AlignRight
                                             }
                                         }
                                     }

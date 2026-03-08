@@ -33,6 +33,7 @@ Dart transforms your Wayland desktop into a modern, fully-featured environment. 
 - **Smart Launcher**: Application filtering with math calculation (`= 2+2`) and web search shortcuts (`!y`, `!g`, `!r`).
 - **Lock Screen**: Minimalist overlay with password verification, media controls, and widget toggles.
 - **Media Controls**: Playback control, metadata display, and **cava** audio visualization.
+- **Workspace Overview**: Full-screen grid view of all workspaces with active window tracking and quick switching.
 - **AI Chat (Ollama)**:
     - Chat with local LLMs directly from the dashboard.
     - **File Attachments**: Attach images (vision models) and text files as context.
@@ -76,6 +77,7 @@ Add these to your `hyprland.conf`:
 bind = SUPER, R, exec, ~/.config/alloy/dart/open-launcher.sh
 bind = SUPER, M, exec, ~/.config/alloy/dart/toggle-menu.sh
 bind = SUPER, V, exec, ~/.config/alloy/dart/open-clipboard.sh
+bind = SUPER, Tab, exec, ~/.config/alloy/dart/open-overview.sh
 ```
 
 ---
