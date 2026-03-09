@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: aiChatRoot
@@ -390,11 +391,12 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
-        spacing: 10
+        spacing: 0
 
         // ── Header ──
         RowLayout {
             Layout.fillWidth: true
+            Layout.bottomMargin: 10
             spacing: 10
 
             Rectangle {
@@ -408,6 +410,15 @@ Rectangle {
                     text: "󰚩"
                     color: dsAccent
                     font.pixelSize: 16
+                }
+
+                // Subtle glow behind icon
+                layer.enabled: true
+                layer.effect: Glow {
+                    radius: 8
+                    samples: 17
+                    color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.25)
+                    spread: 0.1
                 }
             }
 
@@ -546,6 +557,14 @@ Rectangle {
                     }
                 }
             }
+        }
+
+        // ── Header separator ──
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: Qt.rgba(1,1,1,0.06)
+            Layout.bottomMargin: 10
         }
 
         // ── Settings View ──
@@ -715,13 +734,13 @@ Rectangle {
                 // ── Empty state placeholder ──
                 Column {
                     anchors.centerIn: parent
-                    spacing: 12
+                    spacing: 16
                     visible: chatModel.count === 0
-                    opacity: 0.5
+                    width: parent.width * 0.85
 
                     Rectangle {
-                        width: 56; height: 56
-                        radius: 28
+                        width: 60; height: 60
+                        radius: 30
                         color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.1)
                         anchors.horizontalCenter: parent.horizontalCenter
 
@@ -731,21 +750,74 @@ Rectangle {
                             color: dsAccent
                             font.pixelSize: 28
                         }
+
+                        // Pulsing glow animation
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.6; to: 1.0; duration: 1800; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 1.0; to: 0.6; duration: 1800; easing.type: Easing.InOutSine }
+                        }
                     }
 
                     Text {
                         text: "Ask me anything"
                         color: "#ffffff"
-                        font.pixelSize: 15
+                        font.pixelSize: 16
                         font.weight: Font.DemiBold
+                        font.family: "Inter, sans-serif"
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
 
                     Text {
                         text: "Powered by " + aiModel
-                        color: Qt.rgba(1,1,1,0.35)
+                        color: Qt.rgba(1,1,1,0.3)
                         font.pixelSize: 11
+                        font.family: "Inter, sans-serif"
                         anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    // ── Quick action suggestion chips ──
+                    Flow {
+                        width: parent.width
+                        spacing: 8
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        Layout.topMargin: 8
+
+                        property var suggestions: ["Summarize a topic", "Write code", "Explain a concept", "Translate text"]
+
+                        Repeater {
+                            model: parent.suggestions
+                            delegate: Rectangle {
+                                width: chipText.implicitWidth + 24
+                                height: 30
+                                radius: 15
+                                color: chipMa.containsMouse ? Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.15) : Qt.rgba(1,1,1,0.05)
+                                border.width: 1
+                                border.color: chipMa.containsMouse ? Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.3) : Qt.rgba(1,1,1,0.08)
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                                Text {
+                                    id: chipText
+                                    anchors.centerIn: parent
+                                    text: modelData
+                                    font.pixelSize: 11
+                                    font.weight: Font.Medium
+                                    color: chipMa.containsMouse ? dsAccent : Qt.rgba(1,1,1,0.5)
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                }
+                                MouseArea {
+                                    id: chipMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        messageInput.text = modelData;
+                                        messageInput.forceActiveFocus();
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -754,13 +826,24 @@ Rectangle {
                     anchors.fill: parent
                     model: chatModel
                     clip: true
-                    spacing: 10
+                    spacing: 14
                     visible: chatModel.count > 0
+
+                    ScrollBar.vertical: ScrollBar {
+                        policy: ScrollBar.AsNeeded
+                        width: 4
+                        contentItem: Rectangle {
+                            implicitWidth: 4
+                            radius: 2
+                            color: Qt.rgba(1,1,1,0.15)
+                        }
+                        background: Rectangle { color: "transparent" }
+                    }
 
                 delegate: Column {
                     id: chatDelegate
                     width: ListView.view.width
-                    spacing: 4
+                    spacing: 6
 
                     property var parsedSources: {
                         if (!model.sources) return [];
@@ -772,75 +855,123 @@ Rectangle {
                     property bool hasContent: (model.message ? model.message.length > 0 : false) || (model.thought ? model.thought.length > 0 : false)
                     visible: hasContent
 
+                    // Fade-in animation for new messages
+                    opacity: 0
+                    Component.onCompleted: opacity = 1
+                    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+
+                    // Role label
                     Text {
                         text: model.role === "user" ? "You" : "AI"
-                        font.pixelSize: 11
+                        font.pixelSize: 10
                         font.weight: Font.Bold
-                        color: model.role === "user" ? dsAccent : Qt.rgba(1,1,1,0.4)
+                        font.letterSpacing: 0.5
+                        color: model.role === "user" ? dsAccent : Qt.rgba(1,1,1,0.35)
                         anchors.right: model.role === "user" ? parent.right : undefined
                         anchors.left: model.role === "assistant" ? parent.left : undefined
+                        anchors.leftMargin: model.role === "assistant" ? 8 : 0
+                        anchors.rightMargin: model.role === "user" ? 8 : 0
                     }
 
+                    // ── Bubble with accent left border for assistant ──
                     Rectangle {
                         id: bubbleRect
-                        width: parent.width * 0.85
+                        width: model.role === "user" ? Math.min(parent.width * 0.85, messageColumn.implicitWidth + 28) : parent.width
                         height: messageColumn.height + 20
-                        radius: dsSmallRadius + 4
-                        topLeftRadius: model.role === "assistant" ? 4 : dsSmallRadius + 4
-                        topRightRadius: model.role === "user" ? 4 : dsSmallRadius + 4
+                        radius: dsSmallRadius + 2
+                        topLeftRadius: model.role === "assistant" ? 2 : dsSmallRadius + 2
+                        topRightRadius: model.role === "user" ? 2 : dsSmallRadius + 2
                         clip: true
 
                         color: model.role === "user" ?
-                               Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.15) :
-                               Qt.rgba(1,1,1, 0.06)
+                               Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.12) :
+                               Qt.rgba(1,1,1, 0.04)
 
                         anchors.right: model.role === "user" ? parent.right : undefined
                         anchors.left: model.role === "assistant" ? parent.left : undefined
 
+                        // Accent left bar for assistant messages
+                        Rectangle {
+                            width: 3
+                            height: parent.height
+                            color: dsAccent
+                            opacity: 0.5
+                            visible: model.role === "assistant"
+                            radius: 1.5
+                        }
+
                         Column {
                             id: messageColumn
-                            width: parent.width - 20
-                            x: 10
+                            width: parent.width - (model.role === "assistant" ? 24 : 20)
+                            x: model.role === "assistant" ? 14 : 10
                             y: 10
                             spacing: 8
 
-                            // Thought block
+                            // ── Collapsible Thought block ──
                             Rectangle {
                                 id: thoughtBlock
                                 width: parent.width
-                                height: thoughtLayout.implicitHeight + 12
+                                property bool expanded: false
+                                height: expanded ? (thoughtContent.implicitHeight + thoughtHeader.height + 16) : (thoughtHeader.height + 10)
+                                Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                                 color: Qt.rgba(0,0,0,0.15)
                                 radius: dsSmallRadius
+                                clip: true
                                 visible: model.thought ? (model.thought.length > 0) : false
 
-                                RowLayout {
-                                    id: thoughtLayout
-                                    anchors.fill: parent
-                                    anchors.margins: 6
+                                // Clickable header
+                                Row {
+                                    id: thoughtHeader
+                                    x: 8; y: 5
                                     spacing: 6
 
                                     Text {
-                                        Layout.alignment: Qt.AlignTop
                                         text: "󰌵"
                                         color: dsAccent
-                                        font.pixelSize: 13
-                                    }
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: model.thought ? model.thought : ""
-                                        color: Qt.rgba(1,1,1,0.6)
                                         font.pixelSize: 12
-                                        font.italic: true
-                                        wrapMode: Text.Wrap
-                                        lineHeight: 1.2
-                                        textFormat: Text.MarkdownText
                                     }
+                                    Text {
+                                        text: "Thinking"
+                                        color: Qt.rgba(1,1,1,0.5)
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                    }
+                                    Text {
+                                        text: thoughtBlock.expanded ? "󰅃" : "󰅀"
+                                        color: Qt.rgba(1,1,1,0.3)
+                                        font.pixelSize: 10
+                                    }
+                                }
+                                MouseArea {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    height: thoughtHeader.height + 10
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: thoughtBlock.expanded = !thoughtBlock.expanded
+                                }
+
+                                // Expandable content
+                                Text {
+                                    id: thoughtContent
+                                    x: 8
+                                    y: thoughtHeader.height + 10
+                                    width: parent.width - 16
+                                    text: model.thought ? model.thought : ""
+                                    color: Qt.rgba(1,1,1,0.55)
+                                    font.pixelSize: 12
+                                    font.italic: true
+                                    wrapMode: Text.Wrap
+                                    lineHeight: 1.3
+                                    textFormat: Text.MarkdownText
+                                    visible: thoughtBlock.expanded
+                                    opacity: thoughtBlock.expanded ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: 200 } }
                                 }
                             }
 
                             Rectangle {
-                                width: parent.width; height: 1; color: Qt.rgba(1,1,1,0.08)
+                                width: parent.width; height: 1; color: Qt.rgba(1,1,1,0.06)
                                 visible: (model.thought ? (model.thought.length > 0) : false) && (model.message ? (model.message.length > 0) : false)
                             }
 
@@ -850,7 +981,6 @@ Rectangle {
                                 property string rawMessage: model.message ? model.message : ""
                                 text: {
                                     if (!rawMessage) return "";
-                                    // Parse citation tags like [^1^], [1], [^1] into HTML superscripts
                                     var formattedText = rawMessage.replace(/\[\^?(\d+)\^?\]/g, "<sup>[$1]</sup>");
                                     return formattedText;
                                 }
@@ -976,37 +1106,58 @@ Rectangle {
             }
             } // end Item wrapper
 
-            // ── Loading Indicator ──
-            Row {
+            // ── Loading Indicator — shimmer bar ──
+            Item {
                 Layout.fillWidth: true
-                spacing: 6
+                Layout.preferredHeight: 24
                 visible: isLoading
                 Layout.leftMargin: 4
 
-                Repeater {
-                    model: 3
-                    Rectangle {
-                        width: 6; height: 6; radius: 3
-                        color: dsAccent
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 10
 
-                        SequentialAnimation on y {
-                            running: isLoading; loops: Animation.Infinite
-                            PauseAnimation { duration: index * 150 }
-                            NumberAnimation { from: 0; to: -6; duration: 250; easing.type: Easing.OutCubic }
-                            NumberAnimation { from: -6; to: 0; duration: 250; easing.type: Easing.InCubic }
-                            PauseAnimation { duration: (2 - index) * 150 }
+                    // Shimmer bar
+                    Rectangle {
+                        width: 120; height: 4
+                        radius: 2
+                        color: Qt.rgba(1,1,1,0.06)
+                        clip: true
+
+                        Rectangle {
+                            id: shimmer
+                            width: 40; height: parent.height
+                            radius: 2
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: "transparent" }
+                                GradientStop { position: 0.5; color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.7) }
+                                GradientStop { position: 1.0; color: "transparent" }
+                            }
+
+                            SequentialAnimation on x {
+                                running: isLoading; loops: Animation.Infinite
+                                NumberAnimation { from: -40; to: 120; duration: 1200; easing.type: Easing.InOutQuad }
+                                PauseAnimation { duration: 200 }
+                            }
                         }
+                    }
+
+                    Text {
+                        text: "Thinking..."
+                        color: Qt.rgba(1,1,1,0.35)
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        font.family: "Inter, sans-serif"
+                        anchors.verticalCenter: parent.verticalCenter
+
                         SequentialAnimation on opacity {
                             running: isLoading; loops: Animation.Infinite
-                            PauseAnimation { duration: index * 150 }
-                            NumberAnimation { from: 0.3; to: 1.0; duration: 250 }
-                            NumberAnimation { from: 1.0; to: 0.3; duration: 250 }
-                            PauseAnimation { duration: (2 - index) * 150 }
+                            NumberAnimation { from: 0.35; to: 0.7; duration: 800; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 0.7; to: 0.35; duration: 800; easing.type: Easing.InOutSine }
                         }
                     }
                 }
-
-                Text { text: "Thinking..."; color: Qt.rgba(1,1,1,0.4); font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter; leftPadding: 2 }
             }
 
             // ── Attachments List ──
@@ -1075,10 +1226,23 @@ Rectangle {
 
             // ── Input Field ──
             Rectangle {
+                id: inputFieldRect
                 Layout.fillWidth: true
-                height: 44
+                height: 48
                 radius: dsSmallRadius + 4
                 color: Qt.rgba(1,1,1,0.06)
+                border.width: messageInput.activeFocus ? 1 : 0
+                border.color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.5)
+                Behavior on border.width { NumberAnimation { duration: 200 } }
+
+                // Focus glow
+                layer.enabled: messageInput.activeFocus
+                layer.effect: Glow {
+                    radius: 6
+                    samples: 13
+                    color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.15)
+                    spread: 0.0
+                }
 
                 RowLayout {
                     anchors.fill: parent
