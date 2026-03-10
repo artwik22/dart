@@ -7,6 +7,19 @@
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT="$DIR/scripts/take-screenshot.sh"
 
+if [ -z "$1" ]; then
+    # ── Trigger Quickshell Capture HUD ────────────────────────────────
+    # Check if quickshell is likely running
+    if pgrep -x quickshell > /dev/null; then
+        echo "toggleCapture" > /tmp/quickshell_command
+        exit 0
+    else
+        # Fallback to area capture if quickshell is not running
+        bash "$SCRIPT"
+        exit $?
+    fi
+fi
+
 if [ "$1" == "--full" ]; then
     # ── Full screen capture ──────────────────────────────────────────
     SCREENSHOTS_DIR="$HOME/Pictures/Screenshots"

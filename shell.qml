@@ -21,6 +21,7 @@ ShellRoot {
         property bool volumeEdgeHovered: false  // Czy myszka jest nad detektorem krawędzi
         property bool clipboardVisible: false
         property bool settingsVisible: false
+        property bool captureMenuVisible: false
         property bool lockScreenVisible: false  // Własny lock screen (zamiast swaylock/loginctl)
         property bool lockScreenNonBlocking: false // Jeśli true, ruszysz myszką i znika
         
@@ -379,6 +380,8 @@ ShellRoot {
             root.toggleMenu()
         } else if (cmd === "openClipboardManager") {
             root.openClipboardManager()
+        } else if (cmd === "toggleCapture") {
+            root.toggleCapture()
         } else if (cmd === "openSettings") {
             root.openSettings()
         } else if (cmd === "hideSidebar") {
@@ -429,6 +432,13 @@ ShellRoot {
         var scaleStr = String(scaleFactor)
         var cmd = "GTK_SCALE_FACTOR=" + scaleStr + " fuse 2>/dev/null || GTK_SCALE_FACTOR=" + scaleStr + " $HOME/.local/bin/fuse 2>/dev/null || GTK_SCALE_FACTOR=" + scaleStr + " $HOME/.config/alloy/fuse/target/release/fuse 2>/dev/null"
         processHelper.runCommand(['sh', '-c', cmd.replace(/'/g, "'\"'\"'")])
+    }
+    
+    // Toggle the new Capture HUD
+    function toggleCapture() {
+        if (sharedData) {
+            sharedData.captureMenuVisible = !sharedData.captureMenuVisible
+        }
     }
     
     // Screenshot Service - Take screenshot with area selection
@@ -595,6 +605,17 @@ ShellRoot {
         model: Quickshell.screens
         delegate: Component {
             RightEdgeDetector {
+                required property var modelData
+                screen: modelData
+                sharedData: root.sharedData
+            }
+        }
+    }
+    
+    Variants {
+        model: Quickshell.screens
+        delegate: Component {
+            CaptureMenu {
                 required property var modelData
                 screen: modelData
                 sharedData: root.sharedData
