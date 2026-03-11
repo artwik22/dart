@@ -377,8 +377,8 @@ PanelWindow {
             }
             return h;
         } else if (currentMode === 3) {
-            // Run command mode - search box only
-            return 48;
+            // Wallpapers mode - grid height
+            return 400;
         } else if (currentMode === 5) {
             // Power menu: match packages options height
             return 150;
@@ -1442,8 +1442,8 @@ PanelWindow {
             color: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : colorBackground
         }
         
-        // Obsługa klawiszy na kontenerze - przekieruj do TextInput tylko w trybie Launch App
-        Keys.forwardTo: (currentMode === 0) ? [searchInput] : []
+        // Obsługa klawiszy na kontenerze - przekieruj do odpowiedniego komponentu
+        Keys.forwardTo: (currentMode === 0 || currentMode === 4) ? [searchInput] : (currentMode === 3 ? [wallpapersGrid] : [])
         
         Keys.onPressed: function(event) {
             // Escape - zamknij launcher lub wróć do wyboru trybu
@@ -1474,6 +1474,10 @@ PanelWindow {
                     // Wróć do wyboru źródła usuwania
                     currentPackageMode = 3
                     removeSourceMode = -1
+                    selectedIndex = 0
+                } else if (currentMode === 3) {
+                    // Wróć do stanu początkowego z trybu tapet
+                    currentMode = 0
                     selectedIndex = 0
                 } else {
                     // Wróć do stanu początkowego
@@ -1763,7 +1767,7 @@ PanelWindow {
             Item {
                 id: launchAppMode
                 anchors.fill: parent
-                visible: currentMode === 0 || currentMode === 3 || currentMode === 4
+                visible: currentMode === 0 || currentMode === 4
                 enabled: visible
                 
                 Column {
@@ -1775,14 +1779,14 @@ PanelWindow {
                                 width: parent.width
                                 height: 48
                                 
-                                opacity: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 3 || currentMode === 4)) ? 1 : 0
+                                opacity: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 4)) ? 1 : 0
                                 
                                 Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
                                  Rectangle {
                                     id: searchBox
                                     anchors.left: parent.left
-                                    width: (currentMode === 3 || currentMode === 4) ? parent.width : (parent.width - (40 * 4 + 12 * 4))
+                                    width: (currentMode === 4) ? parent.width : (parent.width - (40 * 4 + 12 * 4))
                                     height: 48
                                     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#111111"
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
@@ -1819,7 +1823,7 @@ PanelWindow {
                                     selectByMouse: true
                                     activeFocusOnPress: true
                                     activeFocusOnTab: true
-                                    focus: ((currentMode === 0 || currentMode === 3 || currentMode === 4) && sharedData && sharedData.launcherVisible)
+                                    focus: ((currentMode === 0 || currentMode === 4) && sharedData && sharedData.launcherVisible)
                                     
                                     // Searching indicator
                                     Item {
@@ -1844,7 +1848,7 @@ PanelWindow {
                                     }
                                     
                                     Text {
-                                        text: currentMode === 4 ? "Search files..." : (currentMode === 3 ? ">_ Run command... (e.g. htop, ping google.com)" : "Search applications...")
+                                        text: currentMode === 4 ? "Search files..." : "Search applications..."
                                         color: parent.color
                                         opacity: 0.3
                                         visible: !parent.text && !parent.inputMethodComposing
@@ -1885,8 +1889,8 @@ PanelWindow {
                                         if (event.modifiers & Qt.ControlModifier) {
                                             if (event.key === Qt.Key_1) { currentMode = 0; event.accepted = true }
                                             else if (event.key === Qt.Key_2) { currentMode = 1; currentPackageMode = -1; event.accepted = true }
-                                            else if (event.key === Qt.Key_3) { currentMode = 4; event.accepted = true }
-                                            else if (event.key === Qt.Key_4) { currentMode = 3; event.accepted = true }
+                                                else if (event.key === Qt.Key_3) { currentMode = 4; event.accepted = true }
+                                                else if (event.key === Qt.Key_4) { currentMode = 3; event.accepted = true }
                                             
                                             if (event.accepted) {
                                                 selectedIndex = 0
@@ -1947,24 +1951,16 @@ PanelWindow {
                                             }
 
                                             // 2. Default launch actions
-                                            if (currentMode === 3) {
-                                                if (searchText.trim().length > 0 && sharedData && sharedData.runCommand) {
-                                                    sharedData.runCommand(['sh', '-c', searchText.trim() + ' &'])
-                                                    sharedData.launcherVisible = false
-                                                }
-                                                event.accepted = true
-                                                return
-                                            } else if (currentMode === 4) {
-                                                if (fileSearchResults.count > 0 && selectedIndex >= 0 && selectedIndex < fileSearchResults.count) {
+                                            // Default launch actions (Terminal mode 3 has been removed)
+                                                if (currentMode === 4 && fileSearchResults.count > 0 && selectedIndex >= 0 && selectedIndex < fileSearchResults.count) {
                                                     var file = fileSearchResults.get(selectedIndex)
                                                     if (file && file.path && sharedData && sharedData.runCommand) {
                                                         sharedData.runCommand(['xdg-open', file.path])
                                                         sharedData.launcherVisible = false
                                                     }
+                                                    event.accepted = true
+                                                    return
                                                 }
-                                                event.accepted = true
-                                                return
-                                            }
                                             
                                             // Check if search text starts with "!" for Firefox search
                                             if (searchText && searchText.trim().startsWith("!")) {
@@ -2116,7 +2112,7 @@ PanelWindow {
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p3Btn.containsMouse || highlightedModeIndex === 3) ? colorPrimary : colorSecondary
                                     visible: true
-                                    opacity: (currentMode !== 3 && currentMode !== 4) ? 1.0 : 0.0
+                                    opacity: (currentMode !== 4) ? 1.0 : 0.0
                                     enabled: opacity > 0
                                     
                                     scale: p3Btn.containsMouse ? 1.1 : 1.0
@@ -2129,7 +2125,7 @@ PanelWindow {
                                     
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "󰆍" // Terminal
+                                        text: "󰋩" // Wallpapers (was Terminal)
                                         font.pixelSize: 18
                                         color: colorText
                                     }
@@ -2142,7 +2138,7 @@ PanelWindow {
                                             currentMode = 3
                                             if (searchInput) {
                                                 searchInput.text = ""
-                                                searchInput.forceActiveFocus()
+                                                // searchInput.forceActiveFocus() // Removed to allow GridView focus
                                             }
                                         }
                                     }
@@ -2155,7 +2151,7 @@ PanelWindow {
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     color: (p4Btn.containsMouse || highlightedModeIndex === 4) ? colorPrimary : colorSecondary
                                     visible: true
-                                    opacity: (currentMode !== 3 && currentMode !== 4) ? 1.0 : 0.0
+                                    opacity: (currentMode !== 4) ? 1.0 : 0.0
                                     enabled: opacity > 0
                                     
                                     scale: p4Btn.containsMouse ? 1.1 : 1.0
@@ -2523,6 +2519,167 @@ PanelWindow {
                             
                 } // closes launchAppColumn
             } // closes launchAppMode
+            
+            // Tryb 3: Wallpapers (zastępuje Terminal)
+            Item {
+                id: wallpapersMode
+                anchors.fill: parent
+                visible: currentMode === 3
+                enabled: visible
+                
+                property string wallpapersPath: ""
+                
+                ListModel {
+                    id: launcherWallpapersModel
+                }
+                
+                function loadWallpapers() {
+                    if (sharedData && sharedData.username) {
+                        wallpapersPath = "/home/" + sharedData.username + "/Pictures/Wallpapers"
+                    } else {
+                        // Default fallback
+                        wallpapersPath = "/home/iartwik/Pictures/Wallpapers"
+                    }
+                    var findCmd = "find -L '" + wallpapersPath + "' -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \\) 2>/dev/null | sort"
+                    
+                    if (sharedData && sharedData.runCommand) {
+                        sharedData.runCommand(['sh', '-c', findCmd + " > /tmp/quickshell_launcher_wallpapers && echo DONE"], readWallpapersList)
+                    }
+                }
+                
+                function readWallpapersList() {
+                    console.log("Reading wallpapers list from /tmp/quickshell_launcher_wallpapers")
+                    var xhr = new XMLHttpRequest()
+                    xhr.open("GET", "file:///tmp/quickshell_launcher_wallpapers")
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === XMLHttpRequest.DONE) {
+                            if (xhr.status === 200 || xhr.status === 0) {
+                                var content = xhr.responseText
+                                console.log("Wallpapers file content length: " + (content ? content.length : 0))
+                                if (content && content.length > 0) {
+                                    launcherWallpapersModel.clear()
+                                    var lines = content.split('\n')
+                                    var addedCount = 0
+                                    for (var i = 0; i < lines.length; i++) {
+                                        var path = lines[i].trim()
+                                        if (path.length > 0) {
+                                            var filename = path.substring(path.lastIndexOf('/') + 1)
+                                            launcherWallpapersModel.append({ path: path, filename: filename })
+                                            addedCount++
+                                        }
+                                    }
+                                    console.log("Added " + addedCount + " wallpapers to model")
+                                } else {
+                                    console.log("Wallpapers file is empty")
+                                }
+                            } else {
+                                console.log("Failed to read wallpapers file, status: " + xhr.status)
+                            }
+                        }
+                    }
+                    xhr.send()
+                }
+
+                Text {
+                    anchors.top: parent.top
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Wallpapers: " + launcherWallpapersModel.count + " (Path: " + wallpapersPath + ")"
+                    color: "white"
+                    font.pixelSize: 12
+                    opacity: 0.5
+                }
+                
+                onVisibleChanged: {
+                    if (visible && launcherWallpapersModel.count === 0) {
+                        loadWallpapers()
+                    }
+                    if (visible) {
+                        wallpapersGrid.forceActiveFocus()
+                    }
+                }
+                
+                GridView {
+                    id: wallpapersGrid
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    cellWidth: 160
+                    cellHeight: 120
+                    clip: true
+                    model: launcherWallpapersModel
+                    focus: true
+                    currentIndex: 0
+                    
+                    Keys.onPressed: function(event) {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            if (currentIndex >= 0 && currentIndex < model.count) {
+                                var wp = model.get(currentIndex)
+                                applyWallpaper(wp.path)
+                            }
+                            event.accepted = true
+                        }
+                    }
+                    
+                    function applyWallpaper(path) {
+                        if (sharedData && sharedData.runCommand) {
+                            sharedData.runCommand(['sh', '-c', 'echo \'' + path.replace(/'/g, "'\\''") + '\' > /tmp/quickshell_wallpaper_path'])
+                            if (typeof saveColors === "function") {
+                                saveColors("") 
+                            }
+                            sharedData.launcherVisible = false
+                        }
+                    }
+                    
+                    delegate: Rectangle {
+                        width: wallpapersGrid.cellWidth - 16
+                        height: wallpapersGrid.cellHeight - 16
+                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
+                        color: "transparent"
+                        
+                        Rectangle {
+                            anchors.fill: parent
+                            color: getTransparentColor(colorAccent, 0.15)
+                            opacity: wallpaperMouseArea.containsMouse ? 1 : 0
+                            radius: parent.radius
+                            Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                        }
+                        
+                        scale: wallpaperMouseArea.containsMouse ? 1.05 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                        
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            source: model.path ? (model.path.startsWith("/") ? "file://" + model.path : model.path) : ""
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            cache: true
+                            smooth: true
+                            mipmap: true
+                        }
+                        
+                        MouseArea {
+                            id: wallpaperMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            
+                            onClicked: {
+                                if (sharedData && sharedData.runCommand) {
+                                    // Zapisz ścieżkę do pliku tak jak w SettingsApplication
+                                    sharedData.runCommand(['sh', '-c', 'echo \'' + model.path.replace(/'/g, "'\\''") + '\' > /tmp/quickshell_wallpaper_path'])
+                                    // Spróbuj użyć istniejącej logiki zmiany kolorów z AppLauncher
+                                    if (typeof saveColors === "function") {
+                                        var sidebarPos = sharedData.dashboardPosition || "right"
+                                        var currentPreset = sharedData.colorPreset || ""
+                                        saveColors(currentPreset) // Jeśli AppLauncher ma inną sygnaturę saveColors, dostosuj
+                                    }
+                                    sharedData.launcherVisible = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             
             // Tryb 1: Packages – ten sam wygląd co strona główna (height 50, radius 4, lewy pasek)
             
