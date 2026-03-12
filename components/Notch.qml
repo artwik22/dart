@@ -67,7 +67,7 @@ PanelWindow {
         if (currentMode === "none") {
             expanded = false;
         } else if (currentMode === "capture") {
-            targetWidth = 360
+            targetWidth = 430
             targetHeight = 110
             expanded = true
             autoHideTimer.stop()
@@ -221,6 +221,32 @@ PanelWindow {
             color: "#000000"
         }
 
+        // ── Mouse interaction ─────────────────────────────────────
+        MouseArea {
+            id: notchMouseArea
+            anchors.fill: notchBody
+            hoverEnabled: true
+
+            onEntered: {
+                if (notchRoot.currentMode !== "capture") {
+                    autoHideTimer.stop()
+                }
+            }
+            onExited: {
+                if (notchRoot.currentMode !== "capture") {
+                    autoHideTimer.restart()
+                }
+            }
+            onClicked: {
+                // If it's a notification, close it immediately on click
+                if (notchRoot.currentMode === "notification" || notchRoot.currentMode === "battery") {
+                    notchRoot.closeNotch()
+                } else if (notchRoot.currentMode === "capture") {
+                    // Do nothing for capture background click, let buttons handle it
+                }
+            }
+        }
+
         // ==========================================================
         // UI: Collapsed (Fallback)
         // ==========================================================
@@ -293,6 +319,17 @@ PanelWindow {
                     onClicked: {
                         if (sharedData && sharedData.runCommand)
                             sharedData.runCommand(['sh', '-c', 'sleep 0.2 && /home/iartwik/.config/alloy/dart/scripts/take-screenshot.sh &'])
+                        notchRoot.closeNotch()
+                    }
+                }
+
+                NotchButton {
+                    iconText: "󰈢"
+                    label: "Search"
+                    accentColor: notchRoot.colorAccent
+                    onClicked: {
+                        if (sharedData && sharedData.runCommand)
+                            sharedData.runCommand(['sh', '-c', 'sleep 0.2 && /home/iartwik/.config/alloy/dart/scripts/take-screenshot.sh --search &'])
                         notchRoot.closeNotch()
                     }
                 }
@@ -486,36 +523,6 @@ PanelWindow {
                 }
             }
         } // End Battery UI
-
-        // ── Mouse interaction ─────────────────────────────────────
-        MouseArea {
-            id: notchMouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            acceptedButtons: Qt.LeftButton
-
-            // Only auto-hide logic for notifications/battery.
-            // Capture menu must be closed explicitly or via background click.
-            onEntered: {
-                if (notchRoot.currentMode !== "capture") {
-                    autoHideTimer.stop()
-                }
-            }
-            onExited: {
-                if (notchRoot.currentMode !== "capture") {
-                    autoHideTimer.restart()
-                }
-            }
-            onClicked: {
-                // If it's a notification, close it immediately on click
-                if (notchRoot.currentMode === "notification" || notchRoot.currentMode === "battery") {
-                    notchRoot.closeNotch()
-                } else if (notchRoot.currentMode === "capture") {
-                    // Do nothing for capture background click, let buttons handle it
-                }
-            }
-        }
 
         // ── Keyboard ──────────────────────────────────────────────
         Keys.onPressed: function(event) {
