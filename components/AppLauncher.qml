@@ -2602,8 +2602,12 @@ PanelWindow {
                     id: wallpapersGrid
                     anchors.fill: parent
                     anchors.margins: 16
-                    cellWidth: 160
-                    cellHeight: 120
+                    
+                    // Dynamic columns: 3 columns that evenly fill the width
+                    property int columns: 3
+                    property real spacing: 8
+                    cellWidth: Math.floor(width / columns)
+                    cellHeight: Math.floor(cellWidth * 9 / 16) + spacing  // 16:9 aspect ratio + spacing
                     clip: true
                     model: launcherWallpapersModel
                     focus: true
@@ -2629,51 +2633,66 @@ PanelWindow {
                         }
                     }
                     
-                    delegate: Rectangle {
-                        width: wallpapersGrid.cellWidth - 16
-                        height: wallpapersGrid.cellHeight - 16
-                        radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
-                        color: "transparent"
+                    delegate: Item {
+                        width: wallpapersGrid.cellWidth
+                        height: wallpapersGrid.cellHeight
                         
                         Rectangle {
+                            id: wallpaperTile
                             anchors.fill: parent
-                            color: getTransparentColor(colorAccent, 0.15)
-                            opacity: wallpaperMouseArea.containsMouse ? 1 : 0
-                            radius: parent.radius
-                            Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                        }
-                        
-                        scale: wallpaperMouseArea.containsMouse ? 1.05 : 1.0
-                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                        
-                        Image {
-                            anchors.fill: parent
-                            anchors.margins: 4
-                            source: model.path ? (model.path.startsWith("/") ? "file://" + model.path : model.path) : ""
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            cache: true
-                            smooth: true
-                            mipmap: true
-                        }
-                        
-                        MouseArea {
-                            id: wallpaperMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
+                            anchors.margins: wallpapersGrid.spacing / 2
+                            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
+                            color: "transparent"
+                            clip: true
                             
-                            onClicked: {
-                                if (sharedData && sharedData.runCommand) {
-                                    // Zapisz ścieżkę do pliku tak jak w SettingsApplication
-                                    sharedData.runCommand(['sh', '-c', 'echo \'' + model.path.replace(/'/g, "'\\''") + '\' > /tmp/quickshell_wallpaper_path'])
-                                    // Spróbuj użyć istniejącej logiki zmiany kolorów z AppLauncher
-                                    if (typeof saveColors === "function") {
-                                        var sidebarPos = sharedData.dashboardPosition || "right"
-                                        var currentPreset = sharedData.colorPreset || ""
-                                        saveColors(currentPreset) // Jeśli AppLauncher ma inną sygnaturę saveColors, dostosuj
+                            scale: wallpaperMouseArea.containsMouse ? 1.03 : 1.0
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                            
+                            Image {
+                                anchors.fill: parent
+                                source: model.path ? (model.path.startsWith("/") ? "file://" + model.path : model.path) : ""
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                cache: true
+                                smooth: true
+                                mipmap: true
+                            }
+                            
+                            // Hover overlay
+                            Rectangle {
+                                anchors.fill: parent
+                                color: getTransparentColor(colorAccent, 0.2)
+                                opacity: wallpaperMouseArea.containsMouse ? 1 : 0
+                                radius: parent.radius
+                                Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                            }
+                            
+                            // Border highlight on hover
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "transparent"
+                                border.width: wallpaperMouseArea.containsMouse ? 2 : 0
+                                border.color: colorAccent
+                                radius: parent.radius
+                                Behavior on border.width { NumberAnimation { duration: 150 } }
+                            }
+                            
+                            MouseArea {
+                                id: wallpaperMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                
+                                onClicked: {
+                                    if (sharedData && sharedData.runCommand) {
+                                        sharedData.runCommand(['sh', '-c', 'echo \'' + model.path.replace(/'/g, "'\\''") + '\' > /tmp/quickshell_wallpaper_path'])
+                                        if (typeof saveColors === "function") {
+                                            var sidebarPos = sharedData.dashboardPosition || "right"
+                                            var currentPreset = sharedData.colorPreset || ""
+                                            saveColors(currentPreset)
+                                        }
+                                        sharedData.launcherVisible = false
                                     }
-                                    sharedData.launcherVisible = false
                                 }
                             }
                         }
