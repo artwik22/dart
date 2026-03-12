@@ -2583,10 +2583,11 @@ PanelWindow {
                 Text {
                     anchors.top: parent.top
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "Wallpapers: " + launcherWallpapersModel.count + " (Path: " + wallpapersPath + ")"
+                    text: "Wallpapers: " + launcherWallpapersModel.count + " (Path: " + wallpapersMode.wallpapersPath + ")"
                     color: "white"
                     font.pixelSize: 12
                     opacity: 0.5
+                    visible: false
                 }
                 
                 onVisibleChanged: {

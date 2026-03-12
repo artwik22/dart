@@ -24,3 +24,4 @@ BluetoothMenu 1.0 BluetoothMenu.qml
 AiChatMenu 1.0 AiChatMenu.qml
 WorkspaceOverview 1.0 WorkspaceOverview.qml
 CaptureMenu 1.0 CaptureMenu.qml
+Notch 1.0 Notch.qml

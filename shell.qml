@@ -22,6 +22,7 @@ ShellRoot {
         property bool clipboardVisible: false
         property bool settingsVisible: false
         property bool captureMenuVisible: false
+        property bool notchVisible: true
         property bool lockScreenVisible: false  // Własny lock screen (zamiast swaylock/loginctl)
         property bool lockScreenNonBlocking: false // Jeśli true, ruszysz myszką i znika
         
@@ -615,10 +616,11 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
         delegate: Component {
-            CaptureMenu {
+            Notch {
                 required property var modelData
                 screen: modelData
                 sharedData: root.sharedData
+                projectPath: root.projectPath
             }
         }
     }
