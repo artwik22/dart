@@ -38,6 +38,7 @@ PanelWindow {
     property double lastNetTx: 0
     property double lastNetTime: 0
     property string gpuBrand: "" // Cached GPU brand: nvidia, amd, intel, or sysfs
+    property string weatherCity: ""
     
     // Helper to push to history
     function pushHistory(arr, val) {
@@ -116,6 +117,10 @@ PanelWindow {
 
     property int currentTab: 0
     property var sharedData: null
+    onSharedDataChanged: {
+        if (sharedData) {
+        }
+    }
 
     // --- Animacja wejścia/wyjścia (bez glitchy) ---
     // showProgress 0..1, start zawsze 0; Binding ustawia cel, Behavior animuje
@@ -127,19 +132,20 @@ PanelWindow {
         value: (sharedData && sharedData.menuVisible) ? 1.0 : 0.0
     }
     Behavior on showProgress {
-        NumberAnimation { duration: 450; easing.type: Easing.OutExpo }
+        NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
     }
-    visible: true
+    onShowProgressChanged: { }
+    visible: showProgress > 0
     color: "transparent"
     
     // Floating margins (distance from edge)
     // Primary axis (e.g. Right): Animate for slide-in (-width to 15)
     // Perpendicular axes (e.g. Top/Bottom): Fixed 15 OR 0 if classic
     margins {
-        top: panelPos === "top" ? (-implicitHeight * (1.0 - showProgress) + (isFloating ? 20 : 0) * showProgress) : (isFloating ? 20 : 0)
-        bottom: panelPos === "bottom" ? (-implicitHeight * (1.0 - showProgress) + (isFloating ? 20 : 0) * showProgress) : (isFloating ? 20 : 0)
-        right: panelPos === "right" ? (-implicitWidth * (1.0 - showProgress) + (isFloating ? 20 : 0) * showProgress) : (isFloating ? 20 : 0)
-        left: panelPos === "left" ? (-implicitWidth * (1.0 - showProgress) + (isFloating ? 20 : 0) * showProgress) : (isFloating ? 20 : 0)
+        top: isFloating ? 20 : 0
+        bottom: isFloating ? 20 : 0
+        right: isFloating ? 20 : 0
+        left: isFloating ? 20 : 0
     }
 
     Item {
@@ -149,6 +155,19 @@ PanelWindow {
         enabled: showProgress > 0.02
         focus: showProgress > 0.02
         
+        transform: Translate {
+            x: {
+                if (panelPos === "right") return 300 * (1.0 - showProgress)
+                if (panelPos === "left") return -300 * (1.0 - showProgress)
+                return 0
+            }
+            y: {
+                if (panelPos === "bottom") return 300 * (1.0 - showProgress)
+                if (panelPos === "top") return -300 * (1.0 - showProgress)
+                return 0
+            }
+        }
+
         Keys.onPressed: function(event) {
             if (event.key === Qt.Key_Escape) {
                 if (sharedData) {
@@ -3463,14 +3482,19 @@ PanelWindow {
         }
     }
 
+    // Consistently handle menu visibility changes in one place if possible, 
+    // but the file is large, so let's consolidate the two I found.
+    
     Connections {
         target: sharedData
         enabled: !!sharedData
         function onMenuVisibleChanged() {
             if (sharedData.menuVisible) {
                 startCava()
+                if (dashboardContainer) dashboardContainer.forceActiveFocus()
             } else {
                 stopCava()
+                if (dashboardContainer) dashboardContainer.focus = false
             }
         }
     }
@@ -3498,16 +3522,7 @@ PanelWindow {
         checkClipboard()
     }
     
-    Connections {
-        target: sharedData
-        function onMenuVisibleChanged() {
-            if (sharedData && sharedData.menuVisible) {
-                if (dashboardRoot.dashboardContainer) dashboardRoot.dashboardContainer.forceActiveFocus()
-            } else {
-                dashboardContainer.focus = false
-            }
-        }
-    }
+
     
     // ============ POWER MENU FUNCTIONS ============
     function suspendSystem() {

@@ -417,6 +417,7 @@ ShellRoot {
 
     function handleRemoteCommand(cmd) {
         if (!cmd) return
+        console.log("shell.qml: Received remote command: " + cmd)
         if (cmd === "openLauncher") {
             root.openLauncher()
         } else if (cmd === "toggleMenu") {
@@ -452,7 +453,9 @@ ShellRoot {
     
     // Funkcja do zamykania/otwierania menu
     function toggleMenu() {
+        console.log("shell.qml: Toggling menu. Old state: " + sharedData.menuVisible)
         sharedData.menuVisible = !sharedData.menuVisible
+        console.log("shell.qml: New menu state: " + sharedData.menuVisible)
     }
 
     // Funkcja otwierania launcher'a aplikacji
@@ -697,6 +700,7 @@ ShellRoot {
                 id: dashboardInstance
                 sharedData: root.sharedData
                 projectPath: root.projectPath
+                screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
                 // Remove visible: sharedData.menuVisible to allow internal animation-out to work
             }
         }
