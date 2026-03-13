@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Io
 import QtQuick
 
 Item {
@@ -11,17 +12,17 @@ Item {
     
     Timer {
         id: refreshTimer
-        interval: 1000
+        interval: 100
         running: true
         repeat: true
         triggeredOnStart: true
         onTriggered: refresh()
     }
-    
+
     function refresh() {
         if (!sharedData || !sharedData.runCommand) return
         
-        var tmp = "/tmp/mango_tags_" + Math.random().toString(36).substring(7)
+        var tmp = "/tmp/mango_tags_refresh"
         sharedData.runCommand(['sh', '-c', 'mmsg -g -t > ' + tmp], function() {
             var xhr = new XMLHttpRequest()
             xhr.open("GET", "file://" + tmp)
@@ -29,20 +30,13 @@ Item {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
                     var out = (xhr.responseText || "").trim()
                     parseTags(out)
-                    sharedData.runCommand(['rm', '-f', tmp])
                 }
             }
             xhr.send()
         })
     }
-    
+
     function parseTags(data) {
-        // Example output:
-        // eDP-1 tag 1 0 2 0
-        // eDP-1 tag 2 1 1 1
-        // ...
-        // eDP-1 tags 7 2 0
-        
         var lines = data.split('\n')
         var newTags = []
         var primaryFocused = null
@@ -54,6 +48,8 @@ Item {
             var parts = line.split(/\s+/)
             if (parts.length >= 6 && parts[1] === "tag") {
                 var tagId = parseInt(parts[2])
+                if (tagId > 4) continue // Limit to 4 tags
+                
                 var selected = parts[3] === "1"
                 var occupied = parts[4] !== "0"
                 var urgent = parts[5] === "1"
@@ -63,7 +59,7 @@ Item {
                     selected: selected,
                     occupied: occupied,
                     urgent: urgent,
-                    isFocused: selected // In MangoWM, multiple can be selected, but we treat selected as focused for UI
+                    isFocused: selected
                 }
                 
                 newTags.push(tagObj)
@@ -79,13 +75,14 @@ Item {
         }
     }
     
+    Component.onCompleted: refresh()
+
     function dispatch(command, arg) {
         if (!sharedData || !sharedData.runCommand) return
         
         if (command === "workspace") {
             sharedData.runCommand(['mmsg', '-s', '-t', arg.toString()])
-            // Optimistic update or wait for next refresh
-            refresh()
+            refreshTimer.start() // Immediate poll trigger
         }
     }
 }

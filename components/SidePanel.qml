@@ -547,7 +547,12 @@ PanelWindow {
                         property bool isActive: provider.focusedWorkspace ? provider.focusedWorkspace.id === (index + 1) : false
                         property bool hasWindows: { 
                             if (!provider.workspaces) return false
-                            var ws = provider.workspaces.values ? provider.workspaces.values.find(w => w.id === (index + 1)) : provider.workspaces.find(w => w.id === (index + 1))
+                            var ws = null
+                            if (Array.isArray(provider.workspaces)) {
+                                ws = provider.workspaces.find(w => w.id === (index + 1))
+                            } else if (Array.isArray(provider.workspaces.values)) {
+                                ws = provider.workspaces.values.find(w => w.id === (index + 1))
+                            }
                             return ws ? (ws.lastIpcObject ? ws.lastIpcObject.windows > 0 : !!ws.occupied) : false 
                         }
                         
@@ -660,7 +665,12 @@ PanelWindow {
                         property bool isActive: provider.focusedWorkspace ? provider.focusedWorkspace.id === (index + 1) : false
                         property bool hasWindows: { 
                             if (!provider.workspaces) return false
-                            var ws = provider.workspaces.values ? provider.workspaces.values.find(w => w.id === (index + 1)) : provider.workspaces.find(w => w.id === (index + 1))
+                            var ws = null
+                            if (Array.isArray(provider.workspaces)) {
+                                ws = provider.workspaces.find(w => w.id === (index + 1))
+                            } else if (Array.isArray(provider.workspaces.values)) {
+                                ws = provider.workspaces.values.find(w => w.id === (index + 1))
+                            }
                             return ws ? (ws.lastIpcObject ? ws.lastIpcObject.windows > 0 : !!ws.occupied) : false 
                         }
 
