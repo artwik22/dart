@@ -543,10 +543,12 @@ PanelWindow {
                         width: parent.width
                         height: Math.max(workspaceLine.height, 12)
                         anchors.horizontalCenter: parent.horizontalCenter
-                        property bool isActive: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id === (index + 1) : false
+                        property var provider: (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
+                        property bool isActive: provider.focusedWorkspace ? provider.focusedWorkspace.id === (index + 1) : false
                         property bool hasWindows: { 
-                            var ws = Hyprland.workspaces.values.find(w => w.id === (index + 1))
-                            return ws ? ws.lastIpcObject.windows > 0 : false 
+                            if (!provider.workspaces) return false
+                            var ws = provider.workspaces.values ? provider.workspaces.values.find(w => w.id === (index + 1)) : provider.workspaces.find(w => w.id === (index + 1))
+                            return ws ? (ws.lastIpcObject ? ws.lastIpcObject.windows > 0 : !!ws.occupied) : false 
                         }
                         
                         property bool isDots: (sharedData && sharedData.sidebarStyle === "dots")
@@ -573,7 +575,13 @@ PanelWindow {
                             anchors.margins: -4
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: Hyprland.dispatch("workspace", index + 1) 
+                            onClicked: {
+                                if (provider.dispatch) {
+                                    provider.dispatch("workspace", index + 1)
+                                } else {
+                                    Hyprland.dispatch("workspace", index + 1)
+                                }
+                            }
                         }
                     }
                 }
@@ -584,10 +592,13 @@ PanelWindow {
                 anchors.margins: -8
                 acceptedButtons: Qt.NoButton
                 onWheel: function(wheel) {
+                    var provider = (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
                     if (wheel.angleDelta.y > 0) {
-                        Hyprland.dispatch("workspace", "m-1")
+                        if (provider.dispatch) provider.dispatch("workspace", "m-1")
+                        else Hyprland.dispatch("workspace", "m-1")
                     } else if (wheel.angleDelta.y < 0) {
-                        Hyprland.dispatch("workspace", "m+1")
+                        if (provider.dispatch) provider.dispatch("workspace", "m+1")
+                        else Hyprland.dispatch("workspace", "m+1")
                     }
                 }
             }
@@ -645,10 +656,12 @@ PanelWindow {
                         height: parent.height
                         width: Math.max(workspaceLineTop.width, 12)
                         anchors.verticalCenter: parent.verticalCenter
-                        property bool isActive: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id === (index + 1) : false
+                        property var provider: (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
+                        property bool isActive: provider.focusedWorkspace ? provider.focusedWorkspace.id === (index + 1) : false
                         property bool hasWindows: { 
-                            var ws = Hyprland.workspaces.values.find(w => w.id === (index + 1))
-                            return ws ? ws.lastIpcObject.windows > 0 : false 
+                            if (!provider.workspaces) return false
+                            var ws = provider.workspaces.values ? provider.workspaces.values.find(w => w.id === (index + 1)) : provider.workspaces.find(w => w.id === (index + 1))
+                            return ws ? (ws.lastIpcObject ? ws.lastIpcObject.windows > 0 : !!ws.occupied) : false 
                         }
 
                         property bool isDots: (sharedData && sharedData.sidebarStyle === "dots")
@@ -675,7 +688,13 @@ PanelWindow {
                             anchors.margins: -4
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: Hyprland.dispatch("workspace", index + 1) 
+                            onClicked: {
+                                if (provider.dispatch) {
+                                    provider.dispatch("workspace", index + 1)
+                                } else {
+                                    Hyprland.dispatch("workspace", index + 1)
+                                }
+                            }
                         }
                     }
                 }
@@ -686,10 +705,13 @@ PanelWindow {
                 anchors.margins: -8
                 acceptedButtons: Qt.NoButton
                 onWheel: function(wheel) {
+                    var provider = (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
                     if (wheel.angleDelta.y > 0) {
-                        Hyprland.dispatch("workspace", "m-1")
+                        if (provider.dispatch) provider.dispatch("workspace", "m-1")
+                        else Hyprland.dispatch("workspace", "m-1")
                     } else if (wheel.angleDelta.y < 0) {
-                        Hyprland.dispatch("workspace", "m+1")
+                        if (provider.dispatch) provider.dispatch("workspace", "m+1")
+                        else Hyprland.dispatch("workspace", "m+1")
                     }
                 }
             }

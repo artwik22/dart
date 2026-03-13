@@ -11,6 +11,10 @@ ShellRoot {
     ProcessHelper { id: processHelper }
     // Osobna kolejka tylko do czyszczenia /tmp/quickshell_command – bez czekania na cava/wallpaper/itd.
     ProcessHelper { id: processHelperClear }
+    MangoWM {
+        id: mangoWMProvider
+        sharedData: root.sharedData
+    }
 
     // Współdzielone właściwości (jeśli potrzebne)
     property var sharedData: QtObject {
@@ -99,6 +103,7 @@ ShellRoot {
         property string sidebarWorkspaceMode: "top" // "top" | "center" | "bottom"
         property bool dynamicSidebarBackground: false
         property bool micaSidebarBackground: false
+        property var workspaceProvider: Hyprland // Default to Hyprland
     }
     
     // Color config file path - dynamically determined
@@ -203,6 +208,43 @@ ShellRoot {
             sharedData.setTimeout(function() { root.sharedData.dashboardLoaded = true }, 3000)
             sharedData.setTimeout(function() { root.sharedData.launcherLoaded = true }, 4000)
             sharedData.setTimeout(function() { root.sharedData.clipboardLoaded = true }, 5000)
+            
+            // Detect Window Manager
+            root.detectWM()
+        }
+    }
+
+    function detectWM() {
+        processHelper.runCommand(['sh', '-c', 'pgrep mango > /dev/null && echo "mango" || echo "hyprland"'], function(out) {
+            // pgrep via ProcessHelper might not return output directly to this callback if not captured.
+            // Wait, ProcessHelper.runCommand in shell.qml uses a callback with no args usually?
+            // Let me check ProcessHelper.qml again.
+        })
+    }
+    
+    // Improved WM detection using the runAndRead pattern if needed, but let's try a simpler approach in shell.qml
+    Timer {
+        id: wmDetectionTimer
+        interval: 2000
+        running: true
+        repeat: false
+        onTriggered: {
+            var tmp = "/tmp/qs_wm_check"
+            processHelper.runCommand(['sh', '-c', 'pgrep mango > /dev/null && echo "mango" > ' + tmp + ' || echo "hyprland" > ' + tmp], function() {
+                var xhr = new XMLHttpRequest()
+                xhr.open("GET", "file://" + tmp)
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        var wm = (xhr.responseText || "").trim()
+                        if (wm === "mango") {
+                            sharedData.workspaceProvider = mangoWMProvider
+                        } else {
+                            sharedData.workspaceProvider = Hyprland
+                        }
+                    }
+                }
+                xhr.send()
+            })
         }
     }
 
