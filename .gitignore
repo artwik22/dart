@@ -23,3 +23,11 @@ Thumbs.db
 *.qmlc
 *.jsc
 
+# Python
+__pycache__/
+*.pyc
+
+# Local data
+*_ai_history.json
+*_ai_settings.json
+
