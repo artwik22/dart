@@ -126,6 +126,16 @@ ShellRoot {
         }
     }
     
+    // MangoWM fullscreen: podobnie jak Hyprland, ale przez polling w MangoWM.qml
+    Connections {
+        target: mangoWMProvider
+        function onFullscreenChanged() {
+            if (sharedData.workspaceProvider === mangoWMProvider) {
+                sharedData.sidebarHiddenByFullscreen = mangoWMProvider.fullscreen
+            }
+        }
+    }
+    
     // Single startup: one Process writes HOME and QUICKSHELL_PROJECT_PATH, then one read + loadColors + readLowPerf
     function initializeColorPath() {
         processHelper.runCommand(['sh', '-c', 'echo "$HOME|$QUICKSHELL_PROJECT_PATH" > /tmp/quickshell_init 2>/dev/null || true'], initPathsFromFile)
@@ -238,6 +248,7 @@ ShellRoot {
                         var wm = (xhr.responseText || "").trim()
                         if (wm === "mango") {
                             sharedData.workspaceProvider = mangoWMProvider
+                            sharedData.sidebarHiddenByFullscreen = mangoWMProvider.fullscreen
                         } else {
                             sharedData.workspaceProvider = Hyprland
                         }

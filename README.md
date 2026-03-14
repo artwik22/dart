@@ -46,7 +46,7 @@ Dart transforms your Wayland desktop into a modern, fully-featured environment. 
 ## 🛠️ Requirements
 
 - **Quickshell** (Latest master recommended)
-- **DE/WM**: Tested **only** on **Hyprland**.
+- **DE/WM**: Supported on **Hyprland** & **MangoWM**
 - **Fuse**: Required for settings and system integration. [Repo](https://github.com/artwik22/fuse)
 
 ### Optional Dependencies
