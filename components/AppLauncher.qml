@@ -2653,6 +2653,8 @@ PanelWindow {
                                 anchors.fill: parent
                                 source: model.path ? (model.path.startsWith("/") ? "file://" + model.path : model.path) : ""
                                 fillMode: Image.PreserveAspectCrop
+                                sourceSize.width: 256
+                                sourceSize.height: 256
                                 asynchronous: true
                                 cache: true
                                 smooth: true

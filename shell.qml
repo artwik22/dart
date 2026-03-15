@@ -213,13 +213,9 @@ ShellRoot {
     Component.onCompleted: {
         tryEarlyColorLoad()
         initializeColorPath()
-        // Background load heavy components after startup
+        
         if (sharedData && sharedData.setTimeout) {
-            sharedData.setTimeout(function() { root.sharedData.dashboardLoaded = true }, 3000)
-            sharedData.setTimeout(function() { root.sharedData.launcherLoaded = true }, 4000)
-            sharedData.setTimeout(function() { root.sharedData.clipboardLoaded = true }, 5000)
-            
-            // Detect Window Manager
+            // Detect Window Manager immediately, skip preloading heavy UI components to save RAM
             root.detectWM()
         }
     }
@@ -699,13 +695,50 @@ ShellRoot {
         }
     }
 
+    // Zmienne z opóźnieniem dla animacji zamknięcia
+    property bool dashboardActive: sharedData.menuVisible
+    property bool launcherActive: sharedData.launcherVisible
+    property bool clipboardActive: sharedData.clipboardVisible
+    property bool overviewActive: sharedData.overviewVisible
+
+    Timer {
+        id: unloadDelayTimer
+        interval: 350
+        repeat: false
+        onTriggered: {
+            if (!root.sharedData.menuVisible) dashboardActive = false;
+            if (!root.sharedData.launcherVisible) launcherActive = false;
+            if (!root.sharedData.clipboardVisible) clipboardActive = false;
+            if (!root.sharedData.overviewVisible) overviewActive = false;
+        }
+    }
+
+    Connections {
+        target: root.sharedData
+        function onMenuVisibleChanged() { 
+            if (root.sharedData.menuVisible) dashboardActive = true; 
+            else unloadDelayTimer.restart(); 
+        }
+        function onLauncherVisibleChanged() { 
+            if (root.sharedData.launcherVisible) launcherActive = true; 
+            else unloadDelayTimer.restart(); 
+        }
+        function onClipboardVisibleChanged() { 
+            if (root.sharedData.clipboardVisible) clipboardActive = true; 
+            else unloadDelayTimer.restart(); 
+        }
+        function onOverviewVisibleChanged() { 
+            if (root.sharedData.overviewVisible) overviewActive = true; 
+            else unloadDelayTimer.restart(); 
+        }
+    }
+
     // Dashboard - jeden globalny (nie per-ekran)
     // Pokazuje się gdy myszka najedzie na górną krawędź ekranu
     Loader {
         id: dashboardLoader
         asynchronous: true
-        active: root.sharedData.menuVisible || root.sharedData.dashboardLoaded
-        onStatusChanged: if (status === Loader.Ready) root.sharedData.dashboardLoaded = true
+        active: root.dashboardActive
         sourceComponent: Component {
             Dashboard {
                 id: dashboardInstance
@@ -721,8 +754,7 @@ ShellRoot {
     Loader {
         id: appLauncherLoader
         asynchronous: true
-        active: root.sharedData.launcherVisible || root.sharedData.launcherLoaded
-        onStatusChanged: if (status === Loader.Ready) root.sharedData.launcherLoaded = true
+        active: root.launcherActive
         sourceComponent: Component {
             AppLauncher {
                 id: appLauncherInstance
@@ -746,8 +778,7 @@ ShellRoot {
     Loader {
         asynchronous: true
         id: clipboardManagerLoader
-        active: root.sharedData.clipboardVisible || root.sharedData.clipboardLoaded
-        onStatusChanged: if (status === Loader.Ready) root.sharedData.clipboardLoaded = true
+        active: root.clipboardActive
         sourceComponent: Component {
             ClipboardManager {
                 id: clipboardManagerInstance
@@ -774,8 +805,7 @@ ShellRoot {
     Loader {
         id: workspaceOverviewLoader
         asynchronous: true
-        active: root.sharedData.overviewVisible || root.sharedData.overviewLoaded
-        onStatusChanged: if (status === Loader.Ready) root.sharedData.overviewLoaded = true
+        active: root.overviewActive
         sourceComponent: Component {
             WorkspaceOverview {
                 id: workspaceOverviewInstance
