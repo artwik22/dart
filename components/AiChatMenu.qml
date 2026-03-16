@@ -912,41 +912,55 @@ Rectangle {
                                 id: thoughtBlock
                                 width: parent.width
                                 property bool expanded: false
-                                height: expanded ? (thoughtContent.implicitHeight + thoughtHeader.height + 16) : (thoughtHeader.height + 10)
-                                Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                                color: Qt.rgba(0,0,0,0.15)
+                                height: expanded ? (thoughtContent.implicitHeight + thoughtHeader.height + 24) : (thoughtHeader.height + 12)
+                                Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutQuart } }
+                                color: Qt.rgba(1,1,1,0.03)
                                 radius: dsSmallRadius
                                 clip: true
                                 visible: model.thought ? (model.thought.length > 0) : false
 
+                                // Left accent border
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    width: 2
+                                    color: dsAccent
+                                    opacity: 0.6
+                                }
+
                                 // Clickable header
-                                Row {
+                                RowLayout {
                                     id: thoughtHeader
-                                    x: 8; y: 5
-                                    spacing: 6
+                                    anchors.left: parent.left
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.leftMargin: 12
+                                    height: 32
+                                    spacing: 8
 
                                     Text {
                                         text: "󰌵"
                                         color: dsAccent
-                                        font.pixelSize: 12
+                                        font.pixelSize: 14
                                     }
                                     Text {
                                         text: "Thinking"
-                                        color: Qt.rgba(1,1,1,0.5)
+                                        color: "#ffffff"
+                                        opacity: 0.7
                                         font.pixelSize: 11
-                                        font.weight: Font.Medium
+                                        font.weight: Font.DemiBold
+                                        Layout.fillWidth: true
                                     }
                                     Text {
                                         text: thoughtBlock.expanded ? "󰅃" : "󰅀"
                                         color: Qt.rgba(1,1,1,0.3)
-                                        font.pixelSize: 10
+                                        font.pixelSize: 12
+                                        Layout.rightMargin: 10
                                     }
                                 }
                                 MouseArea {
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.top: parent.top
-                                    height: thoughtHeader.height + 10
+                                    anchors.fill: thoughtHeader
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: thoughtBlock.expanded = !thoughtBlock.expanded
                                 }
@@ -954,19 +968,21 @@ Rectangle {
                                 // Expandable content
                                 Text {
                                     id: thoughtContent
-                                    x: 8
-                                    y: thoughtHeader.height + 10
-                                    width: parent.width - 16
+                                    anchors.left: parent.left
+                                    anchors.top: thoughtHeader.bottom
+                                    anchors.right: parent.right
+                                    anchors.margins: 12
+                                    anchors.topMargin: 4
                                     text: model.thought ? model.thought : ""
-                                    color: Qt.rgba(1,1,1,0.55)
+                                    color: Qt.rgba(1,1,1,0.5)
                                     font.pixelSize: 12
                                     font.italic: true
                                     wrapMode: Text.Wrap
-                                    lineHeight: 1.3
+                                    lineHeight: 1.4
                                     textFormat: Text.MarkdownText
                                     visible: thoughtBlock.expanded
                                     opacity: thoughtBlock.expanded ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: 200 } }
+                                    Behavior on opacity { NumberAnimation { duration: 250 } }
                                 }
                             }
 
@@ -1106,57 +1122,90 @@ Rectangle {
             }
             } // end Item wrapper
 
-            // ── Loading Indicator — shimmer bar ──
+            // ── Loading Indicator — premium pulse ──
             Item {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 24
+                Layout.preferredHeight: 32
                 visible: isLoading
-                Layout.leftMargin: 4
+                Layout.leftMargin: 8
 
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 10
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: 12
 
-                    // Shimmer bar
+                    // Pulsing AI Icon
                     Rectangle {
-                        width: 120; height: 4
-                        radius: 2
+                        width: 24; height: 24
+                        radius: 12
+                        color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.1)
+                        border.width: 1
+                        border.color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.3)
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰚩"
+                            color: dsAccent
+                            font.pixelSize: 14
+                        }
+
+                        // Glow effect
+                        layer.enabled: true
+                        layer.effect: Glow {
+                            radius: 10
+                            samples: 17
+                            color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.4)
+                            spread: 0.2
+                        }
+
+                        SequentialAnimation on scale {
+                            running: isLoading; loops: Animation.Infinite
+                            NumberAnimation { from: 1.0; to: 1.1; duration: 800; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 1.1; to: 1.0; duration: 800; easing.type: Easing.InOutSine }
+                        }
+                    }
+
+                    // Shimmer/Scanning bar
+                    Rectangle {
+                        Layout.preferredWidth: 100; Layout.preferredHeight: 3
+                        radius: 1.5
                         color: Qt.rgba(1,1,1,0.06)
                         clip: true
 
                         Rectangle {
                             id: shimmer
-                            width: 40; height: parent.height
-                            radius: 2
+                            width: 30; height: parent.height
+                            radius: 1.5
                             gradient: Gradient {
                                 orientation: Gradient.Horizontal
                                 GradientStop { position: 0.0; color: "transparent" }
-                                GradientStop { position: 0.5; color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.7) }
+                                GradientStop { position: 0.5; color: dsAccent }
                                 GradientStop { position: 1.0; color: "transparent" }
                             }
 
                             SequentialAnimation on x {
                                 running: isLoading; loops: Animation.Infinite
-                                NumberAnimation { from: -40; to: 120; duration: 1200; easing.type: Easing.InOutQuad }
-                                PauseAnimation { duration: 200 }
+                                NumberAnimation { from: -30; to: 100; duration: 1500; easing.type: Easing.InOutQuad }
+                                PauseAnimation { duration: 300 }
                             }
                         }
                     }
 
                     Text {
                         text: "Thinking..."
-                        color: Qt.rgba(1,1,1,0.35)
-                        font.pixelSize: 11
+                        color: "#ffffff"
+                        opacity: 0.4
+                        font.pixelSize: 12
                         font.weight: Font.Medium
                         font.family: "Inter, sans-serif"
-                        anchors.verticalCenter: parent.verticalCenter
-
+                        
                         SequentialAnimation on opacity {
                             running: isLoading; loops: Animation.Infinite
-                            NumberAnimation { from: 0.35; to: 0.7; duration: 800; easing.type: Easing.InOutSine }
-                            NumberAnimation { from: 0.7; to: 0.35; duration: 800; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 0.4; to: 0.8; duration: 1000; easing.type: Easing.InOutSine }
+                            NumberAnimation { from: 0.8; to: 0.4; duration: 1000; easing.type: Easing.InOutSine }
                         }
                     }
+                    
+                    Item { Layout.fillWidth: true }
                 }
             }
 
