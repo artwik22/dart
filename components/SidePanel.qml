@@ -1246,46 +1246,191 @@ PanelWindow {
                 visible: (sharedData && sharedData.sidebarBatteryEnabled === true)
             }
 
-            QuickToggle {
-                icon: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "⚡" : ""
-                pulsing: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged")
-                contentColor: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "#00ff41" : (sidePanel.qBatteryPct > 40 ? "#ffffff" : (sidePanel.qBatteryPct > 20 ? "#ffd700" : "#ff3b3b"))
-                sharedData: sidePanel.sharedData
-                sidePanelRoot: sidePanel
-                panelPosition: sidePanel.panelPosition
-                outputScreen: sidePanel.screen
-                showBackground: false
+            // ── Circular Battery Ring ─────────────────────────────────────
+            Item {
+                id: batteryRingItem
                 Layout.alignment: Qt.AlignCenter
                 Layout.preferredWidth: 28
                 Layout.preferredHeight: 28
                 visible: (sharedData && sharedData.sidebarBatteryEnabled === true)
-                onClicked: {} // No action on click for now, just a display toggle
-                popoverContent: Component {
+
+                property bool isCharging: {
+                    var s = sidePanel.qBatteryStatus.toLowerCase()
+                    return s === "charging" || s === "full" || s === "fully-charged"
+                }
+                property int pct: sidePanel.qBatteryPct
+                property color ringColor: isCharging
+                    ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
+                    : (pct > 40
+                        ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
+                        : (pct > 20 ? "#ffd700" : "#ff4444"))
+
+                // Pulsing glow when charging
+                SequentialAnimation on opacity {
+                    running: batteryRingItem.isCharging
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 1.0; to: 0.55; duration: 1400; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 0.55; to: 1.0; duration: 1400; easing.type: Easing.InOutSine }
+                }
+
+                scale: batteryRingMouseArea.containsMouse ? 1.12 : 1.0
+                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+
+                // Background ring (track) — subtle thin circle
+                Canvas {
+                    id: batteryTrackCanvas
+                    anchors.fill: parent
+                    Component.onCompleted: requestPaint()
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        var cx = width / 2, cy = height / 2
+                        var r = Math.min(width, height) / 2 - 2.5
+                        ctx.beginPath()
+                        ctx.arc(cx, cy, r, 0, Math.PI * 2)
+                        ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.08)
+                        ctx.lineWidth = 2.5
+                        ctx.stroke()
+                    }
+                }
+
+                // Foreground arc (progress) — colored proportional to battery %
+                Canvas {
+                    id: batteryArcCanvas
+                    anchors.fill: parent
+
+                    Connections {
+                        target: batteryRingItem
+                        function onPctChanged()      { batteryArcCanvas.requestPaint() }
+                        function onRingColorChanged() { batteryArcCanvas.requestPaint() }
+                    }
+
+                    Component.onCompleted: requestPaint()
+
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        var pct = batteryRingItem.pct
+                        if (pct <= 0) return
+                        var frac = Math.min(pct, 100) / 100.0
+                        var cx = width / 2, cy = height / 2
+                        var r = Math.min(width, height) / 2 - 2.5
+                        var startAngle = -Math.PI / 2
+                        var endAngle = startAngle + (Math.PI * 2 * frac)
+
+                        // Subtle glow
+                        ctx.shadowColor = batteryRingItem.ringColor
+                        ctx.shadowBlur = 6
+
+                        ctx.beginPath()
+                        ctx.arc(cx, cy, r, startAngle, endAngle)
+                        ctx.strokeStyle = batteryRingItem.ringColor
+                        ctx.lineWidth = 3
+                        ctx.lineCap = "round"
+                        ctx.stroke()
+                    }
+                }
+
+                // Hover/popover trigger
+                MouseArea {
+                    id: batteryRingMouseArea
+                    anchors.fill: parent
+                    anchors.margins: -4
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+
+                    onEntered: {
+                        if (sidePanel.hoveredTogglesCount !== undefined)
+                            sidePanel.hoveredTogglesCount += 1
+                        sidePanel.showPopover(batteryPopoverComponent, 0, 0)
+                    }
+                    onExited: {
+                        if (sidePanel.hoveredTogglesCount !== undefined && sidePanel.hoveredTogglesCount > 0)
+                            sidePanel.hoveredTogglesCount -= 1
+                        sidePanel.showPopover(null, 0, 0)
+                    }
+                }
+
+                // Popover content
+                property Component batteryPopoverComponent: Component {
                     Rectangle {
-                        width: 200
-                        height: 60
-                        color: (sharedData.colorSecondary || "#141414")
+                        width: 210
+                        height: 80
+                        color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
                         radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 12
-                            Text { 
-                                text: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "⚡" : ""
-                                font.pixelSize: 24
-                                color: (sidePanel.qBatteryStatus.toLowerCase() === "charging" || sidePanel.qBatteryStatus.toLowerCase() === "fully-charged") ? "#00ff41" : (sidePanel.qBatteryPct > 40 ? "#ffffff" : (sidePanel.qBatteryPct > 20 ? "#ffd700" : "#ff3b3b"))
-                            }
-                            Column {
-                                anchors.verticalCenter: parent.verticalCenter
-                                Text { 
-                                    text: sidePanel.qBatteryPct + "%"
-                                    font.pixelSize: 18
-                                    font.weight: Font.Bold
-                                    color: "#ffffff" 
+
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: 14
+                            spacing: 6
+
+                            RowLayout {
+                                width: parent.width
+                                spacing: 10
+
+                                // Mini circular ring in popover
+                                Canvas {
+                                    width: 38; height: 38
+                                    property real frac: Math.max(0, Math.min(sidePanel.qBatteryPct, 100)) / 100.0
+                                    onFracChanged: requestPaint()
+                                    Component.onCompleted: requestPaint()
+                                    onPaint: {
+                                        var ctx = getContext("2d"); ctx.reset()
+                                        var cx = width/2, cy = height/2, r = cx - 3
+                                        // Gray track ring
+                                        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2)
+                                        ctx.strokeStyle = Qt.rgba(1,1,1,0.12); ctx.lineWidth = 3.5; ctx.stroke()
+                                        if (frac > 0) {
+                                            var col = sidePanel.qBatteryPct > 40
+                                                ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
+                                                : (sidePanel.qBatteryPct > 20 ? "#ffd700" : "#ff4444")
+                                            ctx.beginPath()
+                                            ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2 + Math.PI*2*frac)
+                                            ctx.strokeStyle = col; ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.stroke()
+                                        }
+                                    }
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: sidePanel.qBatteryPct + "%"
+                                        font.pixelSize: 8; font.weight: Font.Black
+                                        color: "#ffffff"
+                                        style: Text.Outline
+                                        styleColor: Qt.rgba(0,0,0,0.5)
+                                    }
                                 }
-                                Text { 
-                                    text: sidePanel.qBatteryStatus
-                                    font.pixelSize: 12
-                                    color: Qt.rgba(1,1,1,0.5) 
+
+                                Column {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Text {
+                                        text: sidePanel.qBatteryPct + "%"
+                                        font.pixelSize: 20; font.weight: Font.Black
+                                        color: "#ffffff"
+                                    }
+                                    Text {
+                                        text: sidePanel.qBatteryStatus
+                                        font.pixelSize: 11
+                                        color: Qt.rgba(1,1,1,0.5)
+                                    }
+                                }
+                            }
+
+                            // Progress bar
+                            Item {
+                                width: parent.width; height: 5
+                                Rectangle {
+                                    anchors.fill: parent; radius: height/2
+                                    color: Qt.rgba(1,1,1,0.1)
+                                }
+                                Rectangle {
+                                    height: parent.height; radius: height/2
+                                    width: parent.width * Math.max(0, Math.min(sidePanel.qBatteryPct, 100)) / 100.0
+                                    color: sidePanel.qBatteryPct > 40
+                                        ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
+                                        : (sidePanel.qBatteryPct > 20 ? "#ffd700" : "#ff4444")
+                                    Behavior on width { NumberAnimation { duration: 600; easing.type: Easing.OutExpo } }
                                 }
                             }
                         }

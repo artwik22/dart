@@ -26,3 +26,9 @@ WorkspaceOverview 1.0 WorkspaceOverview.qml
 CaptureMenu 1.0 CaptureMenu.qml
 Notch 1.0 Notch.qml
 MangoWM 1.0 MangoWM.qml
+ClipboardTab 1.0 ClipboardTab.qml
+DashboardTab 1.0 DashboardTab.qml
+NotificationTab 1.0 NotificationTab.qml
+PerformanceTab 1.0 PerformanceTab.qml
+ScreenshotEditor 1.0 ScreenshotEditor.qml
+SettingsApplication 1.0 SettingsApplication.qml
