@@ -1283,6 +1283,11 @@ PanelWindow {
                     layer.enabled: true
                     layer.samples: 4  // MSAA for extra smoothness
 
+                    property real animatedPct: batteryRingItem.pct
+                    Behavior on animatedPct {
+                        NumberAnimation { duration: 800; easing.type: Easing.OutCubic }
+                    }
+
                     // Track — full gray circle
                     ShapePath {
                         strokeColor: Qt.rgba(1, 1, 1, 0.1)
@@ -1313,11 +1318,8 @@ PanelWindow {
                             radiusX: batteryRingItem.width / 2 - 2
                             radiusY: batteryRingItem.height / 2 - 2
                             startAngle: -90
-                            sweepAngle: Math.min(batteryRingItem.pct, 100) / 100.0 * 360
-
-                            Behavior on sweepAngle {
-                                NumberAnimation { duration: 800; easing.type: Easing.OutCubic }
-                            }
+                            sweepAngle: Math.max(0, Math.min(batteryRingShape.animatedPct, 100)) / 100.0 * 360
+                            // Note: intentionally avoided Behavior on sweepAngle to prevent binding breakage
                         }
                     }
                 }
@@ -1368,6 +1370,9 @@ PanelWindow {
                                         layer.enabled: true
                                         layer.samples: 4
 
+                                        property real animatedPct: sidePanel.qBatteryPct
+                                        Behavior on animatedPct { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+
                                         // Background track
                                         ShapePath {
                                             strokeColor: Qt.rgba(1, 1, 1, 0.1)
@@ -1395,8 +1400,7 @@ PanelWindow {
                                                 centerX: 19; centerY: 19
                                                 radiusX: 16; radiusY: 16
                                                 startAngle: -90
-                                                sweepAngle: Math.max(0, Math.min(sidePanel.qBatteryPct, 100)) / 100.0 * 360
-                                                Behavior on sweepAngle { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+                                                sweepAngle: Math.max(0, Math.min(parent.animatedPct, 100)) / 100.0 * 360
                                             }
                                         }
                                     }
