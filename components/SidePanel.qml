@@ -1250,8 +1250,8 @@ PanelWindow {
             Item {
                 id: batteryRingItem
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 28
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
                 visible: (sharedData && sharedData.sidebarBatteryEnabled === true)
 
                 property bool isCharging: {
@@ -1276,58 +1276,49 @@ PanelWindow {
                 scale: batteryRingMouseArea.containsMouse ? 1.12 : 1.0
                 Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
 
-                // Background ring (track) — subtle thin circle
-                Canvas {
-                    id: batteryTrackCanvas
+                // GPU-rendered ring using Shape (antialiased, smooth)
+                Shape {
+                    id: batteryRingShape
                     anchors.fill: parent
-                    Component.onCompleted: requestPaint()
-                    onPaint: {
-                        var ctx = getContext("2d")
-                        ctx.reset()
-                        var cx = width / 2, cy = height / 2
-                        var r = Math.min(width, height) / 2 - 2.5
-                        ctx.beginPath()
-                        ctx.arc(cx, cy, r, 0, Math.PI * 2)
-                        ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.08)
-                        ctx.lineWidth = 2.5
-                        ctx.stroke()
-                    }
-                }
+                    layer.enabled: true
+                    layer.samples: 4  // MSAA for extra smoothness
 
-                // Foreground arc (progress) — colored proportional to battery %
-                Canvas {
-                    id: batteryArcCanvas
-                    anchors.fill: parent
+                    // Track — full gray circle
+                    ShapePath {
+                        strokeColor: Qt.rgba(1, 1, 1, 0.1)
+                        strokeWidth: 2
+                        fillColor: "transparent"
+                        capStyle: ShapePath.RoundCap
 
-                    Connections {
-                        target: batteryRingItem
-                        function onPctChanged()      { batteryArcCanvas.requestPaint() }
-                        function onRingColorChanged() { batteryArcCanvas.requestPaint() }
+                        PathAngleArc {
+                            centerX: batteryRingItem.width / 2
+                            centerY: batteryRingItem.height / 2
+                            radiusX: batteryRingItem.width / 2 - 2
+                            radiusY: batteryRingItem.height / 2 - 2
+                            startAngle: 0
+                            sweepAngle: 360
+                        }
                     }
 
-                    Component.onCompleted: requestPaint()
+                    // Progress arc — proportional to battery %
+                    ShapePath {
+                        strokeColor: batteryRingItem.ringColor
+                        strokeWidth: 2.5
+                        fillColor: "transparent"
+                        capStyle: ShapePath.RoundCap
 
-                    onPaint: {
-                        var ctx = getContext("2d")
-                        ctx.reset()
-                        var pct = batteryRingItem.pct
-                        if (pct <= 0) return
-                        var frac = Math.min(pct, 100) / 100.0
-                        var cx = width / 2, cy = height / 2
-                        var r = Math.min(width, height) / 2 - 2.5
-                        var startAngle = -Math.PI / 2
-                        var endAngle = startAngle + (Math.PI * 2 * frac)
+                        PathAngleArc {
+                            centerX: batteryRingItem.width / 2
+                            centerY: batteryRingItem.height / 2
+                            radiusX: batteryRingItem.width / 2 - 2
+                            radiusY: batteryRingItem.height / 2 - 2
+                            startAngle: -90
+                            sweepAngle: Math.min(batteryRingItem.pct, 100) / 100.0 * 360
 
-                        // Subtle glow
-                        ctx.shadowColor = batteryRingItem.ringColor
-                        ctx.shadowBlur = 6
-
-                        ctx.beginPath()
-                        ctx.arc(cx, cy, r, startAngle, endAngle)
-                        ctx.strokeStyle = batteryRingItem.ringColor
-                        ctx.lineWidth = 3
-                        ctx.lineCap = "round"
-                        ctx.stroke()
+                            Behavior on sweepAngle {
+                                NumberAnimation { duration: 800; easing.type: Easing.OutCubic }
+                            }
+                        }
                     }
                 }
 
@@ -1342,7 +1333,7 @@ PanelWindow {
                     onEntered: {
                         if (sidePanel.hoveredTogglesCount !== undefined)
                             sidePanel.hoveredTogglesCount += 1
-                        sidePanel.showPopover(batteryPopoverComponent, 0, 0)
+                        sidePanel.showPopover(batteryRingItem.batteryPopoverComponent, 0, 0)
                     }
                     onExited: {
                         if (sidePanel.hoveredTogglesCount !== undefined && sidePanel.hoveredTogglesCount > 0)
@@ -1368,27 +1359,48 @@ PanelWindow {
                                 width: parent.width
                                 spacing: 10
 
-                                // Mini circular ring in popover
-                                Canvas {
+                                // Mini circular ring in popover (GPU rendered)
+                                Item {
                                     width: 38; height: 38
-                                    property real frac: Math.max(0, Math.min(sidePanel.qBatteryPct, 100)) / 100.0
-                                    onFracChanged: requestPaint()
-                                    Component.onCompleted: requestPaint()
-                                    onPaint: {
-                                        var ctx = getContext("2d"); ctx.reset()
-                                        var cx = width/2, cy = height/2, r = cx - 3
-                                        // Gray track ring
-                                        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2)
-                                        ctx.strokeStyle = Qt.rgba(1,1,1,0.12); ctx.lineWidth = 3.5; ctx.stroke()
-                                        if (frac > 0) {
-                                            var col = sidePanel.qBatteryPct > 40
+                                    
+                                    Shape {
+                                        anchors.fill: parent
+                                        layer.enabled: true
+                                        layer.samples: 4
+
+                                        // Background track
+                                        ShapePath {
+                                            strokeColor: Qt.rgba(1, 1, 1, 0.1)
+                                            strokeWidth: 3
+                                            fillColor: "transparent"
+                                            capStyle: ShapePath.RoundCap
+
+                                            PathAngleArc {
+                                                centerX: 19; centerY: 19
+                                                radiusX: 16; radiusY: 16
+                                                startAngle: 0; sweepAngle: 360
+                                            }
+                                        }
+
+                                        // Progress arc
+                                        ShapePath {
+                                            strokeColor: sidePanel.qBatteryPct > 40
                                                 ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
                                                 : (sidePanel.qBatteryPct > 20 ? "#ffd700" : "#ff4444")
-                                            ctx.beginPath()
-                                            ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2 + Math.PI*2*frac)
-                                            ctx.strokeStyle = col; ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.stroke()
+                                            strokeWidth: 3.5
+                                            fillColor: "transparent"
+                                            capStyle: ShapePath.RoundCap
+
+                                            PathAngleArc {
+                                                centerX: 19; centerY: 19
+                                                radiusX: 16; radiusY: 16
+                                                startAngle: -90
+                                                sweepAngle: Math.max(0, Math.min(sidePanel.qBatteryPct, 100)) / 100.0 * 360
+                                                Behavior on sweepAngle { NumberAnimation { duration: 800; easing.type: Easing.OutCubic } }
+                                            }
                                         }
                                     }
+
                                     Text {
                                         anchors.centerIn: parent
                                         text: sidePanel.qBatteryPct + "%"
