@@ -407,7 +407,7 @@ Rectangle {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "󰚩"
+                    text: "󰭹"
                     color: dsAccent
                     font.pixelSize: 16
                 }
@@ -746,7 +746,7 @@ Rectangle {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "󰚩"
+                            text: "󰭹"
                             color: dsAccent
                             font.pixelSize: 28
                         }
@@ -890,15 +890,6 @@ Rectangle {
                         anchors.right: model.role === "user" ? parent.right : undefined
                         anchors.left: model.role === "assistant" ? parent.left : undefined
 
-                        // Accent left bar for assistant messages
-                        Rectangle {
-                            width: 3
-                            height: parent.height
-                            color: dsAccent
-                            opacity: 0.5
-                            visible: model.role === "assistant"
-                            radius: 1.5
-                        }
 
                         Column {
                             id: messageColumn
@@ -919,15 +910,6 @@ Rectangle {
                                 clip: true
                                 visible: model.thought ? (model.thought.length > 0) : false
 
-                                // Left accent border
-                                Rectangle {
-                                    anchors.left: parent.left
-                                    anchors.top: parent.top
-                                    anchors.bottom: parent.bottom
-                                    width: 2
-                                    color: dsAccent
-                                    opacity: 0.6
-                                }
 
                                 // Clickable header
                                 RowLayout {
@@ -940,16 +922,11 @@ Rectangle {
                                     spacing: 8
 
                                     Text {
-                                        text: "󰌵"
-                                        color: dsAccent
-                                        font.pixelSize: 14
-                                    }
-                                    Text {
                                         text: "Thinking"
-                                        color: "#ffffff"
-                                        opacity: 0.7
+                                        color: dsAccent
                                         font.pixelSize: 11
                                         font.weight: Font.DemiBold
+                                        font.letterSpacing: 0.5
                                         Layout.fillWidth: true
                                     }
                                     Text {
@@ -1133,65 +1110,34 @@ Rectangle {
                     anchors.fill: parent
                     spacing: 12
 
-                    // Pulsing AI Icon
-                    Rectangle {
-                        width: 24; height: 24
-                        radius: 12
-                        color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.1)
-                        border.width: 1
-                        border.color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.3)
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰚩"
-                            color: dsAccent
-                            font.pixelSize: 14
-                        }
-
-                        // Glow effect
-                        layer.enabled: true
-                        layer.effect: Glow {
-                            radius: 10
-                            samples: 17
-                            color: Qt.rgba(dsAccent.r, dsAccent.g, dsAccent.b, 0.4)
-                            spread: 0.2
-                        }
-
-                        SequentialAnimation on scale {
-                            running: isLoading; loops: Animation.Infinite
-                            NumberAnimation { from: 1.0; to: 1.1; duration: 800; easing.type: Easing.InOutSine }
-                            NumberAnimation { from: 1.1; to: 1.0; duration: 800; easing.type: Easing.InOutSine }
-                        }
-                    }
-
-                    // Shimmer/Scanning bar
-                    Rectangle {
-                        Layout.preferredWidth: 100; Layout.preferredHeight: 3
-                        radius: 1.5
-                        color: Qt.rgba(1,1,1,0.06)
-                        clip: true
-
-                        Rectangle {
-                            id: shimmer
-                            width: 30; height: parent.height
-                            radius: 1.5
-                            gradient: Gradient {
-                                orientation: Gradient.Horizontal
-                                GradientStop { position: 0.0; color: "transparent" }
-                                GradientStop { position: 0.5; color: dsAccent }
-                                GradientStop { position: 1.0; color: "transparent" }
-                            }
-
-                            SequentialAnimation on x {
-                                running: isLoading; loops: Animation.Infinite
-                                NumberAnimation { from: -30; to: 100; duration: 1500; easing.type: Easing.InOutQuad }
-                                PauseAnimation { duration: 300 }
+                    // Modern Three-Dot Loading Indicator
+                    Row {
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.preferredHeight: 5 // Height of the dots
+                        spacing: 4
+                        
+                        Repeater {
+                            model: 3
+                            delegate: Rectangle {
+                                width: 5; height: 5
+                                radius: 2.5
+                                color: dsAccent
+                                opacity: 0.3
+                                
+                                SequentialAnimation on opacity {
+                                    running: isLoading; loops: Animation.Infinite
+                                    PauseAnimation { duration: index * 200 }
+                                    NumberAnimation { from: 0.3; to: 1.0; duration: 400; easing.type: Easing.InOutSine }
+                                    NumberAnimation { from: 1.0; to: 0.3; duration: 400; easing.type: Easing.InOutSine }
+                                    PauseAnimation { duration: (2 - index) * 200 }
+                                }
                             }
                         }
                     }
 
                     Text {
                         text: "Thinking..."
+                        Layout.alignment: Qt.AlignVCenter
                         color: "#ffffff"
                         opacity: 0.4
                         font.pixelSize: 12

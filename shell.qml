@@ -479,12 +479,10 @@ ShellRoot {
         }
     }
 
-    // Funkcja otwierania aplikacji ustawień (fuse)
+    // Funkcja otwierania aplikacji ustawień (quickshell)
     function openSettings() {
-        var scaleFactor = (sharedData && sharedData.uiScale) ? sharedData.uiScale : 1.0
-        var scaleStr = String(scaleFactor)
-        var cmd = "GTK_SCALE_FACTOR=" + scaleStr + " fuse 2>/dev/null || GTK_SCALE_FACTOR=" + scaleStr + " $HOME/.local/bin/fuse 2>/dev/null || GTK_SCALE_FACTOR=" + scaleStr + " $HOME/.config/alloy/fuse/target/release/fuse 2>/dev/null"
-        processHelper.runCommand(['sh', '-c', cmd.replace(/'/g, "'\"'\"'")])
+        var cmd = "quickshell -p " + projectPath + "/settings.qml"
+        processHelper.runCommand(['sh', '-c', cmd])
     }
     
     // Toggle the new Capture HUD
