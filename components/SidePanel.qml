@@ -531,9 +531,44 @@ PanelWindow {
                 z: -1
                 active: !isHorizontal && sidePanelWorkspaceColumnContainer.visible && sidePanel.dynamicBackground && sidePanelWorkspaceColumnContainer.mode !== "top"
             }
+            // Liquid Morph Track (Vertical)
+            Rectangle {
+                id: wsTrackVert
+                width: 2
+                height: sidePanelWorkspaceColumn.height
+                x: (parent.width - width) / 2
+                y: sidePanelWorkspaceColumn.y
+                color: Qt.rgba(1, 1, 1, 0.08)
+                radius: 1
+                z: -1
+                visible: !isHorizontal
+            }
+
+            // Liquid Morph Segment (Active Workspace - Vertical)
+            Rectangle {
+                id: wsActiveSegmentVert
+                width: 4
+                x: (parent.width - width) / 2
+                z: 0
+                visible: !isHorizontal
+                
+                property var provider: (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
+                property int activeIndex: provider.focusedWorkspace ? Math.max(0, Math.min(3, provider.focusedWorkspace.id - 1)) : 0
+                
+                // Position and height animation to create "morph" feel
+                height: 20 
+                y: sidePanelWorkspaceColumn.y + activeIndex * (16 + 12) + (16 - height) / 2
+                
+                color: sharedData.colorAccent || "#4a9eff"
+                radius: 2
+                
+                Behavior on y { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: 300 } }
+            }
+
             Column { 
                 id: sidePanelWorkspaceColumn
-                spacing: 8
+                spacing: 12
                 width: parent.width
                 
                 Repeater { 
@@ -541,39 +576,14 @@ PanelWindow {
                     Item { 
                         id: workspaceItem
                         width: parent.width
-                        height: Math.max(workspaceLine.height, 12)
+                        height: 16
                         anchors.horizontalCenter: parent.horizontalCenter
-                        property var provider: (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
-                        property bool isActive: provider.focusedWorkspace ? provider.focusedWorkspace.id === (index + 1) : false
-                        property bool hasWindows: { 
-                            if (!provider.workspaces) return false
-                            var ws = null
-                            if (Array.isArray(provider.workspaces)) {
-                                ws = provider.workspaces.find(w => w.id === (index + 1))
-                            } else if (Array.isArray(provider.workspaces.values)) {
-                                ws = provider.workspaces.values.find(w => w.id === (index + 1))
-                            }
-                            return ws ? (ws.lastIpcObject ? ws.lastIpcObject.windows > 0 : !!ws.occupied) : false 
-                        }
                         
-                        property bool isDots: (sharedData && sharedData.sidebarStyle === "dots")
-                        property real targetHeight: isDots ? (isActive ? 32 : (hasWindows ? 12 : 6)) : (isActive ? 64 : (hasWindows ? 32 : 16))
-                        property real targetWidth: isDots ? 6 : 3
+                        property var provider: (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
+                        
+                        // Pure Mode: No dots, no dashes, no visual markers here.
+                        // Only the underlying track and moving segment define the UI.
 
-                        Rectangle { 
-                            id: workspaceLine
-                            anchors.centerIn: parent
-                            width: workspaceItem.targetWidth
-                            height: workspaceItem.targetHeight
-                            radius: isDots ? (width / 2) : ((sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0)
-                            color: workspaceItem.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItem.hasWindows ? "#fff" : "#666")
-                            opacity: workspaceItem.isActive ? 1.0 : (workspaceItem.hasWindows ? 0.8 : 0.4)
-                            scale: wsMouseArea.containsMouse ? 1.3 : 1.0
-                            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
-                            Behavior on color { ColorAnimation { duration: 200 } }
-                            Behavior on opacity { NumberAnimation { duration: 200 } }
-                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                        }
                         MouseArea { 
                             id: wsMouseArea
                             anchors.fill: parent
@@ -638,9 +648,43 @@ PanelWindow {
             z: 50
             
             // Background for workspaces is shared in Horizontal mode (see above), so no loader here.
+            // Liquid Morph Track (Horizontal)
+            Rectangle {
+                id: wsTrackHoriz
+                height: 2
+                width: sidePanelWorkspaceRow.width
+                y: (parent.height - height) / 2
+                x: sidePanelWorkspaceRow.x
+                color: Qt.rgba(1, 1, 1, 0.08)
+                radius: 1
+                z: -1
+                visible: isHorizontal
+            }
+
+            // Liquid Morph Segment (Active Workspace - Horizontal)
+            Rectangle {
+                id: wsActiveSegmentHoriz
+                height: 4
+                y: (parent.height - height) / 2
+                z: 0
+                visible: isHorizontal
+                
+                property var provider: (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
+                property int activeIndex: provider.focusedWorkspace ? Math.max(0, Math.min(3, provider.focusedWorkspace.id - 1)) : 0
+                
+                width: 20
+                x: sidePanelWorkspaceRow.x + activeIndex * (16 + 12) + (16 - width) / 2
+                
+                color: sharedData.colorAccent || "#4a9eff"
+                radius: 2
+                
+                Behavior on x { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: 300 } }
+            }
+
             Row { 
                 id: sidePanelWorkspaceRow
-                spacing: 8
+                spacing: 12
                 height: parent.height
                 
                 opacity: panelActive ? 1.0 : 0.0
@@ -659,39 +703,13 @@ PanelWindow {
                     Item { 
                         id: workspaceItemTop
                         height: parent.height
-                        width: Math.max(workspaceLineTop.width, 12)
+                        width: 16
                         anchors.verticalCenter: parent.verticalCenter
+                        
                         property var provider: (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
-                        property bool isActive: provider.focusedWorkspace ? provider.focusedWorkspace.id === (index + 1) : false
-                        property bool hasWindows: { 
-                            if (!provider.workspaces) return false
-                            var ws = null
-                            if (Array.isArray(provider.workspaces)) {
-                                ws = provider.workspaces.find(w => w.id === (index + 1))
-                            } else if (Array.isArray(provider.workspaces.values)) {
-                                ws = provider.workspaces.values.find(w => w.id === (index + 1))
-                            }
-                            return ws ? (ws.lastIpcObject ? ws.lastIpcObject.windows > 0 : !!ws.occupied) : false 
-                        }
+                        
+                        // Pure Mode: No visual markers for individual workspaces here.
 
-                        property bool isDots: (sharedData && sharedData.sidebarStyle === "dots")
-                        property real targetWidth: isDots ? (isActive ? 32 : (hasWindows ? 12 : 6)) : (isActive ? 64 : (hasWindows ? 32 : 16))
-                        property real targetHeight: isDots ? 6 : 3
-
-                        Rectangle { 
-                            id: workspaceLineTop
-                            anchors.centerIn: parent
-                            height: workspaceItemTop.targetHeight
-                            width: workspaceItemTop.targetWidth
-                            radius: isDots ? (height / 2) : ((sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 0)
-                            color: workspaceItemTop.isActive ? (sharedData.colorAccent || "#4a9eff") : (workspaceItemTop.hasWindows ? "#fff" : "#666")
-                            opacity: workspaceItemTop.isActive ? 1.0 : (workspaceItemTop.hasWindows ? 0.8 : 0.4)
-                            scale: wsMouseAreaTop.containsMouse ? 1.3 : 1.0
-                            Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutBack } } 
-                            Behavior on color { ColorAnimation { duration: 200 } }
-                            Behavior on opacity { NumberAnimation { duration: 200 } }
-                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                        }
                         MouseArea { 
                             id: wsMouseAreaTop
                             anchors.fill: parent
