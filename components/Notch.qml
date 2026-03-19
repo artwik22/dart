@@ -324,7 +324,7 @@ PanelWindow {
                 }
 
                 NotchButton {
-                    iconText: "󰈢"
+                    iconText: "󰍉"
                     label: "Search"
                     accentColor: notchRoot.colorAccent
                     onClicked: {
