@@ -104,6 +104,8 @@ ShellRoot {
         property bool dynamicSidebarBackground: false
         property bool micaSidebarBackground: false
         property var workspaceProvider: Hyprland // Default to Hyprland
+        property string activeScreenshotPath: ""
+        property string activeThumbnailPath: ""
     }
     
     // Color config file path - dynamically determined
@@ -224,7 +226,7 @@ ShellRoot {
         processHelper.runCommand(['sh', '-c', 'pgrep mango > /dev/null && echo "mango" || echo "hyprland"'], function(out) {
             // pgrep via ProcessHelper might not return output directly to this callback if not captured.
             // Wait, ProcessHelper.runCommand in shell.qml uses a callback with no args usually?
-            // Let me check ProcessHelper.qml again.
+            // Wait, ProcessHelper.qml again.
         })
     }
     
@@ -449,6 +451,12 @@ ShellRoot {
             sharedData.lockScreenVisible = false
         } else if (cmd === "toggleWorkspaceOverview") {
             root.toggleWorkspaceOverview()
+        } else if (cmd.startsWith("editScreenshot ")) {
+            var path = cmd.substring(15).trim()
+            sharedData.activeScreenshotPath = path
+        } else if (cmd.startsWith("showThumbnail ")) {
+            var path = cmd.substring(14).trim()
+            root.showScreenshotThumbnail(path)
         }
     }
     
@@ -795,6 +803,43 @@ ShellRoot {
                 required property var modelData
                 screen: modelData
                 sharedData: root.sharedData
+            }
+        }
+    }
+
+    // Screenshot Editor Loader
+    Loader {
+        id: screenshotEditorLoader
+        active: sharedData.activeScreenshotPath !== ""
+        asynchronous: true
+        source: "components/ScreenshotEditor.qml"
+        onLoaded: {
+            item.imagePath = sharedData.activeScreenshotPath
+            item.sharedData = sharedData
+            item.editorClosed.connect(function() {
+                sharedData.activeScreenshotPath = ""
+            })
+        }
+    }
+
+    function showScreenshotThumbnail(path) {
+        sharedData.activeThumbnailPath = path
+    }
+
+    Variants {
+        model: (sharedData.activeThumbnailPath !== "" && Quickshell.screens.length > 0) ? [Quickshell.screens[0]] : []
+        delegate: Component {
+            Loader {
+                id: thumbnailLoader
+                required property var modelData
+                active: sharedData.activeThumbnailPath !== ""
+                source: "components/ScreenshotThumbnail.qml"
+                
+                onLoaded: {
+                    item.screen = modelData
+                    item.imagePath = sharedData.activeThumbnailPath
+                    item.sharedData = sharedData
+                }
             }
         }
     }

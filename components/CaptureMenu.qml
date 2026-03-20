@@ -1,260 +1,165 @@
 import QtQuick
-import QtQml
+import QtQuick.Layouts
+import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
-import "."
 
 PanelWindow {
-    id: captureMenuRoot
+    id: root
     
     property var sharedData: null
     property var screen: null
     
-    // Position it in the center or bottom of the screen
-    anchors { 
-        top: true
-        bottom: true
-        left: true
-        right: true
-    }
-    
+    anchors { top: true; bottom: true; left: true; right: true }
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: (sharedData && sharedData.captureMenuVisible) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    exclusiveZone: 0
     
-    // Animation readiness
-    property bool animationReady: false
-    Component.onCompleted: {
-        animationReady = true
-    }
+    property real showProgress: (sharedData && sharedData.captureMenuVisible) ? 1.0 : 0.0
+    Behavior on showProgress { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
 
-    // Animation driver
-    property real showProgress: 0
-    Binding on showProgress {
-        when: animationReady
-        value: (sharedData && sharedData.captureMenuVisible) ? 1.0 : 0.0
-    }
-    Behavior on showProgress {
-        NumberAnimation { 
-            duration: 350
-            easing.type: Easing.OutBack
-            easing.overshoot: 1.15
-        }
-    }
-
-    visible: showProgress > 0.0
+    visible: showProgress > 0.01
     color: "transparent"
     
-    // Helper function for colors
-    function getTransparentColor(hex, alpha) {
-        if (!hex || hex.length < 7) return Qt.rgba(1, 1, 1, alpha);
-        var r = parseInt(hex.substring(1, 3), 16) / 255;
-        var g = parseInt(hex.substring(3, 5), 16) / 255;
-        var b = parseInt(hex.substring(5, 7), 16) / 255;
-        return Qt.rgba(r, g, b, alpha);
-    }
-    
-    // Base colors
-    property string colorBackground: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0a0a0a"
-    property string colorPrimary: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
-    property string colorSecondary: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
-    property string colorAccent: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-    property string colorText: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
-    
+    // ── Design Tokens ──
+    property color dsAccent: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+    property color dsSurface: (sharedData && sharedData.colorSecondary) ? Qt.rgba(sharedData.colorSecondary.r, sharedData.colorSecondary.g, sharedData.colorSecondary.b, 1.0) : "#141414"
+    property color dsBorder: Qt.rgba(1, 1, 1, 0.1)
+    property real dsRadius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
+
     // Recording state
     property bool isRecording: false
     
-    // Check if recording is active
     Timer {
-        interval: 1000
-        running: sharedData && sharedData.captureMenuVisible
-        repeat: true
+        interval: 1000; running: root.visible; repeat: true
         onTriggered: {
             if (sharedData && sharedData.runCommand) {
-                sharedData.runCommand(['sh', '-c', 'pgrep -x wf-recorder > /dev/null && echo 1 || echo 0 > /tmp/quickshell_rec_status'])
-                if (sharedData.setTimeout) sharedData.setTimeout(function() {
-                        var xhr = new XMLHttpRequest()
-                        xhr.open("GET", "file:///tmp/quickshell_rec_status")
-                        xhr.onreadystatechange = function() {
-                            if (xhr.readyState === XMLHttpRequest.DONE) {
-                                isRecording = xhr.responseText.trim() === "1"
-                            }
-                        }
-                        xhr.send()
-                }, 100)
+                sharedData.runCommand(['sh', '-c', 'pgrep -x wf-recorder > /dev/null && echo 1 || echo 0'], function(out) {
+                    isRecording = out.trim() === "1"
+                })
             }
         }
     }
     
     MouseArea {
         anchors.fill: parent
-        enabled: sharedData && sharedData.captureMenuVisible
-        hoverEnabled: true    
-        onClicked: {
-            if (sharedData) sharedData.captureMenuVisible = false
-        }
+        onClicked: sharedData.captureMenuVisible = false
     }
     
-    Item {
+    Rectangle {
         id: menuContainer
-        width: 320
-        height: 80
+        width: 400; height: 100
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: 15
+        anchors.top: parent.top; anchors.topMargin: 40
+        radius: dsRadius
+        color: dsSurface
         
+        scale: 0.95 + (showProgress * 0.05)
         opacity: showProgress
-        enabled: showProgress > 0.02
-        focus: showProgress > 0.02
-        scale: 0.9 + (showProgress * 0.1)
-        transformOrigin: Item.Top
-        transform: Translate {
-            y: (showProgress - 1.0) * 40
-        }
         
-        Rectangle {
-            id: menuBackground
-            anchors.fill: parent
-            radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 12
-            color: colorSecondary 
-            border.width: 0 // Removed border as requested
-        }
+        border.width: 1
+        border.color: dsBorder
         
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {} // Block clicks from closing menu
-        }
-
-        Row {
+        RowLayout {
             anchors.centerIn: parent
             spacing: 20
             
-            // Area Screenshot
             CaptureButton {
-                iconName: "󰆞"
-                tooltipText: "Area Snippet"
-                iconColor: colorText
-                bgHoverColor: colorPrimary
-                onClicked: {
-                    if (sharedData && sharedData.runCommand) {
-                        sharedData.runCommand(['sh', '-c', 'sleep 0.2 && /home/iartwik/.config/alloy/dart/scripts/take-screenshot.sh &'])
-                    }
-                    if (sharedData) sharedData.captureMenuVisible = false
-                }
+                icon: "󰆞"; label: "Area"; tooltip: "Select area"
+                onClicked: { runCapture(""); close() }
+            }
+            CaptureButton {
+                icon: "󰍹"; label: "Screen"; tooltip: "Full screen"
+                onClicked: { runCapture("--full"); close() }
+            }
+            CaptureButton {
+                icon: "󰖲"; label: "Window"; tooltip: "Active window"
+                onClicked: { runCapture("--window"); close() }
             }
             
-            // Full Screen
-            CaptureButton {
-                iconName: "󰍹"
-                tooltipText: "Full Screen"
-                iconColor: colorText
-                bgHoverColor: colorPrimary
-                onClicked: {
-                    if (sharedData && sharedData.runCommand) {
-                        // Use the existing screenshot script
-                        sharedData.runCommand(['sh', '-c', 'sleep 0.2 && /home/iartwik/.config/alloy/dart/screenshot.sh --full &'])
-                    }
-                    if (sharedData) sharedData.captureMenuVisible = false
-                }
+            Rectangle { 
+                width: 1; height: 32; color: Qt.rgba(1, 1, 1, 0.08); Layout.leftMargin: 4; Layout.rightMargin: 4 
             }
             
-            Rectangle {
-                width: 1
-                height: 40
-                color: Qt.rgba(1, 1, 1, 0.1)
-                anchors.verticalCenter: parent.verticalCenter
+            CaptureButton {
+                icon: "󰏫"; label: "Edit"; tooltip: "Capture & Edit"
+                onClicked: { runCapture("--edit"); close() }
             }
             
-            // Record Screen
             CaptureButton {
-                iconName: "󰑊"
-                tooltipText: "Record Screen"
-                iconColor: isRecording ? "#ff4a4a" : colorText
-                bgHoverColor: colorPrimary
+                icon: isRecording ? "󰓛" : "󰑊"; label: isRecording ? "Stop" : "Record"
+                tooltip: isRecording ? "Stop recording" : "Record screen"
+                highlight: isRecording; highlightColor: "#ff4444"
                 onClicked: {
-                    if (isRecording) return;
-                    if (sharedData && sharedData.runCommand) {
-                        sharedData.runCommand(['sh', '-c', 'mkdir -p ~/Videos/Recordings && notify-send -a Alloy "Recording" "Screen recording started" && wf-recorder -f ~/Videos/Recordings/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4 &'])
-                        isRecording = true
+                    if (isRecording) {
+                        sharedData.runCommand(['sh', '-c', 'pkill -INT wf-recorder || pkill wf-recorder'])
+                    } else {
+                        sharedData.runCommand(['sh', '-c', 'mkdir -p ~/Videos/Recordings && wf-recorder -f ~/Videos/Recordings/rec_$(date +%H%M%S).mp4 &'])
+                        notify("Recording Started", "Video is being saved to ~/Videos/Recordings")
                     }
-                    if (sharedData) sharedData.captureMenuVisible = false
+                    close()
                 }
-            }
-            
-            // Stop Recording
-            CaptureButton {
-                iconName: "󰓛"
-                tooltipText: "Stop Recording"
-                opacity: isRecording ? 1.0 : 0.4
-                enabled: isRecording
-                iconColor: colorText
-                bgHoverColor: getTransparentColor("#ff4a4a", 0.3)
-                onClicked: {
-                    if (sharedData && sharedData.runCommand) {
-                        sharedData.runCommand(['sh', '-c', 'pkill -INT wf-recorder || pkill wf-recorder && notify-send -a Alloy "Recording" "Screen recording stopped and saved"'])
-                        isRecording = false
-                    }
-                    if (sharedData) sharedData.captureMenuVisible = false
-                }
-            }
-        }
-        
-        Keys.onPressed: function(event) {
-            if (event.key === Qt.Key_Escape) {
-                if (sharedData) sharedData.captureMenuVisible = false
-                event.accepted = true
             }
         }
     }
+
+    function runCapture(args) {
+        sharedData.runCommand(['sh', '-c', 'sleep 0.3 && /home/iartwik/.config/alloy/dart/scripts/take-screenshot.sh ' + args + ' &'])
+    }
     
-    // Internal component for the buttons
+    function close() { sharedData.captureMenuVisible = false }
+    function notify(title, msg) { sharedData.runCommand(['notify-send', '-a', 'Alloy', title, msg]) }
+
     component CaptureButton : Rectangle {
-        id: btnRoot
-        property string iconName: ""
-        property string tooltipText: ""
-        property string iconColor: "#ffffff"
-        property string bgHoverColor: "#1a1a1a"
-        
-        width: 52
-        height: 52
-        radius: 10
-        color: ma.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
-        
-        Behavior on color { ColorAnimation { duration: 150 } }
-        
-        Text {
-            anchors.centerIn: parent
-            text: btnRoot.iconName
-            font.family: "Material Design Icons"
-            font.pixelSize: 26
-            color: btnRoot.iconColor
-            
-            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
-            scale: ma.pressed ? 0.9 : (ma.containsMouse ? 1.05 : 1.0)
-        }
-        
-        MouseArea {
-            id: ma
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: btnRoot.clicked()
-        }
-        
-        // Tooltip text below
-        Text {
-            anchors.top: parent.bottom
-            anchors.topMargin: 4
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: btnRoot.tooltipText
-            font.family: "Inter, Roboto, sans-serif"
-            font.pixelSize: 10
-            color: Qt.rgba(255, 255, 255, 0.6)
-            opacity: ma.containsMouse ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 150 } }
-        }
-        
+        id: btn
+        property string icon: ""
+        property string label: ""
+        property string tooltip: ""
+        property bool highlight: false
+        property color highlightColor: root.dsAccent
         signal clicked()
+
+        width: 72; height: 72; radius: 12
+        color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
+        border.width: 1
+        border.color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
+        Behavior on color { ColorAnimation { duration: 150 } }
+
+        ColumnLayout {
+            anchors.centerIn: parent; spacing: 4
+            Text {
+                Layout.alignment: Qt.AlignHCenter
+                text: btn.icon; font.family: "Material Design Icons"; font.pixelSize: 28
+                color: btn.highlight ? btn.highlightColor : (ma.containsMouse ? dsAccent : "#ffffff")
+                opacity: (btn.highlight || ma.containsMouse) ? 1.0 : 0.7
+                Behavior on color { ColorAnimation { duration: 150 } }
+                scale: ma.pressed ? 0.9 : 1.0
+                Behavior on scale { NumberAnimation { duration: 100 } }
+            }
+            Text {
+                Layout.alignment: Qt.AlignHCenter
+                text: btn.label; color: "#ffffff"
+                opacity: ma.containsMouse ? 1.0 : 0.4
+                font.pixelSize: 11; font.family: "Inter"; font.weight: Font.SemiBold
+            }
+        }
+
+        MouseArea {
+            id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+            onClicked: btn.clicked()
+        }
+        
+        // Premium Tooltip
+        Rectangle {
+            anchors.top: parent.bottom; anchors.topMargin: 12; anchors.horizontalCenter: parent.horizontalCenter
+            width: ttText.width + 16; height: 28; radius: 8; color: dsSurface; border.width: 1; border.color: dsBorder; opacity: ma.containsMouse ? 1 : 0
+            visible: opacity > 0; Behavior on opacity { NumberAnimation { duration: 150 } }
+            
+            layer.enabled: true
+            layer.effect: DropShadow { radius: 8; samples: 17; color: Qt.rgba(0,0,0,0.3); verticalOffset: 2 }
+
+            Text { id: ttText; anchors.centerIn: parent; text: btn.tooltip; color: "#ffffff"; font.pixelSize: 10; font.family: "Inter"; font.weight: Font.Medium }
+        }
     }
 }

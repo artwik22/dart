@@ -1,332 +1,261 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 
 Rectangle {
-    id: root
-    width: 200
-    height: 280
-    color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+    id: bluetoothRoot
+    width: 280
+    height: 420
+    color: "transparent"
     radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
 
     property var sharedData: null
     property var sidePanelRoot: null
+    property var popoverWindow: null
     
-    // Mask for flush alignment using sidePanel position
-    Rectangle {
-        color: parent.color
-        width: (sidePanelRoot && sidePanelRoot.isHorizontal) ? parent.width : parent.radius
-        height: (sidePanelRoot && sidePanelRoot.isHorizontal) ? parent.radius : parent.height
-        anchors.left: (sidePanelRoot && sidePanelRoot.panelPosition === "left") ? parent.left : undefined
-        anchors.right: (sidePanelRoot && sidePanelRoot.panelPosition === "right") ? parent.right : undefined
-        anchors.top: (sidePanelRoot && sidePanelRoot.panelPosition === "top") ? parent.top : undefined
-        anchors.bottom: (sidePanelRoot && sidePanelRoot.panelPosition === "bottom") ? parent.bottom : undefined
-    }
-    
-    scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
-    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-    
-    // Internal State
-    property bool scanning: false
+    // ── Design Tokens ──
+    property color dsAccent: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+    property color dsSurface: (sharedData && sharedData.colorSecondary) ? Qt.rgba(sharedData.colorSecondary.r, sharedData.colorSecondary.g, sharedData.colorSecondary.b, 1.0) : "#141414"
+    property color dsBorder: Qt.rgba(1, 1, 1, 0.1)
+    property real dsRadius: bluetoothRoot.radius
+
+    // ── Interaction Logic ──
+    property bool isEnabled: false
+    property bool isScanning: false
     property string statusMessage: ""
-    property var devices: [] // Array of objects { mac, name, icon, connected, paired }
     
+    ListModel { id: bluetoothModel }
+
     function runCommand(cmd, callback) {
-        if (sidePanelRoot && sidePanelRoot.runAndRead) {
-            sidePanelRoot.runAndRead(cmd, callback)
+        if (sharedData && sharedData.runAndRead) {
+            sharedData.runAndRead(cmd, callback);
         } else if (sharedData && sharedData.runCommand) {
-             sharedData.runCommand(['sh', '-c', cmd], callback)
+            sharedData.runCommand(['sh', '-c', cmd], callback);
         }
     }
 
-    function scanDevices() {
-        statusMessage = "Refreshing..."
-        var cmd = "for mac in $(echo \"devices\" | bluetoothctl | grep \"^Device\" | awk '{print $2}' | head -n 15); do " +
-                  "info=$(echo \"info $mac\" | bluetoothctl); " +
-                  "name=$(echo \"$info\" | grep \"Name:\" | cut -d: -f2- | xargs); " +
-                  "conn=$(echo \"$info\" | grep -q \"Connected: yes\" && echo \"yes\" || echo \"no\"); " +
-                  "pair=$(echo \"$info\" | grep -q \"Paired: yes\" && echo \"yes\" || echo \"no\"); " +
-                  "icon=$(echo \"$info\" | grep \"Icon:\" | cut -d: -f2- | xargs); " +
-                  "[ -z \"$icon\" ] && icon=\"bluetooth\"; " +
-                  "echo \"$mac|$name|$conn|$pair|$icon\"; " +
-                  "done"
-                  
-        runCommand(cmd, function(out) {
-            statusMessage = ""
-            if (!out) return
-            
-            var lines = out.trim().split('\n')
-            var newDevices = []
-            
+    function updateStatus() {
+        runCommand("bluetoothctl show", function(out) {
+            isEnabled = out.indexOf("Powered: yes") !== -1;
+            fetchDevices();
+        });
+    }
+
+    function togglePower() {
+        var cmd = isEnabled ? "bluetoothctl power off" : "bluetoothctl power on";
+        runCommand(cmd, updateStatus);
+    }
+
+    function fetchDevices() {
+        if (!isEnabled) { bluetoothModel.clear(); return; }
+        // Fetch paired devices
+        runCommand("bluetoothctl devices Paired", function(out) {
+            bluetoothModel.clear();
+            var lines = out.trim().split('\n');
             for (var i = 0; i < lines.length; i++) {
-                var parts = lines[i].split('|')
-                if (parts.length >= 4) {
-                    var mac = parts[0]
-                    var name = parts[1]
-                    var connected = (parts[2] === "yes")
-                    var paired = (parts[3] === "yes")
-                    var icon = parts[4] || "bluetooth"
-                    
-                    newDevices.push({
-                        mac: mac,
-                        name: name,
-                        connected: connected,
-                        paired: paired,
-                        icon: icon
-                    })
+                var line = lines[i].trim();
+                if (line.length > 0) {
+                    var parts = line.split(' ');
+                    if (parts.length >= 3) {
+                        var mac = parts[1];
+                        var name = parts.slice(2).join(' ');
+                        bluetoothModel.append({ mac: mac, name: name, paired: true, connected: false });
+                    }
                 }
             }
-            
-            // Sort: Connected first, then Paired, then Name
-            newDevices.sort(function(a, b) {
-                if (a.connected && !b.connected) return -1
-                if (!a.connected && b.connected) return 1
-                if (a.paired && !b.paired) return -1
-                if (!a.paired && b.paired) return 1
-                return a.name.localeCompare(b.name)
-            })
-            
-            devices = newDevices
-        })
-    }
-    
-    function toggleScan() {
-        if (scanning) {
-            runCommand("bluetoothctl scan off", function() { scanning = false })
-        } else {
-            scanning = true
-            statusMessage = "Discovering..."
-            runCommand("timeout 8 bluetoothctl scan on || true", function() { 
-                scanning = false
-                scanDevices()
-            })
-        }
-    }
-    
-    function connectDevice(mac) {
-        statusMessage = "Connecting..."
-        runCommand("timeout 10 bluetoothctl connect " + mac, function(out) {
-            scanTimer.restart()
-             // Check output for success/fail if needed
-        })
-    }
-    
-    function disconnectDevice(mac) {
-        statusMessage = "Disconnecting..."
-        runCommand("timeout 10 bluetoothctl disconnect " + mac, function(out) {
-            scanTimer.restart()
-        })
-    }
-    
-    function pairDevice(mac) {
-        statusMessage = "Pairing..."
-        runCommand("timeout 15 bluetoothctl pair " + mac, function(out) {
-             statusMessage = "Trusting..."
-             runCommand("timeout 5 bluetoothctl trust " + mac, function(out2) {
-                 connectDevice(mac)
-             })
-        })
+        });
     }
 
-     // Initial check for scan status
-    function checkScanStatus() {
-        runCommand("bluetoothctl show | grep 'Discovering: yes'", function(out) {
-            scanning = (out && out.trim().length > 0)
-        })
-    }
-    
-    Component.onCompleted: {
-        checkScanStatus()
-        scanDevices()
-    }
-    
-    Timer {
-        id: scanTimer
-        interval: 5000
-        repeat: true
-        running: root.visible
-        onTriggered: {
-            checkScanStatus()
-            scanDevices()
+    function toggleScan() {
+        if (!isEnabled) return;
+        isScanning = !isScanning;
+        if (isScanning) {
+            runCommand("bluetoothctl scan on", function() {
+                statusMessage = "Discovering...";
+            });
+        } else {
+            runCommand("bluetoothctl scan off", function() {
+                statusMessage = "";
+                fetchDevices();
+            });
         }
     }
-    
-    
+
+    Timer { interval: 5000; running: bluetoothRoot.visible; repeat: true; onTriggered: updateStatus() }
+    Component.onCompleted: updateStatus()
+
+    // ── Main Content Container ──
+    Rectangle {
+        id: mainBg
+        anchors.fill: parent
+        color: dsSurface
+        radius: dsRadius
+        border.width: 1
+        border.color: dsBorder
+
+        // ── Flush Mask Logic (FIXED) ──
+        Rectangle {
+            id: flushMask
+            color: mainBg.color
+            z: 10
+            width: (sidePanelRoot && !sidePanelRoot.isHorizontal) ? parent.radius : parent.width
+            height: (sidePanelRoot && sidePanelRoot.isHorizontal) ? parent.radius : parent.height
+            
+            anchors.right: (sidePanelRoot && sidePanelRoot.panelPosition === "right") ? parent.right : undefined
+            anchors.left: (sidePanelRoot && sidePanelRoot.panelPosition === "left") ? parent.left : undefined
+            anchors.bottom: (sidePanelRoot && sidePanelRoot.panelPosition === "bottom") ? parent.bottom : undefined
+            anchors.top: (sidePanelRoot && sidePanelRoot.panelPosition === "top") ? parent.top : undefined
+        }
+    }
+
     ColumnLayout {
-        anchors.fill: root
-        anchors.margins: 10
-        spacing: 10
-        
-        // Header
+        anchors.fill: parent
+        anchors.margins: 18
+        spacing: 0
+        z: 11
+
+        // ── Header ──
         RowLayout {
             Layout.fillWidth: true
-            Text {
-                text: "Bluetooth"
-                color: (sharedData.colorOnSurface || "#ffffff")
-                font.pixelSize: 14
-                font.weight: Font.Bold
-                Layout.fillWidth: true
+            Layout.bottomMargin: 16
+            spacing: 12
+
+            ColumnLayout {
+                spacing: -2
+                Text { 
+                    text: "Bluetooth"; color: "#ffffff"; 
+                    font.pixelSize: 20; font.family: "Outfit"; font.weight: Font.Black; font.letterSpacing: -0.5
+                }
+                Text { 
+                    text: isEnabled ? (isScanning ? "Discovering..." : "Ready") : "Disabled"; 
+                    color: isEnabled ? dsAccent : Qt.rgba(1, 1, 1, 0.4); 
+                    font.pixelSize: 11; font.family: "Inter"; font.weight: Font.Medium; opacity: 0.8
+                }
             }
-            
-            // Scan Toggle
-             Rectangle {
-                Layout.preferredWidth: 60
-                Layout.preferredHeight: 22
-                radius: 11
-                color: scanToggleMa.containsMouse ? (root.scanning ? Qt.lighter((sharedData.colorPrimary || "#D0BCFF"), 1.1) : Qt.rgba(1,1,1,0.2)) : (root.scanning ? (sharedData.colorPrimary || "#D0BCFF") : Qt.rgba(1,1,1,0.1))
-                scale: scanToggleMa.pressed ? 0.95 : 1.0
-                Behavior on color { ColorAnimation { duration: 150 } }
-                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+
+            Item { Layout.fillWidth: true }
+
+            // Custom Switch to match Quickshell style
+            Rectangle {
+                width: 40; height: 22; radius: 11
+                color: isEnabled ? dsAccent : Qt.rgba(1, 1, 1, 0.1)
+                Behavior on color { ColorAnimation { duration: 200 } }
                 
-                Text {
-                    anchors.centerIn: parent
-                    text: root.scanning ? "Scanning" : "Scan"
-                    font.pixelSize: 9
-                    font.weight: Font.Bold
-                    color: root.scanning ? (sharedData.colorOnPrimary || "#000000") : (sharedData.colorOnSurface || "#ffffff")
+                Rectangle {
+                    width: 16; height: 16; radius: 8
+                    color: "#ffffff"
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: isEnabled ? 22 : 2
+                    Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
                 }
                 
                 MouseArea {
-                    id: scanToggleMa
                     anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: toggleScan()
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: togglePower()
                 }
             }
         }
-        
-        // Status Message
-        Text {
-            visible: statusMessage !== ""
-            text: statusMessage
-            color: (sharedData.colorOnSurfaceVariant || "#cccccc")
-            font.pixelSize: 12
-            Layout.fillWidth: true
-        }
 
-        // Device List
-        ListView {
-            id: btList
+        // ── Device List ──
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
-            model: root.devices
-            delegate: Rectangle {
-                width: ListView.view.width
-                height: 42
-                color: itemMa.containsMouse ? (modelData.connected ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.25) : Qt.rgba(1,1,1,0.1)) : (modelData.connected ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.15) : "transparent")
-                radius: 8
-                border.width: modelData.connected ? 1 : (itemMa.containsMouse ? 1 : 0)
-                border.color: modelData.connected ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.5) : Qt.rgba(1,1,1,0.05)
-                Behavior on color { ColorAnimation { duration: 150 } }
-                
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 6
-                    spacing: 10
-                    
-                    Text {
-                        text: {
-                            if (modelData.icon.includes("headset") || modelData.icon.includes("headphone")) return "󰋋"
-                            if (modelData.icon.includes("audio")) return "󰓃"
-                            if (modelData.icon.includes("phone")) return "󰏲"
-                            if (modelData.icon.includes("computer") || modelData.icon.includes("laptop")) return "󰌢"
-                            return "󰂯"
-                        }
-                        font.family: "Material Design Icons"
-                        font.pixelSize: 20
-                        color: modelData.connected ? (sharedData.colorPrimary || "#D0BCFF") : (itemMa.containsMouse ? "#ffffff" : Qt.rgba(1,1,1,0.7))
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                    }
-                    
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-                        Text {
-                            text: modelData.name
-                            font.pixelSize: 13
-                            font.weight: modelData.connected ? Font.Bold : Font.Normal
-                            color: modelData.connected ? (sharedData.colorPrimary || "#D0BCFF") : (sharedData.colorOnSurface || "#ffffff")
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
-                            Behavior on color { ColorAnimation { duration: 150 } }
-                        }
-                        Text {
-                            text: modelData.connected ? "Connected" : (modelData.paired ? "Paired" : "New Device")
-                            font.pixelSize: 10
-                            color: modelData.connected ? Qt.rgba((sharedData.colorPrimary || "#D0BCFF").r, (sharedData.colorPrimary || "#D0BCFF").g, (sharedData.colorPrimary || "#D0BCFF").b, 0.8) : (sharedData.colorOnSurfaceVariant || "#aaaaaa")
-                            Layout.fillWidth: true
-                            Behavior on color { ColorAnimation { duration: 150 } }
-                        }
-                    }
-                    
-                    // Action Button
-                    Rectangle {
-                        width: 60; height: 22; radius: 11
-                        visible: itemMa.containsMouse || modelData.connected
-                        color: btnMa.containsMouse ? (modelData.connected ? "#ff4444" : (sharedData.colorPrimary || "#D0BCFF")) : Qt.rgba(1,1,1,0.1)
-                        scale: btnMa.pressed ? 0.92 : 1.0
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                        
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData.connected ? "Disconnect" : (modelData.paired ? "Connect" : "Pair")
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: btnMa.containsMouse ? (modelData.connected ? "#ffffff" : "#000000") : (sharedData.colorOnSurface || "#ffffff")
-                        }
-                        
-                        MouseArea {
-                            id: btnMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: {
-                                if (modelData.connected) disconnectDevice(modelData.mac)
-                                else if (modelData.paired) connectDevice(modelData.mac)
-                                else pairDevice(modelData.mac)
+
+            // Empty State (Refined)
+            ColumnLayout {
+                anchors.centerIn: parent
+                visible: bluetoothModel.count === 0
+                spacing: 12
+                Text { 
+                    text: isEnabled ? "󰂯" : "󰂲"; font.family: "Material Design Icons"; 
+                    font.pixelSize: 42; 
+                    color: Qt.rgba(1, 1, 1, 0.05); Layout.alignment: Qt.AlignHCenter 
+                }
+                Text { 
+                    text: isEnabled ? (isScanning ? "Searching..." : "No paired devices") : "Bluetooth is off"; 
+                    color: Qt.rgba(1, 1, 1, 0.3); font.pixelSize: 12; 
+                    font.family: "Inter"; Layout.alignment: Qt.AlignHCenter 
+                }
+            }
+
+            ListView {
+                id: deviceList
+                anchors.fill: parent
+                model: bluetoothModel
+                spacing: 6
+                clip: true
+                ScrollBar.vertical: ScrollBar { 
+                    width: 2; policy: ScrollBar.AsNeeded
+                    contentItem: Rectangle { color: Qt.rgba(1, 1, 1, 0.1); radius: 1 }
+                }
+
+                delegate: Rectangle {
+                    width: deviceList.width
+                    height: 52
+                    radius: 10
+                    color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
+                    border.width: 1
+                    border.color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        spacing: 12
+
+                        Rectangle {
+                            width: 34; height: 34; radius: 8
+                            color: Qt.rgba(1, 1, 1, 0.03)
+                            Text { 
+                                anchors.centerIn: parent; text: "󰂯"; 
+                                color: dsAccent; font.pixelSize: 18; font.family: "Material Design Icons" 
                             }
                         }
+
+                        ColumnLayout {
+                            spacing: -1; Layout.fillWidth: true
+                            Text { text: model.name; color: "#ffffff"; font.pixelSize: 13; font.family: "Inter"; font.weight: Font.SemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { text: model.mac; color: Qt.rgba(1, 1, 1, 0.4); font.pixelSize: 10; font.family: "Inter" }
+                        }
+
+                        Text { text: "󰒓"; font.family: "Material Design Icons"; color: Qt.rgba(1, 1, 1, 0.2); font.pixelSize: 14; visible: ma.containsMouse }
                     }
-                }
-                
-                MouseArea {
-                    id: itemMa
-                    anchors.fill: parent
-                    hoverEnabled: true
+
+                    MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor }
                 }
             }
         }
-        
-        // Footer actions
+
+        // ── Footer Actions ──
         RowLayout {
-            Layout.fillWidth: true
+            Layout.fillWidth: true; Layout.topMargin: 16; spacing: 8
             
             Rectangle {
                 Layout.fillWidth: true
-                height: 28
-                radius: 8
-                color: bmSetMa.containsMouse ? Qt.rgba(1,1,1,0.15) : Qt.rgba(1,1,1,0.05)
-                scale: bmSetMa.pressed ? 0.98 : 1.0
-                border.width: 1
-                border.color: Qt.rgba(1,1,1,0.05)
+                height: 42; radius: 12; color: scanMa.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.04)
+                border.width: 1; border.color: dsBorder
                 Behavior on color { ColorAnimation { duration: 150 } }
-                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                
-                Text {
+
+                RowLayout {
                     anchors.centerIn: parent
-                    text: "Bluetooth Manager"
-                    color: (sharedData.colorOnSurface || "#ffffff")
-                    font.pixelSize: 11
-                    font.weight: Font.Medium
+                    spacing: 8
+                    Text { text: isScanning ? "󰓛" : "󰂰"; font.family: "Material Design Icons"; color: dsAccent; font.pixelSize: 16 }
+                    Text { text: isScanning ? "Stop Scan" : "Scan for Devices"; color: "#ffffff"; font.pixelSize: 12; font.family: "Inter"; font.weight: Font.Bold }
                 }
-                
+
                 MouseArea {
-                    id: bmSetMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: runCommand("blueman-manager")
+                    id: scanMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                    onClicked: toggleScan()
                 }
+            }
+            
+            Rectangle {
+                width: 42; height: 42; radius: 12; color: settingsMa.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.04)
+                border.width: 1; border.color: dsBorder
+                Text { anchors.centerIn: parent; text: "󰒓"; font.family: "Material Design Icons"; color: "#ffffff"; font.pixelSize: 18; opacity: 0.7 }
+                MouseArea { id: settingsMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: runCommand("blueman-manager") }
             }
         }
     }
