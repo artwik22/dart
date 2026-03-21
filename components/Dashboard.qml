@@ -50,28 +50,28 @@ PanelWindow {
     }
 
     function getResourceHistory(res) {
-        if (res === "ram") return ramHistory
+        if (res === "ram" || res === "memory") return ramHistory
         if (res === "gpu") return gpuHistory
         if (res === "network") return networkHistory
         return cpuHistory
     }
     
     function getResourceLabel(res) {
-        if (res === "ram") return "RAM Usage"
+        if (res === "ram" || res === "memory") return "RAM Usage"
         if (res === "gpu") return "GPU Usage"
         if (res === "network") return "Network"
         return "CPU Usage"
     }
     
     function getResourceIcon(res) {
-        if (res === "ram") return "󰍛"
+        if (res === "ram" || res === "memory") return "󰍛"
         if (res === "gpu") return "󰢮"
         if (res === "network") return "󰇚"
         return "󰻠"
     }
     
     function getResourceValueText(res) {
-        if (res === "ram") return ramUsageValue + "%"
+        if (res === "ram" || res === "memory") return ramUsageValue + "%"
         if (res === "gpu") return gpuUsageValue + "%"
         if (res === "network") {
             var total = networkRxMBs + networkTxMBs
@@ -82,7 +82,7 @@ PanelWindow {
     }
     
     function getResourceSubText(res) {
-        if (res === "ram") return (ramTotalGB > 0 ? ramTotalGB + " GB Total" : "")
+        if (res === "ram" || res === "memory") return (ramTotalGB > 0 ? ramTotalGB + " GB Total" : "")
         if (res === "gpu") return (gpuTempValue > 0 ? gpuTempValue + "°C" : "")
         if (res === "network") {
             function fmt(val) {
@@ -234,6 +234,7 @@ PanelWindow {
                     height: 1
                     color: Qt.rgba(1,1,1,0.05)
                 }
+
 
                 Item {
                     anchors.centerIn: parent
@@ -637,7 +638,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
+                                        radius: 12 // Matches other UI elements better than 16
                                         clip: true
 
                                             // Softer style - Visible background
@@ -671,7 +672,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
+                                        radius: 12 // Matches other UI elements better than 16
                                         clip: true
                                         
                                         // Softer style
@@ -707,7 +708,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
+                                        radius: 12 // Matches other UI elements better than 16
                                         clip: true
 
                                         // Softer style
@@ -749,7 +750,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 8
+                                        radius: 12 // Matches other UI elements better than 16
                                         clip: true
 
                                         // Softer style
@@ -818,6 +819,8 @@ PanelWindow {
                                 Layout.preferredWidth: (parent.width - 8) / 2
                                 radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 14
                                 color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1c1c1c"
+                                border.color: Qt.rgba(1, 1, 1, 0.04)
+                                border.width: 1
                                 
                                 scale: weatherMouseArea.containsMouse ? 1.05 : 1.0
                                 Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
@@ -878,6 +881,8 @@ PanelWindow {
                                 Layout.preferredWidth: (parent.width - 8) / 2
                                 radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 14
                                 color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#1c1c1c"
+                                border.color: Qt.rgba(1, 1, 1, 0.04)
+                                border.width: 1
                                 
                                 property string currentTime: Qt.formatDateTime(new Date(), "HH:mm")
                                 property string currentDate: Qt.formatDateTime(new Date(), "ddd, MMM d")
@@ -939,6 +944,8 @@ PanelWindow {
                             Layout.minimumHeight: 150
                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                            border.color: Qt.rgba(1, 1, 1, 0.04)
+                            border.width: 1
 
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
                             scale: calendarGithubMouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
@@ -1065,6 +1072,8 @@ PanelWindow {
                             Layout.minimumHeight: 130
                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                            border.color: Qt.rgba(1, 1, 1, 0.04)
+                            border.width: 1
                             
                             scale: res1MouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
                             Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
@@ -1123,7 +1132,7 @@ PanelWindow {
                                     }
                                     Text {
                                         text: getResourceLabel(parent.parent.resource).toUpperCase()
-                                        font.pixelSize: 11
+                                        font.pixelSize: 13
                                         font.family: "sans-serif"
                                         font.weight: Font.Bold
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
@@ -1131,7 +1140,7 @@ PanelWindow {
                                     }
                                     Text {
                                         text: getResourceValueText(parent.parent.resource)
-                                        font.pixelSize: 11
+                                        font.pixelSize: 13
                                         font.family: "sans-serif"
                                         font.weight: Font.Bold
                                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
@@ -1139,7 +1148,7 @@ PanelWindow {
                                     }
                                     Text {
                                         text: getResourceSubText(parent.parent.resource)
-                                        font.pixelSize: 10
+                                        font.pixelSize: 12
                                         font.family: "sans-serif"
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000" 
                                         anchors.verticalCenter: parent.verticalCenter
@@ -1209,8 +1218,12 @@ PanelWindow {
                                         ctx.lineTo(chartWidth, chartHeight)
                                         ctx.lineTo(0, chartHeight)
                                         ctx.closePath()
-                                        ctx.fillStyle = (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        ctx.globalAlpha = 0.15
+                                        var gradient = ctx.createLinearGradient(0, chartHeight/2, 0, chartHeight)
+                                        var accent = (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        gradient.addColorStop(0, accent)
+                                        gradient.addColorStop(1, "transparent")
+                                        ctx.fillStyle = gradient
+                                        ctx.globalAlpha = 0.45
                                         ctx.fill()
                                         ctx.globalAlpha = 1.0
                                     }
@@ -1233,6 +1246,8 @@ PanelWindow {
                             Layout.minimumHeight: 130
                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                            border.color: Qt.rgba(1, 1, 1, 0.04)
+                            border.width: 1
                             
                             scale: res2MouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)
                             Behavior on scale { SpringAnimation { spring: 3; damping: 0.4; mass: 0.8 } }
@@ -1290,7 +1305,7 @@ PanelWindow {
                                     }
                                     Text {
                                         text: getResourceLabel(parent.parent.resource).toUpperCase()
-                                        font.pixelSize: 11
+                                        font.pixelSize: 13
                                         font.family: "sans-serif"
                                         font.weight: Font.Bold
                                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#000000"
@@ -1298,7 +1313,7 @@ PanelWindow {
                                     }
                                     Text {
                                         text: getResourceValueText(parent.parent.resource)
-                                        font.pixelSize: 11
+                                        font.pixelSize: 13
                                         font.family: "sans-serif"
                                         font.weight: Font.Bold
                                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41"
@@ -1376,8 +1391,12 @@ PanelWindow {
                                         ctx.lineTo(chartWidth, chartHeight)
                                         ctx.lineTo(0, chartHeight)
                                         ctx.closePath()
-                                        ctx.fillStyle = (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
-                                        ctx.globalAlpha = 0.15
+                                        var gradient2 = ctx.createLinearGradient(0, chartHeight/2, 0, chartHeight)
+                                        var accent2 = (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
+                                        gradient2.addColorStop(0, accent2)
+                                        gradient2.addColorStop(1, "transparent")
+                                        ctx.fillStyle = gradient2
+                                        ctx.globalAlpha = 0.45
                                         ctx.fill()
                                         ctx.globalAlpha = 1.0
                                     }
@@ -1399,6 +1418,8 @@ PanelWindow {
                             Layout.preferredHeight: 140
                             radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 28
                             color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#141414"
+                            border.color: Qt.rgba(1, 1, 1, 0.04)
+                            border.width: 1
 
                             opacity: showProgress > 0.01 ? 1.0 : 0.0
                             scale: mediaMouseArea.containsMouse ? 1.02 : (showProgress > 0.01 ? 1.0 : 0.9)

@@ -30,11 +30,20 @@ Rectangle {
     ListModel { id: wifiModel }
 
     function runCommand(cmd, callback) {
-        if (sharedData && sharedData.runAndRead) {
-            sharedData.runAndRead(cmd, callback);
-        } else if (sharedData && sharedData.runCommand) {
-            sharedData.runCommand(['sh', '-c', cmd], callback);
-        }
+        if (!sharedData || !sharedData.runCommand) return
+        var tmp = "/tmp/qs_wifi_" + Math.random().toString(36).substring(7)
+        sharedData.runCommand(['sh', '-c', cmd + " > " + tmp + " 2>/dev/null"], function() {
+            var xhr = new XMLHttpRequest()
+            xhr.open("GET", "file://" + tmp)
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    var out = (xhr.responseText || "").trim()
+                    if (typeof callback === "function") callback(out)
+                    sharedData.runCommand(['rm', '-f', tmp])
+                }
+            }
+            xhr.send()
+        })
     }
 
     function updateStatus() {
