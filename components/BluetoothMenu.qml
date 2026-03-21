@@ -5,8 +5,8 @@ import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: bluetoothRoot
-    width: 280
-    height: 420
+    width: 260
+    height: 380
     color: "transparent"
     radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
 
@@ -100,7 +100,7 @@ Rectangle {
         anchors.fill: parent
         color: dsSurface
         radius: dsRadius
-        border.width: 1
+        border.width: 0
         border.color: dsBorder
 
         // ── Flush Mask Logic (FIXED) ──
@@ -205,7 +205,7 @@ Rectangle {
                     height: 52
                     radius: 10
                     color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
-                    border.width: 1
+                    border.width: 0
                     border.color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -244,7 +244,7 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 42; radius: 12; color: scanMa.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.04)
-                border.width: 1; border.color: dsBorder
+                border.width: 0; border.color: dsBorder
                 Behavior on color { ColorAnimation { duration: 150 } }
 
                 RowLayout {

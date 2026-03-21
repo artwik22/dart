@@ -5,8 +5,8 @@ import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: wifiRoot
-    width: 280
-    height: 420
+    width: 260
+    height: 380
     color: "transparent"
     radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
 
@@ -101,7 +101,7 @@ Rectangle {
         anchors.fill: parent
         color: dsSurface
         radius: dsRadius
-        border.width: 1
+        border.width: 0
         border.color: dsBorder
 
         // ── Flush Mask Logic (FIXED) ──
@@ -205,7 +205,7 @@ Rectangle {
                     height: 52
                     radius: 10
                     color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
-                    border.width: 1
+                    border.width: 0
                     border.color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -263,7 +263,7 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 42; radius: 12; color: footerMa.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.04)
-                border.width: 1; border.color: dsBorder
+                border.width: 0; border.color: dsBorder
                 Behavior on color { ColorAnimation { duration: 150 } }
 
                 Text { anchors.centerIn: parent; text: "Advanced Settings"; color: "#ffffff"; font.pixelSize: 12; font.family: "Inter"; font.weight: Font.Bold; opacity: 0.8 }
@@ -285,7 +285,7 @@ Rectangle {
             Text { text: pendingSsid; color: dsAccent; font.pixelSize: 13; font.family: "Inter"; Layout.alignment: Qt.AlignHCenter; elide: Text.ElideRight; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter }
             
             Rectangle {
-                Layout.fillWidth: true; height: 42; radius: 10; color: Qt.rgba(1, 1, 1, 0.05); border.width: 1; border.color: dsBorder
+                Layout.fillWidth: true; height: 42; radius: 10; color: Qt.rgba(1, 1, 1, 0.05); border.width: 0; border.color: dsBorder
                 TextInput {
                     id: passInput; anchors.fill: parent; anchors.margins: 12; color: "#ffffff"; echoMode: TextInput.Password; verticalAlignment: TextInput.AlignVCenter; font.pixelSize: 14; activeFocusOnTab: true
                     onAccepted: { showPasswordPrompt = false; connectToNetwork(pendingSsid, text) }
