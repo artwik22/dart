@@ -1308,7 +1308,7 @@ PanelWindow {
 
                     // Track — full gray circle
                     ShapePath {
-                        strokeColor: Qt.rgba(1, 1, 1, 0.1)
+                        strokeColor: Qt.rgba(1, 1, 1, 0.15)
                         strokeWidth: 2
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
@@ -1337,8 +1337,38 @@ PanelWindow {
                             radiusY: batteryRingItem.height / 2 - 2
                             startAngle: -90
                             sweepAngle: Math.max(0, Math.min(batteryRingShape.animatedPct, 100)) / 100.0 * 360
-                            // Note: intentionally avoided Behavior on sweepAngle to prevent binding breakage
                         }
+                    }
+                }
+
+                // Rotating segment when charging (Extra highlight) - Separate Shape to rotate independently
+                Shape {
+                    id: chargingRingShape
+                    anchors.fill: parent
+                    visible: batteryRingItem.isCharging
+                    layer.enabled: true
+                    layer.samples: 4
+
+                    ShapePath {
+                        strokeColor: "#ffffff"
+                        strokeWidth: 3
+                        fillColor: "transparent"
+                        capStyle: ShapePath.RoundCap
+
+                        PathAngleArc {
+                            centerX: batteryRingItem.width / 2
+                            centerY: batteryRingItem.height / 2
+                            radiusX: batteryRingItem.width / 2 - 2
+                            radiusY: batteryRingItem.height / 2 - 2
+                            startAngle: -90
+                            sweepAngle: 45 // Small highlight segment
+                        }
+                    }
+
+                    RotationAnimation on rotation {
+                        from: 0; to: 360; duration: 1500
+                        running: batteryRingItem.isCharging
+                        loops: Animation.Infinite
                     }
                 }
 

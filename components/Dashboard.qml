@@ -3015,7 +3015,7 @@ PanelWindow {
 
     Timer {
         id: batteryTimer
-        interval: 10000
+        interval: 2000
         repeat: true
         running: (sharedData && sharedData.menuVisible)
         onTriggered: updateBattery()
