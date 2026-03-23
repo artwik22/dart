@@ -330,17 +330,17 @@ PanelWindow {
         right: true
     }
     
-    property int baseWidth: 600
+    property int baseWidth: 700
     
     property int listHeight: {
         if (currentMode === 0) {
-            // search input + buttons row (48px)
-            var h = 48;
+            // search input + buttons row (56px)
+            var h = 56;
             if (searchText.length > 0) {
                 if (filteredApps.count > 0) {
-                    h += 12; // spacing between search and list
+                    h += 14; // spacing between search and list
                     var items = Math.min(filteredApps.count, 5);
-                    h += (items * 60) + ((items - 1) * 12);
+                    h += (items * 68) + ((items - 1) * 14);
                 }
             }
             return h;
@@ -363,12 +363,12 @@ PanelWindow {
             }
         } else if (currentMode === 4) {
             // File search mode
-            var h = 48;
+            var h = 56;
             if (searchText.length >= 3) {
                 if (fileSearchResults && fileSearchResults.count > 0) {
-                    h += 12;
+                    h += 14;
                     var items = Math.min(fileSearchResults.count, 6);
-                    h += (items * 60) + ((items - 1) * 12);
+                    h += (items * 68) + ((items - 1) * 14);
                 } else if (isSearchingFiles) {
                     h += 60; // Height of searching box
                 } else {
@@ -418,9 +418,8 @@ PanelWindow {
     }
     Behavior on launcherShowProgress {
         NumberAnimation { 
-            duration: 350
-            easing.type: Easing.OutBack
-            easing.overshoot: 1.15
+            duration: 450
+            easing.type: Easing.OutExpo
         }
     }
 
@@ -1423,10 +1422,10 @@ PanelWindow {
         opacity: launcherShowProgress
         enabled: launcherShowProgress > 0.02
         focus: launcherShowProgress > 0.02
-        scale: 0.85 + (launcherShowProgress * 0.15)
+        scale: 0.92 + (launcherShowProgress * 0.08)
         transformOrigin: Item.Center
         transform: Translate {
-            y: (1.0 - launcherShowProgress) * 50
+            y: (1.0 - launcherShowProgress) * 40
         }
 
 
@@ -1777,7 +1776,7 @@ PanelWindow {
                             
                                 Item {
                                 width: parent.width
-                                height: 48
+                                height: 56
                                 
                                 opacity: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 4)) ? 1 : 0
                                 
@@ -1787,7 +1786,7 @@ PanelWindow {
                                     id: searchBox
                                     anchors.left: parent.left
                                     width: (currentMode === 4) ? parent.width : (parent.width - (40 * 4 + 12 * 4))
-                                    height: 48
+                                    height: 56
                                     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#111111"
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     
@@ -1803,7 +1802,7 @@ PanelWindow {
                                     text: "󰍉" // Search icon
                                     color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                                     opacity: searchInput.activeFocus ? 0.7 : 0.4
-                                    font.pixelSize: 20
+                                    font.pixelSize: 24
                                     z: 10
                                     
                                     Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -1812,9 +1811,9 @@ PanelWindow {
                                 TextInput {
                                     id: searchInput
                                     anchors.fill: parent
-                                    anchors.leftMargin: 46
+                                    anchors.leftMargin: 52
                                     anchors.rightMargin: 16
-                                    font.pixelSize: 18
+                                    font.pixelSize: 22
                                     font.family: "sans-serif"
                                     font.weight: Font.Medium
                                     color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
@@ -2224,8 +2223,8 @@ PanelWindow {
                                         spacing: 16
                                         
                                         Rectangle {
-                                            width: 38
-                                            height: 38
+                                            width: 48
+                                            height: 48
                                             radius: 8
                                             color: (selectedIndex === index) ? colorAccent : colorSecondary
                                             anchors.verticalCenter: parent.verticalCenter
@@ -2234,19 +2233,19 @@ PanelWindow {
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: getFileIcon(model.path)
-                                                font.pixelSize: 20
+                                                font.pixelSize: 24
                                                 color: (selectedIndex === index) ? colorAccent : ((sharedData && sharedData.colorText) ? sharedData.colorText : colorText)
                                             }
                                         }
                                         
                                         Column {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            width: parent.width - 54
+                                            width: parent.width - 64
                                             spacing: 2
                                             
                                             Text {
                                                 text: model.name || "Unknown"
-                                                font.pixelSize: 16
+                                                font.pixelSize: 18
                                                 font.family: "sans-serif"
                                                 font.weight: selectedIndex === index ? Font.Bold : Font.Medium
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
@@ -2255,11 +2254,11 @@ PanelWindow {
                                             }
                                             Text {
                                                 text: model.path || ""
-                                                font.pixelSize: 12
+                                                font.pixelSize: 14
                                                 font.family: "sans-serif"
                                                 font.weight: Font.Medium
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : colorText
-                                                opacity: 0.5
+                                                opacity: 0.6
                                                 elide: Text.ElideMiddle
                                                 width: parent.width
                                             }
@@ -2394,7 +2393,7 @@ PanelWindow {
                                 delegate: Rectangle {
                                     id: appItem
                                     width: appsList.width
-                                    height: 60
+                                    height: 68
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     
                                     opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
@@ -2422,7 +2421,7 @@ PanelWindow {
                                         
                                         // Icon
                                         Item {
-                                            width: 38
+                                            width: 48
                                             height: width
                                             anchors.verticalCenter: parent.verticalCenter
                                             
@@ -2440,8 +2439,8 @@ PanelWindow {
                                                 id: appIconImage
                                                 anchors.fill: parent
                                                 source: appItem.appIcon ? ("image://icon/" + appItem.appIcon) : ""
-                                                sourceSize.width: 38
-                                                sourceSize.height: 38
+                                                sourceSize.width: 48
+                                                sourceSize.height: 48
                                                 smooth: true
                                                 asynchronous: true
                                                 visible: appItem.appIcon && status === Image.Ready
@@ -2450,14 +2449,14 @@ PanelWindow {
                                         
                                         Column {
                                             id: appTextColumn
-                                            width: parent.width - 54
+                                            width: parent.width - 64
                                             anchors.verticalCenter: parent.verticalCenter
                                             spacing: 2
                                             
                                             Text {
                                                 width: parent.width
                                                 text: appItem.appName
-                                                font.pixelSize: 16
+                                                font.pixelSize: 18
                                                 font.family: "sans-serif"
                                                 font.weight: selectedIndex === index ? Font.Bold : Font.Medium
                                                 elide: Text.ElideRight
@@ -2466,9 +2465,9 @@ PanelWindow {
                                             Text {
                                                 width: parent.width
                                                 text: appItem.appComment
-                                                font.pixelSize: 12
+                                                font.pixelSize: 14
                                                 font.family: "sans-serif"
-                                                opacity: 0.6
+                                                opacity: 0.7
                                                 elide: Text.ElideRight
                                                 visible: appItem.appComment.length > 0
                                                 color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"

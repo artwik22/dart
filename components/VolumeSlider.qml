@@ -24,20 +24,20 @@ PanelWindow {
     visible: true
     color: "transparent"
     
-    // Slide in animation from right - negative value moves right (off screen)
-    property int slideOffset: (sharedData && sharedData.volumeVisible) ? 0 : -implicitWidth
+    // Slide in animation from right - positive value moves right (off screen)
+    property int slideOffset: (sharedData && sharedData.volumeVisible) ? 0 : 60
     
     margins {
         top: (screen && screen.height) ? (screen.height - 330) / 2 : 0
         bottom: 0
-        right: slideOffset
+        right: 0 // Fixed margin to prevent flickering on Mango WM
         left: 0
     }
     
     Behavior on slideOffset {
         NumberAnimation {
-            duration: 500
-            easing.type: Easing.OutExpo
+            duration: 400
+            easing.type: Easing.OutCubic
         }
     }
 
@@ -160,6 +160,12 @@ PanelWindow {
     Item {
         id: sliderMainContainer
         anchors.fill: parent
+        clip: true // Ensure content sliding out is hidden
+        
+        transform: Translate {
+            x: volumeSliderRoot.slideOffset
+        }
+        
         visible: true  // Always visible - use opacity for fade effect instead
         enabled: (sharedData && sharedData.volumeVisible)  // Disable interactions when hidden
         

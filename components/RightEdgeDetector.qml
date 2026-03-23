@@ -16,7 +16,7 @@ PanelWindow {
         right: 0
         top: (screen && screen.height) ? (screen.height - 288) / 2 : 0
     }
-    implicitWidth: 1  // Minimalna szerokość tylko do wykrywania hover
+    implicitWidth: 8  // Zwiększona szerokość dla lepszego wykrywania na różnych WM (np. Mango)
     implicitHeight: 288  // 80%, dopasowane do VolumeSlider
     
     WlrLayershell.layer: WlrLayer.Overlay

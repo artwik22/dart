@@ -692,16 +692,6 @@ ShellRoot {
             }
         }
     }
-    Variants {
-        model: Quickshell.screens
-        delegate: Component {
-            RightEdgeDetector {
-                required property var modelData
-                screen: modelData
-                sharedData: root.sharedData
-            }
-        }
-    }
     
     Variants {
         model: Quickshell.screens
@@ -886,6 +876,18 @@ ShellRoot {
                 id: workspaceOverviewInstance
                 sharedData: root.sharedData
                 projectPath: root.projectPath
+            }
+        }
+    }
+
+    // Edge detectors moved to top of Z-stack to avoid being blocked by full-window overlays
+    Variants {
+        model: Quickshell.screens
+        delegate: Component {
+            RightEdgeDetector {
+                required property var modelData
+                screen: modelData
+                sharedData: root.sharedData
             }
         }
     }
