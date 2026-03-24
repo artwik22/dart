@@ -617,41 +617,9 @@ ShellRoot {
             runAndRead('NW_IP=$(networkctl status 2>/dev/null | grep -i "Address:" | awk \'{print $2}\' | grep -v ":" | head -n1); [ -n "$NW_IP" ] && echo "$NW_IP" || ip -o -4 addr show scope global | awk \'{print $4}\' | cut -d/ -f1 | head -n1 || echo ""', "netIP")
             runAndRead('bluetoothctl show | grep -q "Powered: yes" && echo "On" || echo "Off"', "btStatus")
             runAndRead('bluetoothctl devices Connected | wc -l', "btDevices")
+            runAndRead('cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -n1', "batteryPct")
+            runAndRead('cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -n1', "batteryStatus")
             runAndRead('nmcli -f IN-USE,SIGNAL dev wifi | grep "*" | awk \'{print $2}\' || echo 0', "netSignal")
-        }
-    }
-
-    // Dedicated Lightweight Battery Status Timer (Efficiency focused)
-    Timer {
-        id: batteryStatusTimer
-        interval: sharedData.lowPerformanceMode ? 5000 : 2500
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: {
-            var tmpFile = "/tmp/qs_shared_battery"
-            // Combined read for efficiency
-            processHelper.runCommand(['sh', '-c', 'cat /sys/class/power_supply/BAT*/capacity /sys/class/power_supply/BAT*/status 2>/dev/null | head -n2 > ' + tmpFile], function() {
-                var xhr = new XMLHttpRequest()
-                xhr.open("GET", "file://" + tmpFile)
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === XMLHttpRequest.DONE) {
-                        var out = (xhr.responseText || "").trim()
-                        if (out) {
-                            var lines = out.split("\n")
-                            if (lines.length >= 1) {
-                                var pct = parseInt(lines[0])
-                                if (!isNaN(pct)) sharedData.batteryPct = pct
-                            }
-                            if (lines.length >= 2) {
-                                var status = lines[1].trim()
-                                if (sharedData.batteryStatus !== status) sharedData.batteryStatus = status
-                            }
-                        }
-                    }
-                }
-                xhr.send()
-            })
         }
     }
 
@@ -686,6 +654,16 @@ ShellRoot {
         model: Quickshell.screens
         delegate: Component {
             TopEdgeDetector {
+                required property var modelData
+                screen: modelData
+                sharedData: root.sharedData
+            }
+        }
+    }
+    Variants {
+        model: Quickshell.screens
+        delegate: Component {
+            RightEdgeDetector {
                 required property var modelData
                 screen: modelData
                 sharedData: root.sharedData
@@ -876,18 +854,6 @@ ShellRoot {
                 id: workspaceOverviewInstance
                 sharedData: root.sharedData
                 projectPath: root.projectPath
-            }
-        }
-    }
-
-    // Edge detectors moved to top of Z-stack to avoid being blocked by full-window overlays
-    Variants {
-        model: Quickshell.screens
-        delegate: Component {
-            RightEdgeDetector {
-                required property var modelData
-                screen: modelData
-                sharedData: root.sharedData
             }
         }
     }
