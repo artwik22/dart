@@ -228,13 +228,13 @@ Item {
                 GridLayout {
                     anchors.fill: parent; anchors.margins: 12; columns: 2; rows: 2; columnSpacing: 10; rowSpacing: 10
                     Rectangle {
-                        Layout.fillWidth: true; Layout.fillHeight: true; radius: 8; clip: true
+                        Layout.fillWidth: true; Layout.fillHeight: true; radius: 4; clip: true
                         color: toggleSidebarQuickMouseArea.containsMouse ? Qt.rgba(1,1,1,0.2) : Qt.rgba(1,1,1,0.1)
                         Text { anchors.centerIn: parent; text: "󰍜"; font.pixelSize: 22; font.family: "Material Design Icons"; color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff" }
                         MouseArea { id: toggleSidebarQuickMouseArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true; onClicked: { if (sharedData && sharedData.sidebarVisible !== undefined) sharedData.sidebarVisible = !sharedData.sidebarVisible } }
                     }
                     Rectangle {
-                        Layout.fillWidth: true; Layout.fillHeight: true; radius: 8; clip: true
+                        Layout.fillWidth: true; Layout.fillHeight: true; radius: 4; clip: true
                         color: ((dndQuickMouseArea.containsMouse) || (sharedData && sharedData.notificationsEnabled === false)) ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#00ff41") : Qt.rgba(1,1,1,0.1)
                         Text {
                             anchors.centerIn: parent; text: "󰂛"; font.pixelSize: 22; font.family: "Material Design Icons"
@@ -243,7 +243,7 @@ Item {
                         MouseArea { id: dndQuickMouseArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true; onClicked: { if (sharedData && sharedData.notificationsEnabled !== undefined) sharedData.notificationsEnabled = !sharedData.notificationsEnabled } }
                     }
                     Rectangle {
-                        Layout.fillWidth: true; Layout.fillHeight: true; radius: 8; clip: true
+                        Layout.fillWidth: true; Layout.fillHeight: true; radius: 4; clip: true
                         color: lockQuickMouseArea.containsMouse ? Qt.rgba(1,1,1,0.2) : Qt.rgba(1,1,1,0.1)
                         Text { anchors.centerIn: parent; text: "󰌾"; font.pixelSize: 22; font.family: "Material Design Icons"; color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff" }
                         MouseArea {
@@ -258,7 +258,7 @@ Item {
                         }
                     }
                     Rectangle {
-                        Layout.fillWidth: true; Layout.fillHeight: true; radius: 8; clip: true
+                        Layout.fillWidth: true; Layout.fillHeight: true; radius: 4; clip: true
                         color: poweroffQuickMouseArea.containsMouse ? "#FF4444" : Qt.rgba(1,1,1,0.1)
                         Text { anchors.centerIn: parent; text: "󰐥"; font.pixelSize: 22; font.family: "Material Design Icons"; color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff" }
                         MouseArea { id: poweroffQuickMouseArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true; onClicked: { if (sharedData && sharedData.runCommand) sharedData.runCommand(['systemctl', 'poweroff']); if (sharedData) sharedData.menuVisible = false } }

@@ -638,7 +638,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: 12 // Matches other UI elements better than 16
+                                        radius: 4
                                         clip: true
 
                                             // Softer style - Visible background
@@ -672,7 +672,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: 12 // Matches other UI elements better than 16
+                                        radius: 4
                                         clip: true
                                         
                                         // Softer style
@@ -708,7 +708,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: 12 // Matches other UI elements better than 16
+                                        radius: 4
                                         clip: true
 
                                         // Softer style
@@ -750,7 +750,7 @@ PanelWindow {
                                     Rectangle {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: 12 // Matches other UI elements better than 16
+                                        radius: 4
                                         clip: true
 
                                         // Softer style
