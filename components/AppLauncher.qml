@@ -330,60 +330,53 @@ PanelWindow {
         right: true
     }
     
-    property int baseWidth: 700
+    property int baseWidth: 560
     
     property int listHeight: {
         if (currentMode === 0) {
-            // search input + buttons row (56px)
-            var h = 56;
+            var h = 45;
             if (searchText.length > 0) {
                 if (filteredApps.count > 0) {
-                    h += 14; // spacing between search and list
+                    h += 11;
                     var items = Math.min(filteredApps.count, 5);
-                    h += (items * 68) + ((items - 1) * 14);
+                    h += (items * 54) + ((items - 1) * 11);
                 }
             }
             return h;
         } else if (currentMode === 1) {
             if (currentPackageMode === -1) {
-                // Package options: Horizontal row with 3 buttons
-                return 150;
+                return 120;
             } else if (currentPackageMode === 0 || currentPackageMode === 3) {
-                // Install/Remove sources: 2 items (50px) + 1 spacing (8px) + 40px margins
-                return 148;
+                return 118;
             } else if (currentPackageMode === 1 || currentPackageMode === 2 || currentPackageMode === 4 || currentPackageMode === 5) {
-                // package search: search box 30px
-                var h = 30;
+                var h = 24;
                 if (filteredPackages.count > 0) {
-                    h += 8; // spacing below search
+                    h += 6;
                     var items = Math.min(filteredPackages.count, 5);
-                    h += (items * 50) + ((items - 1) * 8);
+                    h += (items * 40) + ((items - 1) * 6);
                 }
                 return h;
             }
         } else if (currentMode === 4) {
-            // File search mode
-            var h = 56;
+            var h = 45;
             if (searchText.length >= 3) {
                 if (fileSearchResults && fileSearchResults.count > 0) {
-                    h += 14;
+                    h += 11;
                     var items = Math.min(fileSearchResults.count, 6);
-                    h += (items * 68) + ((items - 1) * 14);
+                    h += (items * 54) + ((items - 1) * 11);
                 } else if (isSearchingFiles) {
-                    h += 60; // Height of searching box
+                    h += 48;
                 } else {
-                    h += 40; // Height of "No results" message
+                    h += 32;
                 }
             }
             return h;
         } else if (currentMode === 3) {
-            // Wallpapers mode - grid height
-            return 400;
+            return 320;
         } else if (currentMode === 5) {
-            // Power menu: match packages options height
-            return 150;
+            return 120;
         }
-        return 108; // default fallback
+        return 86;
     }
 
     // Native QML centering inside a fullscreen PanelWindow to avoid Wayland stutter
@@ -1406,7 +1399,7 @@ PanelWindow {
     Item {
         id: launcherContainer
         width: baseWidth
-        height: listHeight + 40
+        height: listHeight + 32
         anchors.centerIn: parent
         
         Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutQuart } }
@@ -1776,7 +1769,7 @@ PanelWindow {
                             
                                 Item {
                                 width: parent.width
-                                height: 56
+                                height: 45
                                 
                                 opacity: (sharedData && sharedData.launcherVisible && (currentMode === 0 || currentMode === 4)) ? 1 : 0
                                 
@@ -1785,8 +1778,8 @@ PanelWindow {
                                  Rectangle {
                                     id: searchBox
                                     anchors.left: parent.left
-                                    width: (currentMode === 4) ? parent.width : (parent.width - (40 * 4 + 12 * 4))
-                                    height: 56
+                                    width: (currentMode === 4) ? parent.width : (parent.width - (32 * 4 + 10 * 4))
+                                    height: 45
                                     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#111111"
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 8
                                     
@@ -2393,7 +2386,7 @@ PanelWindow {
                                 delegate: Rectangle {
                                     id: appItem
                                     width: appsList.width
-                                    height: 68
+                                    height: 54
                                     radius: (sharedData && sharedData.quickshellBorderRadius) ? sharedData.quickshellBorderRadius : 0
                                     
                                     opacity: (sharedData && sharedData.launcherVisible && currentMode === 0) ? 1 : 0
