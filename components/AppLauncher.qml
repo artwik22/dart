@@ -1399,8 +1399,10 @@ PanelWindow {
     Item {
         id: launcherContainer
         width: baseWidth
-        height: listHeight + 32
-        anchors.centerIn: parent
+        height: Math.max(listHeight + 32, 80)
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: -20
         
         Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutQuart } }
         Behavior on width { NumberAnimation { duration: 280; easing.type: Easing.OutQuart } }
@@ -1778,6 +1780,7 @@ PanelWindow {
                                  Rectangle {
                                     id: searchBox
                                     anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
                                     width: (currentMode === 4) ? parent.width : (parent.width - (32 * 4 + 10 * 4))
                                     height: 45
                                     color: (sharedData && sharedData.colorSecondary) ? sharedData.colorSecondary : "#111111"
