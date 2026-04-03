@@ -32,3 +32,6 @@ NotificationTab 1.0 NotificationTab.qml
 PerformanceTab 1.0 PerformanceTab.qml
 ScreenshotEditor 1.0 ScreenshotEditor.qml
 SettingsApplication 1.0 SettingsApplication.qml
+BounceCards 1.0 BounceCards.qml
+CardStackOverlay 1.0 CardStackOverlay.qml
+LauncherCardOverlay 1.0 LauncherCardOverlay.qml
