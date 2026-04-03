@@ -965,7 +965,17 @@ ShellRoot {
                 }
                 color: "transparent"
                 WlrLayershell.layer: WlrLayer.Overlay
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        if (launcherCardInstance) launcherCardInstance.close()
+                    }
+                    onWheel: function(wheel) {
+                        if (launcherCardInstance) launcherCardInstance.handleWheel(wheel.angleDelta.y)
+                    }
+                }
 
                 LauncherCardOverlay {
                     id: launcherCardInstance

@@ -137,6 +137,19 @@ Item {
         close()
     }
 
+    function handleWheel(deltaY) {
+        var filtered = root.getFilteredApps()
+        if (deltaY < 0) {
+            if (root.selectedIndex < filtered.length - 1) {
+                root.selectedIndex++
+            }
+        } else {
+            if (root.selectedIndex > 0) {
+                root.selectedIndex--
+            }
+        }
+    }
+
     Timer {
         id: openAnimTimer
         interval: 16
