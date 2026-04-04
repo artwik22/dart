@@ -16,6 +16,20 @@ ShellRoot {
         sharedData: root.sharedData
     }
 
+    property int cursorX: -1
+    property int cursorY: -1
+
+    MouseArea {
+        id: globalCursorTracker
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
+        onPositionChanged: function(mouse) {
+            root.cursorX = mouse.x
+            root.cursorY = mouse.y
+        }
+    }
+
     // Współdzielone właściwości (jeśli potrzebne)
     property var sharedData: QtObject {
         property var runCommand: processHelper ? processHelper.runCommand : function(){}
@@ -72,8 +86,6 @@ ShellRoot {
         property bool overviewVisible: false
         property bool overviewLoaded: false
         property bool bounceCardsVisible: false
-        property real bounceCardsX: -1
-        property real bounceCardsY: -1
         property bool launcherCardVisible: false
         property real launcherCardStartX: 0
         property real launcherCardStartY: 0
@@ -908,11 +920,16 @@ ShellRoot {
                         WlrLayershell.layer: WlrLayer.Overlay
                         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
+                        property real openX: -1
+                        property real openY: -1
+                        property bool positionLocked: false
+
                         CardStackOverlay {
                             id: bounceCardsOverlay
                             width: 500
                             height: 300
-                            anchors.centerIn: parent
+                            x: bounceCardsWindow.openX >= 0 ? bounceCardsWindow.openX - width / 2 : (bounceCardsWindow.width - width) / 2
+                            y: bounceCardsWindow.openY >= 0 ? bounceCardsWindow.openY - height / 2 : (bounceCardsWindow.height - height) / 2
                             sharedData: root.sharedData
                             launcherCardIndex: 4
                             onLauncherCardClicked: function(x, y, w, h) {
@@ -927,6 +944,12 @@ ShellRoot {
                         Connections {
                             target: root.sharedData
                             function onBounceCardsVisibleChanged() {
+                                if (root.sharedData.bounceCardsVisible) {
+                                    sharedData.setTimeout(function() {
+                                        bounceCardsWindow.openX = root.cursorX
+                                        bounceCardsWindow.openY = root.cursorY
+                                    }, 50) // Small delay to ensure cursor position is fresh
+                                }
                                 if (!root.sharedData.bounceCardsVisible && bounceCardsOverlay.startClose) {
                                     bounceCardsOverlay.startClose()
                                     bounceCardsUnloadTimer.restart()
