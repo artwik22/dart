@@ -15,13 +15,38 @@ Item {
     property bool isOpen: false
     property bool isClosingAnim: false
 
-    property real finalWidth: 560
-    property real finalHeight: 420
-    property real finalRadius: 16
+    property real searchboxWidth: 420
+    property real searchboxHeight: 52
+    property real searchboxRadius: 12
+    property real maxResultsHeight: 360
+
+    property real morphTargetWidth: searchboxWidth
+    property real morphTargetHeight: searchboxHeight
+
+    property real _resultsHeight: root.hasSearchResults ? Math.min(root.getFilteredApps().length * 54, root.maxResultsHeight) : 0
+    property real _targetExpandedHeight: root.searchboxHeight + root._resultsHeight + (root.hasSearchResults ? 14 : 0)
+
+    property real _morphWidth: root.startWidth + (root.morphTargetWidth - root.startWidth) * root.animationProgress
+    property real _morphHeight: root.startHeight + (root.morphTargetHeight - root.startHeight) * root.animationProgress
+
+    property real _expandedHeight: root.searchboxHeight
+
+    NumberAnimation {
+        id: expandAnim
+        target: root
+        property: "_expandedHeight"
+        duration: 200
+        easing.type: Easing.OutCubic
+    }
+
+    property real containerWidth: root._morphWidth
+    property real containerHeight: root.animationProgress >= 1 ? root._expandedHeight : root._morphHeight
 
     property string searchText: ""
     property var apps: []
     property int selectedIndex: 0
+
+    property bool hasSearchResults: root.searchText.trim().length > 0 && root.getFilteredApps().length > 0
 
     property color bgColor: (sharedData && sharedData.colorBackground) ? sharedData.colorBackground : "#0a0a0a"
     property color primaryColor: (sharedData && sharedData.colorPrimary) ? sharedData.colorPrimary : "#1a1a1a"
@@ -51,13 +76,16 @@ Item {
         root.searchText = ""
         root.selectedIndex = 0
         loadApps()
-        openAnimTimer.start()
+        closeAnim.stop()
+        openAnim.start()
     }
 
     function close() {
         if (root.isClosingAnim) return
         root.isClosingAnim = true
-        closeAnimTimer.start()
+        openAnim.stop()
+        closeAnim.from = root.animationProgress
+        closeAnim.start()
     }
 
     function loadApps() {
@@ -86,7 +114,7 @@ Item {
 
     function getFilteredApps() {
         var search = root.searchText.trim().toLowerCase()
-        if (search.length === 0) return root.apps.slice(0, 8)
+        if (search.length === 0) return []
 
         var matches = []
         for (var i = 0; i < root.apps.length; i++) {
@@ -115,7 +143,7 @@ Item {
         matches.sort(function(a, b) { return b.score - a.score })
 
         var result = []
-        var limit = Math.min(matches.length, 8)
+        var limit = Math.min(matches.length, 6)
         for (var k = 0; k < limit; k++) {
             result.push(matches[k].app)
         }
@@ -150,34 +178,32 @@ Item {
         }
     }
 
-    Timer {
-        id: openAnimTimer
-        interval: 16
-        repeat: true
-        onTriggered: {
-            root.animationProgress += 0.035
-            if (root.animationProgress >= 1.0) {
-                root.animationProgress = 1.0
-                openAnimTimer.stop()
-                searchInput.forceActiveFocus()
-            }
+    NumberAnimation {
+        id: openAnim
+        target: root
+        property: "animationProgress"
+        from: 0
+        to: 1
+        duration: 400
+        easing.type: Easing.Linear
+        onFinished: {
+            searchInput.forceActiveFocus()
         }
     }
 
-    Timer {
-        id: closeAnimTimer
-        interval: 16
-        repeat: true
-        onTriggered: {
-            root.animationProgress -= 0.045
-            if (root.animationProgress <= 0.0) {
-                root.animationProgress = 0.0
-                closeAnimTimer.stop()
-                root.isOpen = false
-                root.isClosingAnim = false
-                root.visible = false
-                root.fullyClosed()
-            }
+    NumberAnimation {
+        id: closeAnim
+        target: root
+        property: "animationProgress"
+        from: 1
+        to: 0
+        duration: 300
+        easing.type: Easing.Linear
+        onFinished: {
+            root.isOpen = false
+            root.isClosingAnim = false
+            root.visible = false
+            root.fullyClosed()
         }
     }
 
@@ -185,30 +211,23 @@ Item {
 
     Rectangle {
         id: container
-        width: {
-            var eased = easeOutBack(Math.min(1, root.animationProgress))
-            return root.startWidth + (root.finalWidth - root.startWidth) * eased
-        }
-        height: {
-            var eased = easeOutBack(Math.min(1, root.animationProgress))
-            return root.startHeight + (root.finalHeight - root.startHeight) * eased
-        }
+        width: root.containerWidth
+        height: root.containerHeight
         x: {
             var eased = easeOutCubic(Math.min(1, root.animationProgress))
             var startX = root.startX
-            var centerX = parent.width / 2 - root.finalWidth / 2
+            var centerX = parent.width / 2 - root.morphTargetWidth / 2
             return startX + (centerX - startX) * eased
         }
         y: {
             var eased = easeOutCubic(Math.min(1, root.animationProgress))
             var startY = root.startY
-            var centerY = parent.height / 2 - root.finalHeight / 2
+            var centerY = parent.height / 2 - root.morphTargetHeight / 2
             return startY + (centerY - startY) * eased
         }
         radius: {
             var eased = easeOutCubic(Math.min(1, root.animationProgress))
-            var baseRadius = (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 12
-            return 8 + (baseRadius - 8) * eased
+            return 8 + (root.searchboxRadius - 8) * eased
         }
         z: 1000
         color: root.bgColor
@@ -223,14 +242,13 @@ Item {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            height: 52
-            opacity: root.animationProgress > 0.25 ? Math.min(1, (root.animationProgress - 0.25) / 0.5) : 0
+            height: root.searchboxHeight
 
             Text {
                 id: searchIcon
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: 18
+                anchors.leftMargin: 16
                 text: "󰍉"
                 font.pixelSize: 18
                 font.family: "JetBrainsMono Nerd Font"
@@ -243,8 +261,8 @@ Item {
                 anchors.left: searchIcon.right
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: 12
-                anchors.rightMargin: 16
+                anchors.leftMargin: 10
+                anchors.rightMargin: 14
                 text: root.searchText
                 color: root.textColor
                 font.pixelSize: 15
@@ -255,6 +273,11 @@ Item {
                 onTextChanged: {
                     root.searchText = text
                     root.selectedIndex = 0
+                    if (root.animationProgress >= 1) {
+                        expandAnim.from = root._expandedHeight
+                        expandAnim.to = root._targetExpandedHeight
+                        expandAnim.restart()
+                    }
                 }
 
                 Keys.onPressed: function(event) {
@@ -285,7 +308,7 @@ Item {
             Text {
                 anchors.left: searchIcon.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: 12
+                anchors.leftMargin: 10
                 text: "Search applications..."
                 color: root.textColor
                 font.pixelSize: 15
@@ -295,140 +318,143 @@ Item {
             }
         }
 
-        ListView {
-            id: resultsList
+        Rectangle {
+            id: resultsContainer
             anchors.top: searchArea.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.topMargin: 6
-            anchors.bottomMargin: 8
-            clip: true
-            opacity: root.animationProgress > 0.45 ? Math.min(1, (root.animationProgress - 0.45) / 0.4) : 0
+            height: root.hasSearchResults ? root._resultsHeight : 0
+            color: "transparent"
 
-            model: root.getFilteredApps()
-            delegate: Item {
-                width: resultsList.width
-                height: 54
-
-                property bool isSel: index === root.selectedIndex
-
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    anchors.topMargin: 4
-                    anchors.bottomMargin: 4
-                    radius: 8
-                    color: root.accentColor
-                    opacity: parent.isSel ? 0.12 : 0
-                    visible: opacity > 0.01
-
-                    Behavior on opacity {
-                        NumberAnimation { duration: 120 }
-                    }
-                }
-
-                Image {
-                    id: appIconImage
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: 18
-                    width: 24
-                    height: 24
-                    source: modelData.icon ? ("image://icon/" + modelData.icon) : ""
-                    fillMode: Image.PreserveAspectFit
-                    visible: status === Image.Ready && modelData.icon !== ""
-                }
-
-                Text {
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: 18
-                    text: "󰣆"
-                    font.pixelSize: 20
-                    font.family: "JetBrainsMono Nerd Font"
-                    color: parent.isSel ? root.accentColor : root.textColor
-                    opacity: parent.isSel ? 1 : 0.6
-                    visible: !appIconImage.visible
-                }
-
-                Text {
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.topMargin: 12
-                    anchors.leftMargin: 50
-                    anchors.right: parent.right
-                    anchors.rightMargin: 16
-                    text: modelData.name || ""
-                    font.pixelSize: 14
-                    font.bold: true
-                    font.family: "Inter"
-                    color: parent.isSel ? root.accentColor : root.textColor
-                    elide: Text.ElideRight
-
-                    Behavior on color {
-                        ColorAnimation { duration: 120 }
-                    }
-                }
-
-                Text {
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 12
-                    anchors.leftMargin: 50
-                    anchors.right: parent.right
-                    anchors.rightMargin: 16
-                    text: modelData.comment || ""
-                    font.pixelSize: 11
-                    font.family: "Inter"
-                    color: root.textColor
-                    opacity: parent.isSel ? 0.55 : 0.35
-                    elide: Text.ElideRight
-
-                    Behavior on opacity {
-                        NumberAnimation { duration: 120 }
-                    }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onEntered: root.selectedIndex = index
-                    onClicked: root.launchApp(modelData)
-                }
-            }
-
-            ScrollIndicator.vertical: ScrollIndicator {
-                active: false
-            }
-
-            Rectangle {
+            ListView {
+                id: resultsList
                 anchors.fill: parent
-                color: "transparent"
-                visible: resultsList.count === 0 && root.searchText.length > 0
+                clip: true
+                opacity: root.hasSearchResults ? 1 : 0
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 8
+                Behavior on opacity {
+                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                }
 
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "󰍉"
-                        font.pixelSize: 28
-                        font.family: "JetBrainsMono Nerd Font"
-                        color: root.textColor
-                        opacity: 0.2
+                model: root.getFilteredApps()
+                delegate: Item {
+                    width: resultsList.width
+                    height: 54
+
+                    property bool isSel: index === root.selectedIndex
+
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        anchors.topMargin: 4
+                        anchors.bottomMargin: 4
+                        radius: 8
+                        color: root.accentColor
+                        opacity: parent.isSel ? 0.12 : 0
+                        visible: opacity > 0.01
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 120 }
+                        }
+                    }
+
+                    Image {
+                        id: appIconImage
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 18
+                        width: 24
+                        height: 24
+                        source: modelData.icon ? ("image://icon/" + modelData.icon) : ""
+                        fillMode: Image.PreserveAspectFit
+                        visible: status === Image.Ready && modelData.icon !== ""
                     }
 
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "No applications found"
-                        font.pixelSize: 13
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 18
+                        text: "󰣆"
+                        font.pixelSize: 20
+                        font.family: "JetBrainsMono Nerd Font"
+                        color: parent.isSel ? root.accentColor : root.textColor
+                        opacity: parent.isSel ? 1 : 0.6
+                        visible: !appIconImage.visible
+                    }
+
+                    Text {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.topMargin: 12
+                        anchors.leftMargin: 50
+                        anchors.right: parent.right
+                        anchors.rightMargin: 16
+                        text: modelData.name || ""
+                        font.pixelSize: 14
+                        font.bold: true
+                        font.family: "Inter"
+                        color: parent.isSel ? root.accentColor : root.textColor
+                        elide: Text.ElideRight
+
+                        Behavior on color {
+                            ColorAnimation { duration: 120 }
+                        }
+                    }
+
+                    Text {
+                        anchors.left: parent.left
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 12
+                        anchors.leftMargin: 50
+                        anchors.right: parent.right
+                        anchors.rightMargin: 16
+                        text: modelData.comment || ""
+                        font.pixelSize: 11
                         font.family: "Inter"
                         color: root.textColor
-                        opacity: 0.35
+                        opacity: parent.isSel ? 0.55 : 0.35
+                        elide: Text.ElideRight
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 120 }
+                        }
                     }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: root.selectedIndex = index
+                        onClicked: root.launchApp(modelData)
+                    }
+                }
+
+                ScrollIndicator.vertical: ScrollIndicator {
+                    active: false
+                }
+            }
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 8
+                visible: resultsList.count === 0 && root.searchText.length > 0
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "󰍉"
+                    font.pixelSize: 28
+                    font.family: "JetBrainsMono Nerd Font"
+                    color: root.textColor
+                    opacity: 0.2
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "No applications found"
+                    font.pixelSize: 13
+                    font.family: "Inter"
+                    color: root.textColor
+                    opacity: 0.35
                 }
             }
         }
