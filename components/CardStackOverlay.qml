@@ -305,6 +305,22 @@ FocusScope {
             property real centerX: root.implicitWidth / 2 - 100
             property real centerY: root.implicitHeight / 2 - 120
 
+            // Slide Behind: cards slide behind the power card and fade out
+            property real slideT: easeOutCubic(root.systemCardProgress)
+
+            // Target: center of the power card position
+            property real slideTargetX: root.centerX
+            property real slideTargetY: root.centerY
+
+            // Interpolation: fan -> behind power card
+            property real otherTargetX: animX + (slideTargetX - animX) * slideT
+            property real otherTargetY: animY + (slideTargetY - animY) * slideT
+            property real otherTargetRotation: cardAngle * (1 - slideT)
+
+            // Fade + shrink as cards slide behind
+            property real otherOpacity: Math.max(0, 1 - slideT * 1.8)
+            property real otherScale: 1 - slideT * 0.2
+
             function calcHoverOffset() {
                 if (root.systemCardActive) return 0
                 var focusIdx = root.hoveredIndex >= 0 ? root.hoveredIndex : root.keyboardFocusIndex
@@ -342,18 +358,16 @@ FocusScope {
             property real sysWidth: root.cardWidth + 90 * sizeT * isSystemCard
             property real sysHeight: root.cardHeight + 185 * sizeT * isSystemCard
 
-            property real otherShiftX: root.systemCardActive && !isSystemCard ? (cardIndex < root.systemCardIndex ? -50 : 50) * p : 0
-
-            x: (isSystemCard ? sysX : animX) + calcHoverOffset() + otherShiftX
-            y: isSystemCard ? sysY : animY + hoverShift
+            x: isSystemCard ? sysX : otherTargetX + calcHoverOffset()
+            y: isSystemCard ? sysY : otherTargetY + hoverShift
             width: isSystemCard ? sysWidth : root.cardWidth * easedProgress
             height: isSystemCard ? sysHeight : root.cardHeight * easedProgress
-            rotation: isSystemCard ? sysRotation : cardAngle
-            opacity: easedProgress
+            rotation: isSystemCard ? sysRotation : otherTargetRotation
+            opacity: isSystemCard ? 1 : (root.systemCardActive ? otherOpacity : easedProgress)
             transformOrigin: Item.Center
-            scale: isSystemCard ? sysScale : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 1.08 : 1.0)
+            scale: isSystemCard ? sysScale : (root.systemCardActive ? otherScale : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 1.08 : 1.0))
 
-            z: isSystemCard ? 200 : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 100 : cardIndex)
+            z: isSystemCard ? 200 : (root.systemCardActive ? 10 : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 100 : cardIndex))
 
             // Smooth hover/keyboard animations (disabled during system card animation)
             Behavior on x {
