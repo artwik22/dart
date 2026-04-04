@@ -215,9 +215,8 @@ FocusScope {
         property: "systemCardProgress"
         from: 0
         to: 1
-        duration: 500
-        easing.type: Easing.OutBack
-        easing.overshoot: 0.8
+        duration: 600
+        easing.type: Easing.InOutCubic
         onFinished: {
             root.systemSelectedAction = 0
         }
@@ -229,8 +228,8 @@ FocusScope {
         property: "systemCardProgress"
         from: 1
         to: 0
-        duration: 400
-        easing.type: Easing.InCubic
+        duration: 500
+        easing.type: Easing.InOutCubic
         onFinished: {
             root.systemCardActive = false
             root.showSystemConfirm = false
@@ -322,7 +321,7 @@ FocusScope {
             // Single progress drives everything simultaneously
             property real p: root.systemCardProgress
 
-            // Flip: 0 -> 180 degrees (only for system card)
+            // Flip: 0 -> 180 degrees (easing already applied by NumberAnimation)
             property real flipAngle: isSystemCard ? p * 180 : 0
             property real flipXScale: isSystemCard ? Math.abs(Math.cos(flipAngle * Math.PI / 180)) : 1
             property bool showBackFace: isSystemCard && flipAngle >= 90
@@ -356,10 +355,27 @@ FocusScope {
 
             z: isSystemCard ? 200 : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 100 : cardIndex)
 
-            // FRONT FACE decorations - fade out as flip progresses
-            property real frontOpacity: flipAngle < 90 ? 1 : 0
-            // BACK FACE content - fade in as flip completes
-            property real backOpacity: flipAngle > 90 ? Math.min(1, (flipAngle - 90) / 90) : 0
+            // Smooth hover/keyboard animations (disabled during system card animation)
+            Behavior on x {
+                enabled: !root.systemCardActive
+                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            }
+            Behavior on y {
+                enabled: !root.systemCardActive
+                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            }
+            Behavior on scale {
+                enabled: !root.systemCardActive
+                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+            }
+            Behavior on rotation {
+                enabled: !root.systemCardActive
+                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            }
+
+            // Smooth front/back face transitions with overlap at 90°
+            property real frontOpacity: Math.max(0, Math.min(1, 1 - (flipAngle / 80)))
+            property real backOpacity: Math.max(0, Math.min(1, (flipAngle - 100) / 80))
 
             Rectangle {
                 width: parent.width
@@ -374,6 +390,22 @@ FocusScope {
                 }
 
                 property real glowOpacity: isSystemCard && cardItem.showBackFace ? 0.2 : 0
+
+                Behavior on glowOpacity {
+                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                }
+
+                Behavior on color {
+                    ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                }
+
+                Behavior on glowOpacity {
+                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                }
+
+                Behavior on color {
+                    ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                }
 
                 Rectangle {
                     anchors.fill: parent
