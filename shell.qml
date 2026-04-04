@@ -910,6 +910,7 @@ ShellRoot {
                 sourceComponent: Component {
                     PanelWindow {
                         id: bounceCardsWindow
+                        screen: bounceCardsLoader.modelData
                         anchors {
                             left: true
                             top: true
@@ -918,11 +919,16 @@ ShellRoot {
                         }
                         color: "transparent"
                         WlrLayershell.layer: WlrLayer.Overlay
-                        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                        WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
                         property real openX: -1
                         property real openY: -1
                         property bool positionLocked: false
+
+                        Component.onCompleted: {
+                            openX = root.cursorX
+                            openY = root.cursorY
+                        }
 
                         CardStackOverlay {
                             id: bounceCardsOverlay
@@ -944,12 +950,6 @@ ShellRoot {
                         Connections {
                             target: root.sharedData
                             function onBounceCardsVisibleChanged() {
-                                if (root.sharedData.bounceCardsVisible) {
-                                    sharedData.setTimeout(function() {
-                                        bounceCardsWindow.openX = root.cursorX
-                                        bounceCardsWindow.openY = root.cursorY
-                                    }, 50) // Small delay to ensure cursor position is fresh
-                                }
                                 if (!root.sharedData.bounceCardsVisible && bounceCardsOverlay.startClose) {
                                     bounceCardsOverlay.startClose()
                                     bounceCardsUnloadTimer.restart()
