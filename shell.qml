@@ -86,11 +86,6 @@ ShellRoot {
         property bool overviewVisible: false
         property bool overviewLoaded: false
         property bool bounceCardsVisible: false
-        property bool launcherCardVisible: false
-        property real launcherCardStartX: 0
-        property real launcherCardStartY: 0
-        property real launcherCardStartWidth: 110
-        property real launcherCardStartHeight: 155
 
         // Color theme properties
         property string colorBackground: "#0a0a0a"
@@ -483,15 +478,6 @@ ShellRoot {
             sharedData.bounceCardsVisible = true
         } else if (cmd === "closeBounceCards") {
             sharedData.bounceCardsVisible = false
-        } else if (cmd.startsWith("openLauncherCard ")) {
-            var parts = cmd.substring(17).trim().split(" ")
-            if (parts.length >= 4) {
-                sharedData.launcherCardStartX = parseFloat(parts[0])
-                sharedData.launcherCardStartY = parseFloat(parts[1])
-                sharedData.launcherCardStartWidth = parseFloat(parts[2])
-                sharedData.launcherCardStartHeight = parseFloat(parts[3])
-                root.launcherCardActive = true
-            }
         }
     }
     
@@ -884,20 +870,6 @@ ShellRoot {
         }
     }
 
-    // Workspace Overview - Full-screen grid
-    Loader {
-        id: workspaceOverviewLoader
-        asynchronous: true
-        active: root.overviewActive
-        sourceComponent: Component {
-            WorkspaceOverview {
-                id: workspaceOverviewInstance
-                sharedData: root.sharedData
-                projectPath: root.projectPath
-            }
-        }
-    }
-
     // BounceCards - Animated card stack overlay
     Variants {
         model: Quickshell.screens.length > 0 ? [Quickshell.screens[0]] : []
@@ -938,13 +910,6 @@ ShellRoot {
                             y: bounceCardsWindow.openY >= 0 ? bounceCardsWindow.openY - height / 2 : (bounceCardsWindow.height - height) / 2
                             sharedData: root.sharedData
                             launcherCardIndex: 4
-                            onLauncherCardClicked: function(x, y, w, h) {
-                                sharedData.launcherCardStartX = x
-                                sharedData.launcherCardStartY = y
-                                sharedData.launcherCardStartWidth = w
-                                sharedData.launcherCardStartHeight = h
-                                root.launcherCardActive = true
-                            }
                         }
 
                         Connections {
@@ -965,57 +930,6 @@ ShellRoot {
                                 root.bounceCardsActive = false
                             }
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    property bool launcherCardActive: false
-
-    Loader {
-        id: launcherCardOverlay
-        asynchronous: true
-        active: root.launcherCardActive
-        sourceComponent: Component {
-            PanelWindow {
-                id: launcherCardWindow
-                anchors {
-                    left: true
-                    top: true
-                    right: true
-                    bottom: true
-                }
-                color: "transparent"
-                WlrLayershell.layer: WlrLayer.Overlay
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        if (launcherCardInstance) launcherCardInstance.close()
-                    }
-                    onWheel: function(wheel) {
-                        if (launcherCardInstance) launcherCardInstance.handleWheel(wheel.angleDelta.y)
-                    }
-                }
-
-                LauncherCardOverlay {
-                    id: launcherCardInstance
-                    anchors.fill: parent
-                    sharedData: root.sharedData
-                    projectPath: root.projectPath
-                    startX: root.sharedData.launcherCardStartX
-                    startY: root.sharedData.launcherCardStartY
-                    startWidth: root.sharedData.launcherCardStartWidth
-                    startHeight: root.sharedData.launcherCardStartHeight
-
-                    Component.onCompleted: {
-                        open()
-                    }
-
-                    onFullyClosed: {
-                        root.launcherCardActive = false
                     }
                 }
             }

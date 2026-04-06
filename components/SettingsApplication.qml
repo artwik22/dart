@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
-import "settings"
+// import "settings" -- directory does not exist
 
 PanelWindow {
     id: settingsApplicationRoot
@@ -173,25 +173,6 @@ PanelWindow {
                         }
                     }
                 }
-            }
-        }
-    }
-    
-    Component.onCompleted: {
-        loadWallpapers()
-    }
-}
-                            }
-                            Text {
-                                text: "Version 2.0 Titanium\nPrecision Engineered UI Components"; color: colorText; opacity: 0.4
-                                font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; width: Math.min(parent.width, 500); wrapMode: Text.WordWrap
-                                font.family: "Inter, sans-serif"
-                            }
-                        }
-                    }
-                }
-                
-                NumberAnimation { id: fadeAnim; target: mainStack; property: "opacity"; from: 0; to: 1; duration: 400; easing.type: Easing.OutCubic }
             }
         }
     }

@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -11,28 +12,6 @@ PanelWindow {
     
     property bool isMangoWM: false
     
-    Timer {
-        id: mangoPollingTimer
-        interval: 100
-        running: true
-        repeat: true
-        onTriggered: checkMangoEdge()
-    }
-    
-    function checkMangoEdge() {
-        if (!isMangoWM || !screen || !sharedData) return
-        
-        var mouseX = MouseTracker.cursorX
-        var edgeThreshold = 15
-        var inEdge = (screen.width - mouseX) <= edgeThreshold
-        
-        if (inEdge && !sharedData.volumeEdgeHovered) {
-            sharedData.volumeEdgeHovered = true
-            sharedData.volumeVisible = true
-        } else if (!inEdge && sharedData.volumeEdgeHovered) {
-            sharedData.volumeEdgeHovered = false
-        }
-    }
     
     Component.onCompleted: {
         detectWM()

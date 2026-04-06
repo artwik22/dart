@@ -6,10 +6,10 @@ FocusScope {
 
     property var sharedData: null
     property int cardCount: 5
-    property var cardIcons: ["♠", "♥", "♦", "󰐥", "⊞"]
-    property var cardValues: ["A", "K", "Q", "J", "⌕"]
+    property var cardIcons: ["♠", "♥", "♦", "󰐥", "★"]
+    property var cardValues: ["A", "K", "Q", "J", "10"]
     property var cardActions: ["kitty", null, null, null, null]
-    property var cardBadges: ["⌘", "", "", "⚡", "APPS"]
+    property var cardBadges: ["⌘", "", "", "⚡", ""]
     property var cardTypes: ["action", "action", "action", "system", "launcher"]
     property real cardWidth: 110
     property real cardHeight: 155
@@ -20,14 +20,8 @@ FocusScope {
     property int hoveredIndex: -1
     property bool isClosing: false
     property real animationProgress: 0
-    property int keyboardFocusIndex: -1
     property int launcherCardIndex: -1
-    property bool launcherCardActive: false
-    property real launcherCardProgress: 0
-    property string launcherSearchText: ""
-    property var launcherApps: []
-    property var launcherSearchResults: []
-    property bool launcherLoading: false
+    property int keyboardFocusIndex: -1
 
     property bool systemCardActive: false
     property real systemCardProgress: 0
@@ -37,6 +31,15 @@ FocusScope {
     property real confirmProgress: 0
     property int pendingActionIndex: -1
 
+    property bool launcherCardActive: false
+    property real launcherCardProgress: 0
+    property int launcherCardIndexVal: 4
+    property string launcherSearchText: ""
+    property var launcherApps: []
+    property int launcherSelectedIndex: 0
+    property real launcherExpandedHeight: 52
+    property bool launcherHasResults: launcherSearchText.trim().length > 0 && getFilteredLauncherApps().length > 0
+
     property var systemActions: [
         { label: "Lock", icon: "󰌾", cmd: "swaylock || hyprlock || loginctl lock-session" },
         { label: "Logout", icon: "󰍂", cmd: "loginctl terminate-user $USER" },
@@ -44,6 +47,8 @@ FocusScope {
         { label: "Shutdown", icon: "󰐥", cmd: "systemctl poweroff" },
         { label: "Sleep", icon: "󰤄", cmd: "systemctl suspend" }
     ]
+
+    signal launcherCardClicked(real x, real y, real width, real height)
 
     visible: true
 
@@ -58,12 +63,6 @@ FocusScope {
         systemSelectedAction = -1
         showSystemConfirm = false
         confirmProgress = 0
-        launcherCardActive = false
-        launcherCardProgress = 0
-        launcherSearchText = ""
-        launcherSearchResults = []
-        launcherLoading = false
-        loadLauncherApps()
         openTimer.start()
         forceActiveFocus()
     }
@@ -81,9 +80,24 @@ FocusScope {
         if (root.launcherCardActive) {
             if (event.key === Qt.Key_Escape) {
                 root.closeLauncherCard()
-                launcherCardCloseAnim.start()
                 event.accepted = true
-                return
+            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                var filtered = root.getFilteredLauncherApps()
+                if (filtered.length > 0 && root.launcherSelectedIndex < filtered.length) {
+                    root.launchApp(filtered[root.launcherSelectedIndex])
+                }
+                event.accepted = true
+            } else if (event.key === Qt.Key_Down) {
+                var filtered = root.getFilteredLauncherApps()
+                if (root.launcherSelectedIndex < filtered.length - 1) {
+                    root.launcherSelectedIndex++
+                }
+                event.accepted = true
+            } else if (event.key === Qt.Key_Up) {
+                if (root.launcherSelectedIndex > 0) {
+                    root.launcherSelectedIndex--
+                }
+                event.accepted = true
             }
             return
         }
@@ -139,18 +153,15 @@ FocusScope {
 
     function activateCard(idx) {
         if (idx < 0 || idx >= cardCount) return
-        if (idx < cardTypes.length && cardTypes[idx] === "system") {
+        if (root.launcherCardIndexVal >= 0 && idx === root.launcherCardIndexVal) {
+            root.openLauncherCard()
+        } else if (idx < cardTypes.length && cardTypes[idx] === "system") {
             root.systemCardIndex = idx
             root.systemCardActive = true
             root.systemCardProgress = 0
             root.systemSelectedAction = -1
             root.showSystemConfirm = false
             systemCardOpenAnim.start()
-        } else if (idx < cardTypes.length && cardTypes[idx] === "launcher") {
-            root.launcherCardIndex = idx
-            root.launcherCardActive = true
-            root.launcherCardProgress = 0
-            launcherCardOpenAnim.start()
         } else if (idx < cardActions.length && cardActions[idx]) {
             var cmd = cardActions[idx]
             if (sharedData && sharedData.runCommand) {
@@ -173,73 +184,6 @@ FocusScope {
         root.confirmProgress = 0
     }
 
-    function loadLauncherApps() {
-        root.launcherLoading = true
-        if (root.sharedData && root.sharedData.runCommand) {
-            root.sharedData.runCommand(['sh', '-c', 'python3 /home/iartwik/.config/alloy/dart/scripts/get-apps.py 2>/dev/null || true'])
-        }
-        loadAppsTimer.start()
-    }
-
-    function readLauncherApps() {
-        var xhr = new XMLHttpRequest()
-        xhr.open("GET", "file:///tmp/alloy_apps.json")
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                try {
-                    root.launcherApps = JSON.parse(xhr.responseText)
-                    root.launcherSearchResults = root.launcherApps.slice(0, 8)
-                    root.launcherLoading = false
-                } catch(e) {
-                    root.launcherApps = []
-                    root.launcherSearchResults = []
-                    root.launcherLoading = false
-                }
-            }
-        }
-        xhr.send()
-    }
-
-    function filterLauncherApps(search) {
-        root.launcherSearchText = search
-        if (!search || search.trim().length < 1) {
-            root.launcherSearchResults = root.launcherApps.slice(0, 8)
-            return
-        }
-        var q = search.trim().toLowerCase()
-        var results = []
-        for (var i = 0; i < root.launcherApps.length && results.length < 8; i++) {
-            var a = root.launcherApps[i]
-            if ((a.name && a.name.toLowerCase().indexOf(q) >= 0) ||
-                (a.comment && a.comment.toLowerCase().indexOf(q) >= 0) ||
-                (a.keywords && a.keywords.toLowerCase().indexOf(q) >= 0)) {
-                results.push(a)
-            }
-        }
-        root.launcherSearchResults = results
-    }
-
-    function closeLauncherCard() {
-        if (!root.launcherCardActive) return
-        root.launcherCardProgress = 1
-        launcherCardCloseAnim.start()
-    }
-
-    function launchAppFromCard(app) {
-        if (app.exec) {
-            var exec = app.exec
-            exec = exec.replace(/%%/g, "___PERCENT_PLACEHOLDER___")
-            exec = exec.replace(/%[a-zA-Z]/g, "")
-            exec = exec.replace(/___PERCENT_PLACEHOLDER___/g, "%")
-            exec = exec.replace(/\s+/g, " ").trim()
-
-            if (root.sharedData && root.sharedData.runCommand) {
-                root.sharedData.runCommand(['sh', '-c', exec.replace(/'/g, "'\"'\"'") + ' &'])
-            }
-            root.startClose()
-        }
-    }
-
     function executeSystemAction(idx) {
         if (idx < 0 || idx >= root.systemActions.length) return
         var action = root.systemActions[idx]
@@ -247,6 +191,74 @@ FocusScope {
             sharedData.runCommand(['sh', '-c', action.cmd])
         }
         root.closeSystemCard()
+    }
+
+    function openLauncherCard() {
+        root.launcherCardIndexVal = 4
+        root.launcherCardActive = true
+        root.launcherCardProgress = 0
+        root.launcherSearchText = ""
+        root.launcherSelectedIndex = 0
+        root.launcherExpandedHeight = 52
+        loadLauncherApps()
+        launcherCardOpenAnim.start()
+    }
+
+    function closeLauncherCard() {
+        launcherCardCloseAnim.start()
+    }
+
+    function loadLauncherApps() {
+        if (!(root.sharedData && root.sharedData.runCommand)) return
+        var scriptPath = "/home/iartwik/.config/alloy/dart/scripts/get-apps.py"
+        root.sharedData.runCommand(['python3', scriptPath], readLauncherAppsJson)
+    }
+
+    function readLauncherAppsJson() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "file:///tmp/alloy_apps.json?_=" + Date.now())
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                try {
+                    var data = JSON.parse(xhr.responseText)
+                    if (Array.isArray(data)) {
+                        root.launcherApps = data
+                    }
+                } catch (e) {
+                    console.error("Error parsing launcher apps JSON: " + e)
+                }
+            }
+        }
+        xhr.send()
+    }
+
+    function getFilteredLauncherApps() {
+        var search = root.launcherSearchText.trim().toLowerCase()
+        if (search.length === 0) return []
+
+        var matches = []
+        for (var i = 0; i < root.launcherApps.length; i++) {
+            var app = root.launcherApps[i]
+            if (!app || !app.name) continue
+
+            var name = app.name.toLowerCase()
+            var comment = (app.comment || "").toLowerCase()
+            var score = 0
+
+            if (name === search) score = 100
+            else if (name.startsWith(search)) score = 80
+            else if (name.indexOf(search) >= 0) score = 60
+            else if (comment.indexOf(search) >= 0) score = 40
+
+            if (score > 0) matches.push({ app: app, score: score })
+        }
+
+        matches.sort(function(a, b) { return b.score - a.score })
+
+        var result = []
+        var limit = Math.min(matches.length, 6)
+        for (var k = 0; k < limit; k++) result.push(matches[k].app)
+        return result
     }
 
     function launchApp(app) {
@@ -261,6 +273,7 @@ FocusScope {
                 root.sharedData.runCommand(['sh', '-c', exec.replace(/'/g, "'\"'\"'") + ' &'])
             }
         }
+        closeLauncherCard()
     }
 
     function easeOutBack(t) {
@@ -303,9 +316,6 @@ FocusScope {
                     animationProgress = 0.0
                     closeTimer.stop()
                     root.visible = false
-                    if (root.sharedData) {
-                        root.sharedData.bounceCardsVisible = false
-                    }
                 }
             }
         }
@@ -347,6 +357,9 @@ FocusScope {
         to: 1
         duration: 600
         easing.type: Easing.InOutCubic
+        onFinished: {
+            try { searchInput.forceActiveFocus() } catch(e) {}
+        }
     }
 
     NumberAnimation {
@@ -360,17 +373,17 @@ FocusScope {
         onFinished: {
             root.launcherCardActive = false
             root.launcherSearchText = ""
-            root.launcherSearchResults = []
+            root.launcherSelectedIndex = 0
+            root.launcherExpandedHeight = 52
         }
     }
 
-    Timer {
-        id: loadAppsTimer
-        interval: 800
-        repeat: false
-        onTriggered: {
-            root.readLauncherApps()
-        }
+    NumberAnimation {
+        id: launcherExpandAnim
+        target: root
+        property: "launcherExpandedHeight"
+        duration: 200
+        easing.type: Easing.OutCubic
     }
 
     Timer {
@@ -479,57 +492,83 @@ FocusScope {
             }
 
             property real isSystemCard: (cardIndex === root.systemCardIndex && root.systemCardActive) ? 1 : 0
-            property real isLauncherCard: (cardIndex === root.launcherCardIndex && root.launcherCardActive) ? 1 : 0
-            property real isSpecialCard: isSystemCard || isLauncherCard ? 1 : 0
-            property real specialProgress: isSystemCard ? root.systemCardProgress : (isLauncherCard ? root.launcherCardProgress : 0)
+
+            // Single progress drives everything simultaneously
+            property real p: root.systemCardProgress
 
             // Flip: 0 -> 180 degrees (easing already applied by NumberAnimation)
-            property real flipAngle: isSpecialCard ? specialProgress * 180 : 0
-            property real flipXScale: isSpecialCard ? Math.abs(Math.cos(flipAngle * Math.PI / 180)) : 1
-            property bool showBackFace: isSpecialCard && flipAngle >= 90
+            property real flipAngle: isSystemCard ? p * 180 : 0
+            property real flipXScale: isSystemCard ? Math.abs(Math.cos(flipAngle * Math.PI / 180)) : 1
+            property bool showBackFace: isSystemCard && flipAngle >= 90
 
             // Position: fan -> center (easeOutBack)
-            property real posT: easeOutBack(specialProgress)
-            property real sysX: animX + (root.centerX - animX) * posT * isSpecialCard
-            property real sysY: animY + (root.centerY - animY) * posT * isSpecialCard
+            property real posT: easeOutBack(p)
+            property real sysX: animX + (root.centerX - animX) * posT * isSystemCard
+            property real sysY: animY + (root.centerY - animY) * posT * isSystemCard
 
             // Rotation: fan angle -> 0
-            property real sysRotation: cardAngle * (1 - posT * isSpecialCard)
+            property real sysRotation: cardAngle * (1 - posT * isSystemCard)
 
             // Scale: 1 -> 1.7
-            property real sysScale: 1 + 0.7 * posT * isSpecialCard
+            property real sysScale: 1 + 0.7 * posT * isSystemCard
 
             // Size: normal -> expanded
-            property real sizeT: easeOutCubic(specialProgress)
-            property real sysWidth: root.cardWidth + 90 * sizeT * isSpecialCard
-            property real sysHeight: root.cardHeight + 185 * sizeT * isSpecialCard
+            property real sizeT: easeOutCubic(p)
+            property real sysWidth: root.cardWidth + 90 * sizeT * isSystemCard
+            property real sysHeight: root.cardHeight + 185 * sizeT * isSystemCard
 
-            x: isSpecialCard ? sysX : otherTargetX + calcHoverOffset()
-            y: isSpecialCard ? sysY : otherTargetY + hoverShift
-            width: isSpecialCard ? sysWidth : root.cardWidth * easedProgress
-            height: isSpecialCard ? sysHeight : root.cardHeight * easedProgress
-            rotation: isSpecialCard ? sysRotation : otherTargetRotation
+            // Launcher card flip: 0 -> 180 degrees
+            property real isLauncherCard: (cardIndex === root.launcherCardIndexVal && root.launcherCardActive) ? 1 : 0
+            property real launcherFlipAngle: isLauncherCard ? easeOutBack(root.launcherCardProgress) * 180 : 0
+            property real launcherFlipXScale: isLauncherCard ? Math.abs(Math.cos(launcherFlipAngle * Math.PI / 180)) : 1
+            property bool showLauncherBackFace: isLauncherCard && launcherFlipAngle >= 90
+
+            // Launcher position: fan -> center
+            property real launcherPosT: easeOutBack(root.launcherCardProgress)
+            property real launcherX: animX + (root.centerX - animX) * launcherPosT * isLauncherCard
+            property real launcherY: animY + (root.centerY - animY) * launcherPosT * isLauncherCard
+
+            // Launcher rotation: fan angle -> 0
+            property real launcherRotation: cardAngle * (1 - launcherPosT * isLauncherCard)
+
+            // Launcher scale: 1 -> 1.7
+            property real launcherScale: 1 + 0.7 * launcherPosT * isLauncherCard
+
+            // Launcher size: normal -> expanded
+            property real launcherSizeT: easeOutCubic(root.launcherCardProgress)
+            property real launcherWidth: root.cardWidth + 310 * launcherSizeT * isLauncherCard
+            property real launcherHeight: root.cardHeight + 100 * launcherSizeT * isLauncherCard
+
+            // Launcher front/back opacity
+            property real launcherFrontOpacity: Math.max(0, Math.min(1, 1 - (launcherFlipAngle / 80)))
+            property real launcherBackOpacity: Math.max(0, Math.min(1, (launcherFlipAngle - 100) / 80))
+
+            x: isSystemCard ? sysX : (isLauncherCard ? launcherX : (otherTargetX + calcHoverOffset()))
+            y: isSystemCard ? sysY : (isLauncherCard ? launcherY : (otherTargetY + hoverShift))
+            width: isSystemCard ? sysWidth : (isLauncherCard ? launcherWidth : (root.cardWidth * easedProgress))
+            height: isSystemCard ? sysHeight : (isLauncherCard ? launcherHeight : (root.cardHeight * easedProgress))
+            rotation: isSystemCard ? sysRotation : (isLauncherCard ? launcherRotation : otherTargetRotation)
             opacity: easedProgress
             transformOrigin: Item.Center
-            scale: isSpecialCard ? sysScale : (root.systemCardActive || root.launcherCardActive ? otherScale : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 1.08 : 1.0))
+            scale: isSystemCard ? sysScale : (isLauncherCard ? launcherScale : (root.systemCardActive ? otherScale : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 1.08 : 1.0)))
 
-            z: isSpecialCard ? 200 : ((root.systemCardActive || root.launcherCardActive) ? 50 : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 100 : cardIndex))
+            z: isSystemCard ? 200 : (isLauncherCard ? 200 : (root.systemCardActive ? 50 : ((cardIndex === root.hoveredIndex || cardIndex === root.keyboardFocusIndex) ? 100 : cardIndex)))
 
-            // Smooth hover/keyboard animations (disabled during special card animation)
+            // Smooth hover/keyboard animations (disabled during system card animation)
             Behavior on x {
-                enabled: !root.systemCardActive && !root.launcherCardActive
+                enabled: !root.systemCardActive
                 NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
             }
             Behavior on y {
-                enabled: !root.systemCardActive && !root.launcherCardActive
+                enabled: !root.systemCardActive
                 NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
             }
             Behavior on scale {
-                enabled: !root.systemCardActive && !root.launcherCardActive
+                enabled: !root.systemCardActive
                 NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
             }
             Behavior on rotation {
-                enabled: !root.systemCardActive && !root.launcherCardActive
+                enabled: !root.systemCardActive
                 NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
             }
 
@@ -541,15 +580,15 @@ FocusScope {
                 width: parent.width
                 height: parent.height
                 radius: 8 + 6 * sizeT * isSystemCard
-                clip: isSpecialCard && specialProgress > 0.5
+                clip: isSystemCard && p > 0.5
 
                 transform: Scale {
-                    xScale: cardItem.flipXScale
+                    xScale: cardItem.flipXScale * (cardItem.isLauncherCard ? cardItem.launcherFlipXScale : 1)
                     origin.x: cardItem.width / 2
                     origin.y: cardItem.height / 2
                 }
 
-                property real glowOpacity: isSpecialCard && cardItem.showBackFace ? 0.2 : 0
+                property real glowOpacity: isSystemCard && cardItem.showBackFace ? 0.2 : 0
 
                 Behavior on glowOpacity {
                     NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
@@ -582,9 +621,9 @@ FocusScope {
 
                 // FRONT FACE
                 Item {
-                    visible: cardItem.frontOpacity > 0
+                    visible: cardItem.frontOpacity > 0 || (cardItem.isLauncherCard && cardItem.launcherFrontOpacity > 0)
                     anchors.fill: parent
-                    opacity: cardItem.frontOpacity
+                    opacity: cardItem.isLauncherCard ? cardItem.launcherFrontOpacity : cardItem.frontOpacity
 
                     Text {
                         anchors.top: parent.top
@@ -621,7 +660,7 @@ FocusScope {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         y: parent.height / 2 - height / 2 - 10
-                        text: root.cardIcons[index % root.cardIcons.length]
+                        text: (root.launcherCardIndexVal >= 0 && index === root.launcherCardIndexVal) ? "󰍉" : root.cardIcons[index % root.cardIcons.length]
                         font.pixelSize: 38
                         font.bold: true
                         color: root.cardText
@@ -677,11 +716,8 @@ FocusScope {
                     anchors.fill: parent
                     opacity: cardItem.backOpacity
 
-                    // ---- CONDITIONAL BACK FACE ----
-
                     Text {
                         id: backCenterIcon
-                        visible: isSystemCard
                         anchors.horizontalCenter: parent.horizontalCenter
                         y: 22
                         text: "󰐥"
@@ -692,7 +728,6 @@ FocusScope {
                     }
 
                     Text {
-                        visible: isSystemCard
                         anchors.top: backCenterIcon.bottom
                         anchors.topMargin: 4
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -705,7 +740,6 @@ FocusScope {
                     }
 
                     Column {
-                        visible: isSystemCard
                         anchors.top: parent.top
                         anchors.topMargin: 90
                         anchors.left: parent.left
@@ -722,7 +756,7 @@ FocusScope {
                                 property real actionDelay: index * 0.06
                                 property real actionStart: 0.55
                                 property real actionEnd: 1.0
-                                property real actionT: specialProgress > actionStart ? Math.max(0, Math.min(1, (specialProgress - actionStart - actionDelay) / (actionEnd - actionStart - actionDelay))) : 0
+                                property real actionT: p > actionStart ? Math.max(0, Math.min(1, (p - actionStart - actionDelay) / (actionEnd - actionStart - actionDelay))) : 0
                                 property real actionEased: actionT > 0 && actionT < 1 ? easeOutBack(actionT) : (actionT >= 1 ? 1 : 0)
 
                                 width: parent.width
@@ -786,7 +820,7 @@ FocusScope {
                     }
 
                     Rectangle {
-                        visible: root.showSystemConfirm && root.systemCardActive
+                        visible: root.showSystemConfirm
                         anchors.fill: parent
                         radius: 14
                         color: Qt.rgba(0, 0, 0, 0.5)
@@ -886,150 +920,232 @@ FocusScope {
                             }
                         }
                     }
+                }
 
-                    // ---- LAUNCHER CARD BACK ----
+
+                // LAUNCHER SEARCH BACK FACE
+                Item {
+                    visible: cardItem.showLauncherBackFace
+                    anchors.fill: parent
+                    opacity: cardItem.launcherBackOpacity
+
                     Item {
-                        visible: isLauncherCard
-                        anchors.fill: parent
+                        id: launcherSearchArea
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 52
 
-                        property real launcherContentStart: 0.2
-                        property real launcherContentEnd: 0.8
-                        property real launcherContentT: root.launcherCardProgress > launcherContentStart ? Math.max(0, Math.min(1, (root.launcherCardProgress - launcherContentStart) / (launcherContentEnd - launcherContentStart))) : 0
-                        property real launcherContentEased: launcherContentT > 0 && launcherContentT < 1 ? easeOutBack(launcherContentT) : (launcherContentT >= 1 ? 1 : 0)
-
-                        // Search bar
-                        Rectangle {
-                            id: launcherSearchBar
-                            visible: launcherContentEased > 0
-                            anchors.top: parent.top
+                        Text {
+                            id: launcherSearchIcon
                             anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 16
+                            text: "󰍉"
+                            font.pixelSize: 18
+                            font.family: "JetBrainsMono Nerd Font"
+                            color: root.cardAccent
+                            opacity: 0.8
+                        }
+
+                        TextInput {
+                            id: searchInput
+                            anchors.left: launcherSearchIcon.right
                             anchors.right: parent.right
-                            anchors.margins: 10
-                            anchors.topMargin: 12
-                            height: 40
-                            radius: 10
-                            color: Qt.rgba(1, 1, 1, 0.06)
-                            opacity: launcherContentEased
-                            transform: Translate {
-                                y: (1 - launcherContentEased) * -20
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 14
+                            text: root.launcherSearchText
+                            color: root.cardText
+                            font.pixelSize: 15
+                            font.family: "Inter"
+                            selectionColor: root.cardAccent
+                            selectedTextColor: root.cardSurfaceDark
+
+                            onTextChanged: {
+                                root.launcherSearchText = text
+                                root.launcherSelectedIndex = 0
+                                if (root.launcherCardProgress >= 1) {
+                                    launcherExpandAnim.from = root.launcherExpandedHeight
+                                    launcherExpandAnim.to = root.getLauncherTargetHeight()
+                                    launcherExpandAnim.restart()
+                                }
                             }
 
-                            Text {
-                                id: searchIcon
-                                anchors.left: parent.left
-                                anchors.leftMargin: 12
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "⌕"
-                                font.pixelSize: 16
-                                color: root.cardText
-                                opacity: 0.5
-                            }
-
-                            TextInput {
-                                id: launcherSearchInput
-                                anchors.left: searchIcon.right
-                                anchors.leftMargin: 8
-                                anchors.right: parent.right
-                                anchors.rightMargin: 12
-                                anchors.verticalCenter: parent.verticalCenter
-                                font.pixelSize: 13
-                                font.bold: true
-                                color: root.cardText
-                                activeFocusOnPress: true
-                                onTextChanged: {
-                                    root.filterLauncherApps(text)
-                                }
-                                Keys.onReturnPressed: {
-                                    if (root.launcherSearchResults.length > 0) {
-                                        root.launchAppFromCard(root.launcherSearchResults[0])
-                                    }
-                                }
-                                Keys.onEscapePressed: {
+                            Keys.onPressed: function(event) {
+                                if (event.key === Qt.Key_Escape) {
                                     root.closeLauncherCard()
-                                    launcherCardCloseAnim.start()
+                                    event.accepted = true
+                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                    var filtered = root.getFilteredLauncherApps()
+                                    if (filtered.length > 0 && root.launcherSelectedIndex < filtered.length) {
+                                        root.launchApp(filtered[root.launcherSelectedIndex])
+                                    }
+                                    event.accepted = true
+                                } else if (event.key === Qt.Key_Down) {
+                                    var filtered = root.getFilteredLauncherApps()
+                                    if (root.launcherSelectedIndex < filtered.length - 1) {
+                                        root.launcherSelectedIndex++
+                                    }
+                                    event.accepted = true
+                                } else if (event.key === Qt.Key_Up) {
+                                    if (root.launcherSelectedIndex > 0) {
+                                        root.launcherSelectedIndex--
+                                    }
+                                    event.accepted = true
                                 }
                             }
                         }
 
-                        // App results list
+                        Text {
+                            anchors.left: launcherSearchIcon.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 10
+                            text: "Search applications..."
+                            color: root.cardText
+                            font.pixelSize: 15
+                            font.family: "Inter"
+                            opacity: 0.3
+                            visible: searchInput.text.length === 0 && !searchInput.activeFocus
+                        }
+                    }
+
+                    Rectangle {
+                        id: launcherResultsContainer
+                        anchors.top: launcherSearchArea.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: root.getResultsHeight()
+                        color: "transparent"
+
                         ListView {
                             id: launcherResultsList
-                            visible: launcherContentEased > 0 && !root.launcherLoading
-                            anchors.top: launcherSearchBar.bottom
-                            anchors.topMargin: 15
-                            anchors.left: parent.left
-                            anchors.leftMargin: 10
-                            anchors.right: parent.right
-                            anchors.rightMargin: 10
-                            anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 10
+                            anchors.fill: parent
                             clip: true
-                            spacing: 4
-                            model: root.launcherSearchResults
+                            opacity: root.launcherHasResults ? 1 : 0
 
-                            delegate: Rectangle {
-                                width: ListView.view.width
-                                height: 38
-                                radius: 8
-                                color: launchMouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.03)
+                            Behavior on opacity {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
 
-                                Behavior on color {
-                                    ColorAnimation { duration: 120 }
-                                }
+                            model: root.getFilteredLauncherApps()
+                            delegate: Item {
+                                width: launcherResultsList.width
+                                height: 54
 
-                                Row {
+                                property bool isSel: index === root.launcherSelectedIndex
+
+                                Rectangle {
                                     anchors.fill: parent
                                     anchors.leftMargin: 10
                                     anchors.rightMargin: 10
-                                    spacing: 10
+                                    anchors.topMargin: 4
+                                    anchors.bottomMargin: 4
+                                    radius: 8
+                                    color: root.cardAccent
+                                    opacity: parent.isSel ? 0.12 : 0
+                                    visible: opacity > 0.01
 
-                                    Rectangle {
-                                        width: 26
-                                        height: 26
-                                        radius: 6
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        color: Qt.rgba(1, 1, 1, 0.05)
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "◆"
-                                            font.pixelSize: 12
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
-                                            color: root.cardText
-                                            opacity: 0.5
-                                        }
+                                    Behavior on opacity {
+                                        NumberAnimation { duration: 120 }
                                     }
+                                }
 
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: (modelData.name || "")
-                                        font.pixelSize: 11
-                                        font.bold: true
-                                        color: root.cardText
-                                        opacity: 0.8
+                                Image {
+                                    id: launcherAppIcon
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.leftMargin: 18
+                                    width: 24
+                                    height: 24
+                                    source: modelData.icon ? ("image://icon/" + modelData.icon) : ""
+                                    fillMode: Image.PreserveAspectFit
+                                    visible: status === Image.Ready && modelData.icon !== ""
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.leftMargin: 18
+                                    text: "󰣆"
+                                    font.pixelSize: 20
+                                    font.family: "JetBrainsMono Nerd Font"
+                                    color: parent.isSel ? root.cardAccent : root.cardText
+                                    opacity: parent.isSel ? 1 : 0.6
+                                    visible: !launcherAppIcon.visible
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.top: parent.top
+                                    anchors.topMargin: 12
+                                    anchors.leftMargin: 50
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 16
+                                    text: modelData.name || ""
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    font.family: "Inter"
+                                    color: parent.isSel ? root.cardAccent : root.cardText
+                                    elide: Text.ElideRight
+
+                                    Behavior on color {
+                                        ColorAnimation { duration: 120 }
+                                    }
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 12
+                                    anchors.leftMargin: 50
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 16
+                                    text: modelData.comment || ""
+                                    font.pixelSize: 11
+                                    font.family: "Inter"
+                                    color: root.cardText
+                                    opacity: parent.isSel ? 0.55 : 0.35
+                                    elide: Text.ElideRight
+
+                                    Behavior on opacity {
+                                        NumberAnimation { duration: 120 }
                                     }
                                 }
 
                                 MouseArea {
-                                    id: launchMouseArea
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    onClicked: {
-                                        root.launchAppFromCard(modelData)
-                                    }
+                                    onEntered: root.launcherSelectedIndex = index
+                                    onClicked: root.launchApp(modelData)
                                 }
                             }
+
+                            ScrollIndicator.vertical: ScrollIndicator { active: false }
                         }
 
-                        // Empty state
-                        Text {
-                            visible: !root.launcherLoading && root.launcherSearchResults.length === 0 && root.launcherSearchText.length > 0
+                        Column {
                             anchors.centerIn: parent
-                            text: "No apps found"
-                            font.pixelSize: 12
-                            color: root.cardText
-                            opacity: 0.4
+                            spacing: 8
+                            visible: launcherResultsList.count === 0 && root.launcherSearchText.length > 0
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "󰍉"
+                                font.pixelSize: 28
+                                font.family: "JetBrainsMono Nerd Font"
+                                color: root.cardText
+                                opacity: 0.2
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "No applications found"
+                                font.pixelSize: 13
+                                font.family: "Inter"
+                                color: root.cardText
+                                opacity: 0.35
+                            }
                         }
                     }
                 }
@@ -1042,7 +1158,7 @@ FocusScope {
         hoverEnabled: true
 
         onPositionChanged: function(mouse) {
-            if (root.systemCardActive) return
+            if (root.systemCardActive || root.launcherCardActive) return
             var found = root.findCardAtPoint(mouse.x, mouse.y)
             root.hoveredIndex = found
             if (found >= 0) {
@@ -1051,11 +1167,12 @@ FocusScope {
         }
 
         onExited: {
-            if (!root.systemCardActive) root.hoveredIndex = -1
+            if (!root.systemCardActive && !root.launcherCardActive) root.hoveredIndex = -1
         }
 
         onClicked: function(mouse) {
             if (root.launcherCardActive) {
+                root.closeLauncherCard()
                 return
             }
             if (root.systemCardActive) {
@@ -1068,9 +1185,9 @@ FocusScope {
             }
             var idx = root.findCardAtPoint(mouse.x, mouse.y)
             if (idx >= 0) {
-                if (idx < root.cardTypes.length && root.cardTypes[idx] === "system") {
+                if (idx < root.cardTypes.length && root.cardTypes[idx] === "launcher") {
                     activateCard(idx)
-                } else if (idx < root.cardTypes.length && root.cardTypes[idx] === "launcher") {
+                } else if (idx < root.cardTypes.length && root.cardTypes[idx] === "system") {
                     activateCard(idx)
                 } else if (idx < root.cardActions.length && root.cardActions[idx]) {
                     var cmd = root.cardActions[idx]
