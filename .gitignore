@@ -2,10 +2,16 @@
 /tmp/
 *.tmp
 *.log
+*.temp
+*.cache
+*~
+*.backup
+*.orig
 
 # OS files
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Editor files
 .vscode/
@@ -13,21 +19,167 @@ Thumbs.db
 *.swp
 *.swo
 *~
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
 
 # Build artifacts
 *.o
 *.so
 *.a
+*.obj
+*.exe
+*.out
+*.app
+*.dll
+*.manifest
+*.spec
+*~
 
-# Quickshell cache
+# Qt/QML specific
 *.qmlc
 *.jsc
+.qmake.stash
+.qmake.cache
+*.qmlls
+*.qmltypes
+.qmltypes.cache
+qmltypes/
+.qmake.cache
+moc_*.cpp
+moc_*.h
+ui_*.h
+*.rc
+
+# Compiled resources
+qrc_*.cpp
+moc_*.cpp
+ui_*.h
+qmlcache/
+.qmlcache/
+.qmljs/
+.qmllint/
 
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis
+.pytest_cache/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # Local data
 *_ai_history.json
 *_ai_settings.json
+*_ai_context.json
+*_ai_cache.json
+
+# Claude Code
+CLAUDE.md
+
+# IDE/Editor specific
+*.sublime-workspace
+*.sublime-project
+*.sublime-settings
+*.tmproj
+*.tmtime
+*.sublime-build
+*.sublime-macro
+*.sublime-menu
+*.sublime-commands
+*.sublime-completions
+*.sublime-keymap
+*.sublime-mousemap
+*.sublime-theme
+*.sublime-color-scheme
+*.sublime-indentation
+*.sublime-regex
+*.sublime-build-system
+*.sublime-project
+*.sublime-workspace
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+out/
+out/
+out/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs_vista.txt
+D desktop.ini
+$Recycle.Bin
+*~
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Misc
+*.bak
+*.swp
+*~
+.*.swp
+._*
+.DS_Store
+Thumbs.db
 
