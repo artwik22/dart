@@ -28,6 +28,11 @@ FocusScope {
     property var launcherApps: []
     property var launcherSearchResults: []
     property bool launcherLoading: false
+    property var launcherSearchInputRef: null
+    property real _launcherContentStart: 0.2
+    property real _launcherContentEnd: 0.8
+    property real _launcherContentT: launcherCardProgress > _launcherContentStart ? Math.max(0, Math.min(1, (launcherCardProgress - _launcherContentStart) / (_launcherContentEnd - _launcherContentStart))) : 0
+    property real _launcherContentEased: _launcherContentT > 0 && _launcherContentT < 1 ? easeOutBack(_launcherContentT) : (_launcherContentT >= 1 ? 1 : 0)
 
     property bool systemCardActive: false
     property real systemCardProgress: 0
@@ -44,6 +49,9 @@ FocusScope {
         { label: "Shutdown", icon: "󰐥", cmd: "systemctl poweroff" },
         { label: "Sleep", icon: "󰤄", cmd: "systemctl suspend" }
     ]
+
+    // Action severity colors: Lock=gray, Logout=yellow, Reboot=orange, Shutdown=red, Sleep=blue
+    property var actionColors: ["#aaaaaa", "#e0a030", "#e07020", "#e03030", "#4a9eff"]
 
     visible: true
 
@@ -118,6 +126,11 @@ FocusScope {
             }
             return
         }
+        if (event.key === Qt.Key_Escape) {
+            root.startClose()
+            event.accepted = true
+            return
+        }
         if (event.key === Qt.Key_Left || event.key === Qt.Key_Up) {
             root.keyboardFocusIndex = Math.max(0, root.keyboardFocusIndex - 1)
             root.hoveredIndex = root.keyboardFocusIndex
@@ -151,6 +164,9 @@ FocusScope {
             root.launcherCardActive = true
             root.launcherCardProgress = 0
             launcherCardOpenAnim.start()
+            Qt.callLater(function() {
+                if (root.launcherSearchInputRef) root.launcherSearchInputRef.forceActiveFocus()
+            })
         } else if (idx < cardActions.length && cardActions[idx]) {
             var cmd = cardActions[idx]
             if (sharedData && sharedData.runCommand) {
@@ -728,7 +744,8 @@ FocusScope {
                                 width: parent.width
                                 height: 42
                                 radius: 10
-                                color: actionIdx === root.systemSelectedAction ? Qt.lighter(root.cardAccent, 1.15) : Qt.rgba(1, 1, 1, 0.03)
+                                property color actionClr: root.actionColors[actionIdx] || root.cardAccent
+                                color: actionIdx === root.systemSelectedAction ? Qt.rgba(actionClr.r, actionClr.g, actionClr.b, 0.15) : Qt.rgba(1, 1, 1, 0.03)
                                 opacity: actionT
                                 transform: Translate {
                                     y: (1 - actionEased) * 15
@@ -755,7 +772,7 @@ FocusScope {
                                             anchors.centerIn: parent
                                             text: modelData.icon
                                             font.pixelSize: 14
-                                            color: actionIdx === root.systemSelectedAction ? root.cardAccent : root.cardText
+                                            color: actionIdx === root.systemSelectedAction ? actionClr : root.cardText
                                         }
                                     }
 
@@ -764,7 +781,7 @@ FocusScope {
                                         text: modelData.label
                                         font.pixelSize: 13
                                         font.bold: actionIdx === root.systemSelectedAction
-                                        color: actionIdx === root.systemSelectedAction ? root.cardAccent : root.cardText
+                                        color: actionIdx === root.systemSelectedAction ? actionClr : root.cardText
                                         opacity: 0.85
                                     }
                                 }
@@ -889,18 +906,28 @@ FocusScope {
 
                     // ---- LAUNCHER CARD BACK ----
                     Item {
+                        id: launcherCardBackItem
                         visible: isLauncherCard
                         anchors.fill: parent
 
-                        property real launcherContentStart: 0.2
-                        property real launcherContentEnd: 0.8
-                        property real launcherContentT: root.launcherCardProgress > launcherContentStart ? Math.max(0, Math.min(1, (root.launcherCardProgress - launcherContentStart) / (launcherContentEnd - launcherContentStart))) : 0
-                        property real launcherContentEased: launcherContentT > 0 && launcherContentT < 1 ? easeOutBack(launcherContentT) : (launcherContentT >= 1 ? 1 : 0)
+                        property bool _inputActive: root.launcherSearchInputRef && root.launcherSearchInputRef.activeFocus
+
+                        // Search bar glow
+                        Rectangle {
+                            anchors.fill: launcherSearchBar
+                            anchors.margins: -4
+                            radius: 14
+                            color: "transparent"
+                            border.color: root.cardAccent
+                            border.width: 2
+                            opacity: _inputActive && root._launcherContentEased > 0 ? 0.15 : 0
+                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                        }
 
                         // Search bar
                         Rectangle {
                             id: launcherSearchBar
-                            visible: launcherContentEased > 0
+                            visible: root._launcherContentEased > 0
                             anchors.top: parent.top
                             anchors.left: parent.left
                             anchors.right: parent.right
@@ -909,9 +936,11 @@ FocusScope {
                             height: 40
                             radius: 10
                             color: Qt.rgba(1, 1, 1, 0.06)
-                            opacity: launcherContentEased
+                            border.color: _inputActive ? Qt.rgba(root.cardAccent.r, root.cardAccent.g, root.cardAccent.b, 0.4) : "transparent"
+                            border.width: 1
+                            opacity: root._launcherContentEased
                             transform: Translate {
-                                y: (1 - launcherContentEased) * -20
+                                y: (1 - root._launcherContentEased) * -20
                             }
 
                             Text {
@@ -922,7 +951,8 @@ FocusScope {
                                 text: "⌕"
                                 font.pixelSize: 16
                                 color: root.cardText
-                                opacity: 0.5
+                                opacity: _inputActive ? 0.8 : 0.5
+                                Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
                             }
 
                             TextInput {
@@ -936,6 +966,7 @@ FocusScope {
                                 font.bold: true
                                 color: root.cardText
                                 activeFocusOnPress: true
+                                Component.onCompleted: root.launcherSearchInputRef = this
                                 onTextChanged: {
                                     root.filterLauncherApps(text)
                                 }
@@ -954,7 +985,7 @@ FocusScope {
                         // App results list
                         ListView {
                             id: launcherResultsList
-                            visible: launcherContentEased > 0 && !root.launcherLoading
+                            visible: root._launcherContentEased > 0 && !root.launcherLoading
                             anchors.top: launcherSearchBar.bottom
                             anchors.topMargin: 15
                             anchors.left: parent.left
@@ -989,6 +1020,19 @@ FocusScope {
                                         radius: 6
                                         anchors.verticalCenter: parent.verticalCenter
                                         color: Qt.rgba(1, 1, 1, 0.05)
+                                        clip: true
+
+                                        Image {
+                                            id: appIconImage
+                                            anchors.fill: parent
+                                            source: (modelData.icon && modelData.icon.length > 0) ? ("image://icon/" + modelData.icon) : ""
+                                            sourceSize.width: 26
+                                            sourceSize.height: 26
+                                            smooth: true
+                                            asynchronous: true
+                                            fillMode: Image.PreserveAspectFit
+                                            visible: status === Image.Ready
+                                        }
 
                                         Text {
                                             anchors.centerIn: parent
@@ -998,6 +1042,7 @@ FocusScope {
                                             verticalAlignment: Text.AlignVCenter
                                             color: root.cardText
                                             opacity: 0.5
+                                            visible: appIconImage.status !== Image.Ready
                                         }
                                     }
 
@@ -1040,6 +1085,7 @@ FocusScope {
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
+        acceptedButtons: Qt.LeftButton
 
         onPositionChanged: function(mouse) {
             if (root.systemCardActive) return
