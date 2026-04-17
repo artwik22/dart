@@ -81,15 +81,7 @@ PanelWindow {
 
     property bool isPrimaryPanel: (primaryScreen === null || primaryScreen === undefined || (screen && primaryScreen && screen.name === primaryScreen.name)) && panelActive
 
-    property bool timerRunning: false
-    property int timerRemaining: 0
-    property int timerDuration: 0
     
-    function formatTime(sec) {
-        var m = Math.floor(sec / 60)
-        var s = sec % 60
-        return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s)
-    }
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qssidepanel-" + (panelPosition || "left") + "-" + (screen && screen.name ? screen.name : "0")
@@ -958,7 +950,7 @@ PanelWindow {
                         sharedData.runCommand(['sh', '-c', cmd])
                     }
                 }
-                popoverContent: Component {
+popoverContent: Component {
                     BluetoothMenu {
                         sharedData: sidePanel.sharedData
                         sidePanelRoot: sidePanel
@@ -966,302 +958,17 @@ PanelWindow {
                 }
             }
             
-            QuickToggle {
-                icon: "󰓅"
-                sharedData: sidePanel.sharedData
-                sidePanelRoot: sidePanel
-                panelPosition: sidePanel.panelPosition
-                outputScreen: sidePanel.screen
-                showBackground: false
-                Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 28
-                onClicked: {
-                    if (sharedData && sharedData.runCommand) {
-                        var currentProfile = sidePanel.qPwrStatus.toLowerCase()
-                        var nextProfile = "balanced"
-                        if (currentProfile.includes("power-saver")) nextProfile = "balanced"
-                        else if (currentProfile.includes("balanced")) nextProfile = "performance"
-                        else if (currentProfile.includes("performance")) nextProfile = "power-saver"
-                        sharedData.runCommand(['powerprofilesctl', 'set', nextProfile])
-                    }
-                }
-                popoverContent: Component {
-                    Rectangle {
-                        id: powerPopover
-                        width: 180
-                        height: 180
-                        color: (sharedData.colorSecondary || "#141414")
-                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
-                        
-                        // Mask for flush alignment
-                        Rectangle {
-                            color: parent.color
-                            width: sidePanel.isHorizontal ? parent.width : parent.radius
-                            height: sidePanel.isHorizontal ? parent.radius : parent.height
-                            anchors.left: sidePanel.panelPosition === "right" ? parent.left : undefined
-                            anchors.right: sidePanel.panelPosition === "left" ? parent.right : undefined
-                            anchors.top: sidePanel.panelPosition === "bottom" ? parent.top : undefined
-                            anchors.bottom: sidePanel.panelPosition === "top" ? parent.bottom : undefined
-                        }
-                        
-                        scale: 0.95 + (0.05 * (typeof popoverWindow !== "undefined" ? popoverWindow.showProgress : 1.0))
-                        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                        Column { 
-                            anchors.fill: parent
-                            anchors.margins: 10
-                            spacing: 8
-                            Column { 
-                                spacing: 2
-                                width: parent.width
-                                Text { 
-                                    text: "Power"
-                                    color: (sharedData.colorAccent || "#4a9eff")
-                                    font.pixelSize: 16
-                                    font.weight: Font.ExtraBold 
-                                }
-                                Text { 
-                                    text: sharedData.activePowerProfile ? sharedData.activePowerProfile.charAt(0).toUpperCase() + sharedData.activePowerProfile.slice(1) : "Unknown Profile"
-                                    color: "#fff"
-                                    font.pixelSize: 12
-                                    font.weight: Font.Medium
-                                    opacity: 0.7 
-                                }
-                            }
-                            Column {
-                                spacing: 6
-                                width: parent.width
-                                Text { 
-                                    text: "PERFORMANCE MODE"
-                                    color: Qt.rgba(1,1,1,0.5)
-                                    font.pixelSize: 10
-                                    font.weight: Font.Bold
-                                    font.letterSpacing: 1.2 
-                                }
-                                Column {
-                                    width: parent.width
-                                    spacing: 4
-                                    Repeater {
-                                        model: ["power-saver", "balanced", "performance"]
-                                        Rectangle {
-                                            width: parent.width
-                                            height: 24
-                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                            property bool isActive: sharedData.activePowerProfile === modelData
-                                            color: isActive ? (sharedData.colorAccent || "#4a9eff") : (profMa.containsMouse ? Qt.rgba(1,1,1,0.1) : "transparent")
-                                            border.width: isActive ? 0 : 1
-                                            border.color: Qt.rgba(1,1,1,0.05)
-                                            Behavior on color { ColorAnimation { duration: 150 } }
-                                            Row { 
-                                                anchors.centerIn: parent
-                                                spacing: 8
-                                                Text { 
-                                                    text: modelData === "mic" ? "󰍬" : (modelData === "performance" ? "󰓅" : (modelData === "power-saver" ? "󰾆" : "󰾅"))
-                                                    color: isActive ? "#000" : "#fff"
-                                                    font.pixelSize: 14 
-                                                }
-                                                Text { 
-                                                    text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
-                                                    color: isActive ? "#000" : "#fff"
-                                                    font.pixelSize: 10
-                                                    font.weight: Font.Medium 
-                                                } 
-                                            }
-                                            MouseArea { 
-                                                id: profMa
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                onClicked: sharedData.runCommand(['powerprofilesctl', 'set', modelData]) 
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            Row {
-                                width: parent.width
-                                spacing: 8
-                                Rectangle {
-                                    width: (parent.width - 8) / 2
-                                    height: 28
-                                    color: rbMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                    border.width: 1
-                                    border.color: Qt.rgba(1,1,1,0.05)
-                                    Row { 
-                                        anchors.centerIn: parent
-                                        spacing: 6
-                                        Text { text: "󰜉"; color: "#fff"; font.pixelSize: 14 }
-                                        Text { text: "Reboot"; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium } 
-                                    }
-                                    MouseArea { 
-                                        id: rbMa
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        onClicked: sharedData.runCommand(['systemctl', 'reboot']) 
-                                    }
-                                }
-                                Rectangle {
-                                    width: (parent.width - 8) / 2
-                                    height: 28
-                                    color: sdMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                    border.width: 1
-                                    border.color: Qt.rgba(1,0,0,0.2)
-                                    Row { 
-                                        anchors.centerIn: parent
-                                        spacing: 6
-                                        Text { text: "󰐥"; color: sdMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 14 }
-                                        Text { text: "OFF"; color: sdMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 11; font.weight: Font.Bold } 
-                                    }
-                                    MouseArea { 
-                                        id: sdMa
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        onClicked: sharedData.runCommand(['systemctl', 'poweroff']) 
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
-            QuickToggle {
-                icon: "󰔛"
-                sharedData: sidePanel.sharedData
-                sidePanelRoot: sidePanel
-                panelPosition: sidePanel.panelPosition
-                outputScreen: sidePanel.screen
-                showBackground: false
-                Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 28
-                onClicked: {}
-                popoverContent: Component {
-                    Rectangle {
-                        width: 180
-                        height: 200
-                        color: (sharedData.colorSecondary || "#141414")
-                        radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 16
-                        
-                        // Mask for flush alignment
-                        Rectangle {
-                            color: parent.color
-                            width: sidePanel.isHorizontal ? parent.width : parent.radius
-                            height: sidePanel.isHorizontal ? parent.radius : parent.height
-                            anchors.left: sidePanel.panelPosition === "right" ? parent.left : undefined
-                            anchors.right: sidePanel.panelPosition === "left" ? parent.right : undefined
-                            anchors.top: sidePanel.panelPosition === "bottom" ? parent.top : undefined
-                            anchors.bottom: sidePanel.panelPosition === "top" ? parent.bottom : undefined
-                        }
-                        
-                        Column { 
-                            anchors.fill: parent
-                            anchors.margins: 10
-                            spacing: 8
-                            Column { 
-                                spacing: 2
-                                width: parent.width
-                                Text { text: "Timer"; color: (sharedData.colorAccent || "#4a9eff"); font.pixelSize: 14; font.weight: Font.ExtraBold }
-                                Text { 
-                                    text: sidePanel.timerRunning ? sidePanel.formatTime(sidePanel.timerRemaining) : "No active timer"
-                                    color: sidePanel.timerRunning ? "#fff" : "#aaa"
-                                    font.pixelSize: sidePanel.timerRunning ? 13 : 11
-                                    font.weight: sidePanel.timerRunning ? Font.Bold : Font.Medium
-                                    opacity: sidePanel.timerRunning ? 1.0 : 0.7 
-                                }
-                                Rectangle { 
-                                    width: parent.width
-                                    height: 4
-                                    color: Qt.rgba(1,1,1,0.1)
-                                    radius: (sharedData && sharedData.quickshellBorderRadius > 0) ? 2 : 0
-                                    visible: sidePanel.timerRunning
-                                    Rectangle { 
-                                        height: parent.height
-                                        radius: (sharedData && sharedData.quickshellBorderRadius > 0) ? 2 : 0
-                                        width: sidePanel.timerDuration > 0 ? (parent.width * (sidePanel.timerRemaining / sidePanel.timerDuration)) : 0
-                                        color: (sharedData.colorAccent || "#4a9eff")
-                                        Behavior on width { NumberAnimation { duration: 1000 } } 
-                                    } 
-                                }
-                            }
-                            Column {
-                                spacing: 6
-                                width: parent.width
-                                Text { text: "QUICK SET"; color: Qt.rgba(1,1,1,0.5); font.pixelSize: 10; font.weight: Font.Bold; font.letterSpacing: 1.2 }
-                                GridLayout {
-                                    columns: 2
-                                    rowSpacing: 6
-                                    columnSpacing: 6
-                                    width: parent.width
-                                    Repeater {
-                                        model: [{ label: "5m", sec: 300 }, { label: "15m", sec: 900 }, { label: "30m", sec: 1800 }, { label: "1h", sec: 3600 }]
-                                        Rectangle {
-                                            Layout.fillWidth: true
-                                            height: 24
-                                            color: timerBtnMa.containsMouse ? Qt.rgba(1,1,1,0.1) : Qt.rgba(1,1,1,0.05)
-                                            radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                            border.width: 1
-                                            border.color: Qt.rgba(1,1,1,0.05)
-                                            scale: timerBtnMa.pressed ? 0.95 : (timerBtnMa.containsMouse ? 1.02 : 1.0)
-                                            Behavior on color { ColorAnimation { duration: 150 } }
-                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                            Text { anchors.centerIn: parent; text: modelData.label; color: "#fff"; font.pixelSize: 11; font.weight: Font.Medium }
-                                            MouseArea { 
-                                                id: timerBtnMa
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                onClicked: { 
-                                                    sidePanel.timerDuration = modelData.sec
-                                                    sidePanel.timerRemaining = modelData.sec
-                                                    sidePanel.timerRunning = true
-                                                    if (sharedData && sharedData.runCommand) sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Set', 'Timer for ' + modelData.label + ' started']) 
-                                                } 
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            Rectangle {
-                                width: parent.width
-                                height: 28
-                                color: stopTimerMa.containsMouse ? "#ff4444" : Qt.rgba(1,0,0,0.1)
-                                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined) ? sharedData.quickshellBorderRadius : 10
-                                border.width: 1
-                                border.color: Qt.rgba(1,0,0,0.2)
-                                scale: stopTimerMa.pressed ? 0.95 : (stopTimerMa.containsMouse ? 1.02 : 1.0)
-                                Behavior on color { ColorAnimation { duration: 150 } }
-                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-                                Row { 
-                                    anchors.centerIn: parent
-                                    spacing: 6
-                                    Text { text: "󰅙"; color: stopTimerMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 14 }
-                                    Text { text: "Stop / Clear"; color: stopTimerMa.containsMouse ? "#000" : "#ff4444"; font.pixelSize: 11; font.weight: Font.Bold } 
-                                }
-                                MouseArea { 
-                                    id: stopTimerMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onClicked: { 
-                                        sidePanel.timerRunning = false
-                                        sidePanel.timerRemaining = 0
-                                        if (sharedData && sharedData.runCommand) sharedData.runCommand(['notify-send', '-i', 'alarm-clock', 'Timer Stopped', 'Active timer cancelled']) 
-                                    } 
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Subtle Separator
-            Rectangle {
+            // Separator between Bluetooth and Battery Ring
+            Item {
                 Layout.preferredWidth: !isHorizontal ? 14 : 1
                 Layout.preferredHeight: isHorizontal ? 14 : 1
-                Layout.alignment: Qt.AlignCenter
-                Layout.margins: 4
-                color: Qt.rgba(1, 1, 1, 0.1)
-                visible: (sharedData && sharedData.sidebarBatteryEnabled === true)
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: !isHorizontal ? 14 : 1
+                    height: isHorizontal ? 14 : 1
+                    color: Qt.rgba(1, 1, 1, 0.1)
+                }
             }
 
             // ── Circular Battery Ring ─────────────────────────────────────
@@ -1692,19 +1399,4 @@ PanelWindow {
             }
         }
     }
-    Timer {
-        id: activeTimer
-        interval: 1000
-        repeat: true
-        running: sidePanel.timerRunning && sidePanel.timerRemaining > 0
-        onTriggered: {
-            sidePanel.timerRemaining -= 1
-            if (sidePanel.timerRemaining <= 0) {
-                sidePanel.timerRunning = false
-                if (sharedData && sharedData.runCommand) {
-                    sharedData.runCommand(['notify-send', '-i', 'alarm-clock', '-u', 'critical', 'Timer Finished', 'Time is up!'])
-                }
-            }
-        }
     }
-}
