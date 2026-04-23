@@ -275,12 +275,12 @@ PanelWindow {
             }
             // Clock background pill
             Rectangle {
-                width: 30
+                width: 32
                 height: sidePanelHoursDisplay.implicitHeight + 6 + sidePanelMinutesDisplay.implicitHeight + 6
-                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined && sharedData.quickshellBorderRadius > 0) ? Math.min(sharedData.quickshellBorderRadius, 8) : 8
-                color: Qt.rgba(1,1,1,0.04)
+                radius: (sharedData && sharedData.quickshellBorderRadius !== undefined && sharedData.quickshellBorderRadius > 0) ? Math.min(sharedData.quickshellBorderRadius, 10) : 10
+                color: Qt.rgba(1,1,1,0.06)
                 border.width: 1
-                border.color: Qt.rgba(1,1,1,0.06)
+                border.color: Qt.rgba(1,1,1,0.08)
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Column {
@@ -290,7 +290,7 @@ PanelWindow {
                     Text { 
                         id: sidePanelHoursDisplay
                         text: "00"
-                        font.pixelSize: 17
+                        font.pixelSize: 18
                         font.family: "Outfit, sans-serif"
                         font.weight: Font.Bold
                         font.letterSpacing: -0.5
@@ -302,25 +302,25 @@ PanelWindow {
 
                     // Blinking dot separator
                     Rectangle {
-                        width: 3; height: 3
-                        radius: 1.5
+                        width: 4; height: 4
+                        radius: 2
                         color: (sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff"
                         anchors.horizontalCenter: parent.horizontalCenter
-                        opacity: (sharedData && sharedData.clockBlinkColon) ? (clockColonVisible ? 0.8 : 0.15) : 0.6
+                        opacity: (sharedData && sharedData.clockBlinkColon) ? (clockColonVisible ? 0.9 : 0.2) : 0.7
                         Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
                     }
 
                     Text { 
                         id: sidePanelMinutesDisplay
                         text: "00"
-                        font.pixelSize: 17
+                        font.pixelSize: 18
                         font.family: "Outfit, sans-serif"
                         font.weight: Font.Bold
                         font.letterSpacing: -0.5
                         color: (sharedData && sharedData.colorText) ? sharedData.colorText : "#ffffff"
                         horizontalAlignment: Text.AlignHCenter
                         anchors.horizontalCenter: parent.horizontalCenter
-                        opacity: 0.85
+                        opacity: 0.9
                     }
                 }
             }
@@ -330,17 +330,17 @@ PanelWindow {
         Item {
             id: clockWorkspaceSepV
             width: parent.width
-            height: 14
+            height: 16
             anchors.top: sidePanelClockColumn.bottom
-            anchors.topMargin: 4
+            anchors.topMargin: 6
             anchors.horizontalCenter: parent.horizontalCenter
             visible: !isHorizontal && sidePanelWorkspaceColumnContainer.mode === "top"
 
             Rectangle {
-                width: 14
-                height: 1
+                width: 16
+                height: 1.5
                 anchors.centerIn: parent
-                color: Qt.rgba(1, 1, 1, 0.1)
+                color: Qt.rgba(1, 1, 1, 0.12)
             }
         }
         
@@ -526,12 +526,12 @@ PanelWindow {
             // Liquid Morph Track (Vertical)
             Rectangle {
                 id: wsTrackVert
-                width: 2
+                width: 3
                 height: sidePanelWorkspaceColumn.height
                 x: (parent.width - width) / 2
                 y: sidePanelWorkspaceColumn.y
-                color: Qt.rgba(1, 1, 1, 0.08)
-                radius: 1
+                color: Qt.rgba(1, 1, 1, 0.12)
+                radius: 1.5
                 z: -1
                 visible: !isHorizontal
             }
@@ -539,7 +539,7 @@ PanelWindow {
             // Liquid Morph Segment (Active Workspace - Vertical)
             Rectangle {
                 id: wsActiveSegmentVert
-                width: 4
+                width: 5
                 x: (parent.width - width) / 2
                 z: 0
                 visible: !isHorizontal
@@ -548,11 +548,11 @@ PanelWindow {
                 property int activeIndex: provider.focusedWorkspace ? Math.max(0, Math.min(3, provider.focusedWorkspace.id - 1)) : 0
                 
                 // Position and height animation to create "morph" feel
-                height: 20 
+                height: 24 
                 y: sidePanelWorkspaceColumn.y + activeIndex * (16 + 12) + (16 - height) / 2
                 
                 color: sharedData.colorAccent || "#4a9eff"
-                radius: 2
+                radius: 2.5
                 
                 Behavior on y { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
                 Behavior on height { NumberAnimation { duration: 300 } }
@@ -614,18 +614,18 @@ PanelWindow {
         // Separator between Clock and Workspaces (Horizontal)
         Item {
             id: clockWorkspaceSepH
-            width: 14
+            width: 16
             height: parent.height
             anchors.left: sidePanelClockRow.right
-            anchors.leftMargin: 4
+            anchors.leftMargin: 6
             anchors.verticalCenter: parent.verticalCenter
             visible: isHorizontal
 
             Rectangle {
-                width: 1
-                height: 14
+                width: 1.5
+                height: 16
                 anchors.centerIn: parent
-                color: Qt.rgba(1, 1, 1, 0.1)
+                color: Qt.rgba(1, 1, 1, 0.12)
             }
         }
 
@@ -643,12 +643,12 @@ PanelWindow {
             // Liquid Morph Track (Horizontal)
             Rectangle {
                 id: wsTrackHoriz
-                height: 2
+                height: 3
                 width: sidePanelWorkspaceRow.width
                 y: (parent.height - height) / 2
                 x: sidePanelWorkspaceRow.x
-                color: Qt.rgba(1, 1, 1, 0.08)
-                radius: 1
+                color: Qt.rgba(1, 1, 1, 0.12)
+                radius: 1.5
                 z: -1
                 visible: isHorizontal
             }
@@ -656,7 +656,7 @@ PanelWindow {
             // Liquid Morph Segment (Active Workspace - Horizontal)
             Rectangle {
                 id: wsActiveSegmentHoriz
-                height: 4
+                height: 5
                 y: (parent.height - height) / 2
                 z: 0
                 visible: isHorizontal
@@ -664,11 +664,11 @@ PanelWindow {
                 property var provider: (sharedData && sharedData.workspaceProvider) ? sharedData.workspaceProvider : Hyprland
                 property int activeIndex: provider.focusedWorkspace ? Math.max(0, Math.min(3, provider.focusedWorkspace.id - 1)) : 0
                 
-                width: 20
+                width: 24
                 x: sidePanelWorkspaceRow.x + activeIndex * (16 + 12) + (16 - width) / 2
                 
                 color: sharedData.colorAccent || "#4a9eff"
-                radius: 2
+                radius: 2.5
                 
                 Behavior on x { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
                 Behavior on width { NumberAnimation { duration: 300 } }
@@ -908,7 +908,7 @@ PanelWindow {
             flow: GridLayout.LeftToRight
             columns: !isHorizontal ? 1 : (sharedData && sharedData.sidebarBatteryEnabled === true ? 6 : 4)
             rows: !isHorizontal ? -1 : 1
-            rowSpacing: 2
+            rowSpacing: 4
             
             QuickToggle {
                 icon: "󰖩"
@@ -918,14 +918,15 @@ PanelWindow {
                 outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 28
-                onClicked: {
-                    if (sharedData && sharedData.runCommand) {
-                        sharedData.runCommand(['sh', '-c', 'nmcli radio wifi | grep -q enabled && nmcli radio wifi off || nmcli radio wifi on'])
+                Layout.preferredWidth: 30
+                Layout.preferredHeight: 30
+                popoverContent: Component {
+                    WifiStatusPopover {
+                        sharedData: sidePanel.sharedData
+                        sidePanelRoot: sidePanel
                     }
                 }
-                popoverContent: Component {
+                clickPopoverContent: Component {
                     WifiMenu {
                         sharedData: sidePanel.sharedData
                         sidePanelRoot: sidePanel
@@ -942,8 +943,8 @@ PanelWindow {
                 outputScreen: sidePanel.screen
                 showBackground: false
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 28
+                Layout.preferredWidth: 30
+                Layout.preferredHeight: 30
                 onClicked: {
                     if (sharedData && sharedData.runCommand) {
                         var cmd = (sidePanel.qBtStatus === "On") ? 'bluetoothctl power off' : 'bluetoothctl power on'
@@ -960,14 +961,14 @@ popoverContent: Component {
             
             // Separator between Bluetooth and Battery Ring
             Item {
-                Layout.preferredWidth: !isHorizontal ? 14 : 1
-                Layout.preferredHeight: isHorizontal ? 14 : 1
+                Layout.preferredWidth: !isHorizontal ? 16 : 1
+                Layout.preferredHeight: isHorizontal ? 16 : 1
 
                 Rectangle {
                     anchors.centerIn: parent
-                    width: !isHorizontal ? 14 : 1
-                    height: isHorizontal ? 14 : 1
-                    color: Qt.rgba(1, 1, 1, 0.1)
+                    width: !isHorizontal ? 16 : 1
+                    height: isHorizontal ? 16 : 1
+                    color: Qt.rgba(1, 1, 1, 0.12)
                 }
             }
 
@@ -975,8 +976,8 @@ popoverContent: Component {
             Item {
                 id: batteryRingItem
                 Layout.alignment: Qt.AlignCenter
-                Layout.preferredWidth: 20
-                Layout.preferredHeight: 20
+                Layout.preferredWidth: 22
+                Layout.preferredHeight: 22
                 visible: (sharedData && sharedData.sidebarBatteryEnabled === true)
 
                 property bool isCharging: {
@@ -988,17 +989,17 @@ popoverContent: Component {
                     ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
                     : (pct > 40
                         ? ((sharedData && sharedData.colorAccent) ? sharedData.colorAccent : "#4a9eff")
-                        : (pct > 20 ? "#ffd700" : "#ff4444"))
+                        : (pct > 20 ? "#ffa500" : "#ff5555"))
 
                 // Pulsing glow when charging
                 SequentialAnimation on opacity {
                     running: batteryRingItem.isCharging
                     loops: Animation.Infinite
-                    NumberAnimation { from: 1.0; to: 0.55; duration: 1400; easing.type: Easing.InOutSine }
-                    NumberAnimation { from: 0.55; to: 1.0; duration: 1400; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.0; to: 0.5; duration: 1200; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 0.5; to: 1.0; duration: 1200; easing.type: Easing.InOutSine }
                 }
 
-                scale: batteryRingMouseArea.containsMouse ? 1.12 : 1.0
+                scale: batteryRingMouseArea.containsMouse ? 1.15 : 1.0
                 Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
 
                 // GPU-rendered ring using Shape (antialiased, smooth)
@@ -1006,17 +1007,17 @@ popoverContent: Component {
                     id: batteryRingShape
                     anchors.fill: parent
                     layer.enabled: true
-                    layer.samples: 4  // MSAA for extra smoothness
+                    layer.samples: 4
 
                     property real animatedPct: batteryRingItem.pct
                     Behavior on animatedPct {
-                        NumberAnimation { duration: 800; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
                     }
 
                     // Track — full gray circle
                     ShapePath {
-                        strokeColor: Qt.rgba(1, 1, 1, 0.15)
-                        strokeWidth: 2
+                        strokeColor: Qt.rgba(1, 1, 1, 0.18)
+                        strokeWidth: 2.5
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
 
@@ -1033,7 +1034,7 @@ popoverContent: Component {
                     // Progress arc — proportional to battery %
                     ShapePath {
                         strokeColor: batteryRingItem.ringColor
-                        strokeWidth: 2.5
+                        strokeWidth: 3
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
 
@@ -1048,7 +1049,7 @@ popoverContent: Component {
                     }
                 }
 
-                // Rotating segment when charging (Extra highlight) - Separate Shape to rotate independently
+                // Rotating segment when charging (Extra highlight)
                 Shape {
                     id: chargingRingShape
                     anchors.fill: parent
@@ -1058,7 +1059,7 @@ popoverContent: Component {
 
                     ShapePath {
                         strokeColor: "#ffffff"
-                        strokeWidth: 3
+                        strokeWidth: 3.5
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
 
@@ -1068,12 +1069,12 @@ popoverContent: Component {
                             radiusX: batteryRingItem.width / 2 - 2
                             radiusY: batteryRingItem.height / 2 - 2
                             startAngle: -90
-                            sweepAngle: 45 // Small highlight segment
+                            sweepAngle: 45
                         }
                     }
 
                     RotationAnimation on rotation {
-                        from: 0; to: 360; duration: 1500
+                        from: 0; to: 360; duration: 1200
                         running: batteryRingItem.isCharging
                         loops: Animation.Infinite
                     }

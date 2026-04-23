@@ -17,9 +17,12 @@ Item {
     // Large Mode for Dashboard
     property bool isLarge: false
     
-    // Popover content (for sidebar)
+    // Popover content (for sidebar hover)
     property Component popoverContent: null
-    
+
+    // Click popover content (for sidebar click)
+    property Component clickPopoverContent: null
+
     // Click handler signal
     signal clicked()
     
@@ -176,6 +179,10 @@ Item {
 
         onClicked: {
             root.clicked()
+            // If there's clickPopoverContent, show it instead of hover popover
+            if (root.clickPopoverContent && root.sidePanelRoot) {
+                root.sidePanelRoot.showPopover(root.clickPopoverContent, 0, 0)
+            }
         }
     }
 }

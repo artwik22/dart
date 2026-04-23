@@ -146,9 +146,10 @@ PanelWindow {
     }
     
     // Color management functions
+    // wallpaperPath: path to wallpaper to save (arg 7)
     // optionalPresetName: when applying a preset, pass its name so it's written to colors.json (arg 8).
     // Quickshell loadColors uses presets[colorPreset] – without saving the name, reload would apply the old preset.
-    function saveColors(optionalPresetName) {
+    function saveColors(wallpaperPath, optionalPresetName) {
         if (!projectPath || projectPath.length === 0) {
             return
         }
@@ -156,8 +157,9 @@ PanelWindow {
             return
         }
         var scriptPath = projectPath + "/scripts/save-colors.py"
+        var wallpaperArg = (wallpaperPath && String(wallpaperPath).length > 0) ? String(wallpaperPath).replace(/"/g, '\\"') : ""
         var presetArg = (optionalPresetName && String(optionalPresetName).length > 0) ? String(optionalPresetName).replace(/"/g, '\\"') : ""
-        var cmd = 'python3 "' + scriptPath + '" "' + colorBackground + '" "' + colorPrimary + '" "' + colorSecondary + '" "' + colorText + '" "' + colorAccent + '" "' + colorConfigPath + '" "" "' + presetArg + '"'
+        var cmd = 'python3 "' + scriptPath + '" "' + colorBackground + '" "' + colorPrimary + '" "' + colorSecondary + '" "' + colorText + '" "' + colorAccent + '" "' + colorConfigPath + '" "' + wallpaperArg + '" "' + presetArg + '"'
         if (sharedData && sharedData.runCommand) sharedData.runCommand(['sh', '-c', cmd])
     }
     
@@ -192,7 +194,7 @@ PanelWindow {
                 if (sharedData) sharedData.colorAccent = value
                 break
         }
-        saveColors()
+        saveColors("", "")
     }
     
     // Color presets
@@ -219,7 +221,7 @@ PanelWindow {
         }
         
         // Save to file – must pass preset name so colors.json has colorPreset set; otherwise Quickshell reload applies the old preset.
-        saveColors(presetName)
+        saveColors("", presetName)
         // Trigger Quickshell reload after save finishes (script is async)
         if (sharedData && sharedData.runCommand) {
             sharedData.runCommand(['sh', '-c', 'sleep 0.5 && echo 1 > /tmp/quickshell_color_change'])
@@ -2623,7 +2625,7 @@ PanelWindow {
                         if (sharedData && sharedData.runCommand) {
                             sharedData.runCommand(['sh', '-c', 'echo \'' + path.replace(/'/g, "'\\''") + '\' > /tmp/quickshell_wallpaper_path'])
                             if (typeof saveColors === "function") {
-                                saveColors("") 
+                                saveColors(path, "")
                             }
                             sharedData.launcherVisible = false
                         }
@@ -2687,7 +2689,7 @@ PanelWindow {
                                         if (typeof saveColors === "function") {
                                             var sidebarPos = sharedData.dashboardPosition || "right"
                                             var currentPreset = sharedData.colorPreset || ""
-                                            saveColors(currentPreset)
+                                            saveColors(model.path, currentPreset)
                                         }
                                         sharedData.launcherVisible = false
                                     }
